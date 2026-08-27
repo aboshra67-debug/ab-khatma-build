@@ -3,7 +3,8 @@ name: Build AB Khatma APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build-apk:
@@ -16,7 +17,8 @@ jobs:
 
       - name: Extract project
         run: |
-          mkdir extracted
+          rm -rf extracted
+          mkdir -p extracted
           unzip -q Khatma_Daily_V0_4_BUILD_READY.zip -d extracted
 
       - name: Set up JDK 17
@@ -25,7 +27,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
+      - name: Set up Gradle 9.5
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.5.0'
@@ -33,10 +35,13 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android 36
+      - name: Install Android SDK 36
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
 
       - name: Fix dependencies for Android 36
         working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
@@ -45,22 +50,48 @@ jobs:
           sed -i 's/activity-compose:1.13.0/activity-compose:1.12.4/' app/build.gradle.kts
           sed -i 's/core-ktx:1.18.0/core-ktx:1.17.0/' app/build.gradle.kts
 
+      - name: Fix Debug Manifest
+        working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
+        run: |
+          mkdir -p app/src/debug
+
+          cat > app/src/debug/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools">
+
+              <application
+                  android:usesCleartextTraffic="true"
+                  tools:replace="android:usesCleartextTraffic" />
+
+          </manifest>
+          EOF
+
       - name: Verify project
         working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
-        run: python3 tools/verify_project.py
+        run: |
+          python3 tools/verify_project.py
 
       - name: Build APK
         working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
         run: |
           gradle --no-daemon clean :app:assembleDebug \
-          -PKHATMA_API_BASE_URL="https://CHANGE_ME.example.invalid"
+            -PKHATMA_API_BASE_URL="https://CHANGE_ME.example.invalid"
+
+      - name: Check APK exists
+        run: |
+          test -f extracted/Khatma_Daily_V0_4_BUILD_READY/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Rename APK
         run: |
-          cp extracted/Khatma_Daily_V0_4_BUILD_READY/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V0.4_TEST.apk
+          cp \
+            extracted/Khatma_Daily_V0_4_BUILD_READY/app/build/outputs/apk/debug/app-debug.apk \
+            AB_Khatma_V0.4_TEST.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AB_Khatma_V0.4_TEST_APK
           path: AB_Khatma_V0.4_TEST.apk
+          if-no-files-found: error
+          retention-days: 30
