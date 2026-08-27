@@ -33,14 +33,19 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android 36
+      - name: Install Android 37
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager "platform-tools" "platforms;android-37" "build-tools;37.0.0"
 
       - name: Verify project
         working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
         run: python3 tools/verify_project.py
+
+      - name: Update compile SDK to 37
+        working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
+        run: |
+          sed -i 's/compileSdk = 36/compileSdk = 37/' app/build.gradle.kts
 
       - name: Build APK
         working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
