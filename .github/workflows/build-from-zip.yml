@@ -72,11 +72,11 @@ jobs:
         run: |
           python3 tools/verify_project.py
 
-      - name: Build APK
+      - name: Build APK with Railway Server
         working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
         run: |
           gradle --no-daemon clean :app:assembleDebug \
-            -PKHATMA_API_BASE_URL="https://CHANGE_ME.example.invalid"
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app"
 
       - name: Check APK exists
         run: |
@@ -86,12 +86,12 @@ jobs:
         run: |
           cp \
             extracted/Khatma_Daily_V0_4_BUILD_READY/app/build/outputs/apk/debug/app-debug.apk \
-            AB_Khatma_V0.4_TEST.apk
+            AB_Khatma_V0.4_SERVER_CONNECTED.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.4_TEST_APK
-          path: AB_Khatma_V0.4_TEST.apk
+          name: AB_Khatma_V0.4_SERVER_CONNECTED_APK
+          path: AB_Khatma_V0.4_SERVER_CONNECTED.apk
           if-no-files-found: error
           retention-days: 30
