@@ -1,4 +1,4 @@
-name: Build AB Khatma V0.9 Install Safe APK
+name: Build AB Khatma V0.10 Professional Quran APK
 
 on:
   workflow_dispatch:
@@ -32,6 +32,20 @@ jobs:
           unzip -t v0_9/patch_v09.zip
           unzip -o -q v0_9/patch_v09.zip -d extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
 
+      - name: Apply V0.10 professional Quran patch
+        run: |
+          cat v0_10/chunks/part00.b64 \
+              v0_10/chunks/part01.b64 \
+              v0_10/chunks/part02.b64 \
+              v0_10/chunks/part03.b64 > v0_10/patch_head.b64
+          base64 -d v0_10/patch_head.b64 > v0_10/patch_v010.zip
+          cat v0_10/bin/part04.bin \
+              v0_10/bin/part05.bin \
+              v0_10/bin/part06.bin >> v0_10/patch_v010.zip
+          base64 -d v0_10/chunks/part07.b64 >> v0_10/patch_v010.zip
+          unzip -t v0_10/patch_v010.zip
+          unzip -o -q v0_10/patch_v010.zip -d extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -54,7 +68,7 @@ jobs:
             "platforms;android-36" \
             "build-tools;36.0.0"
 
-      - name: Preserve V0.8 HomeScreen compile fix
+      - name: Preserve HomeScreen Compose import
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 - <<'PY'
@@ -118,7 +132,7 @@ jobs:
         run: |
           python3 tools/fetch_quran_content.py
 
-      - name: Verify V0.9 source
+      - name: Verify V0.10 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 tools/verify_project.py
@@ -127,7 +141,7 @@ jobs:
           test -s app/src/main/assets/quran/quran-moyassar.json
           test -s app/src/main/assets/quran/husary-audio.json
 
-      - name: Make V0.9 install-safe beside existing app
+      - name: Make V0.10 install-safe beside existing app
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 - <<'PY'
@@ -135,14 +149,14 @@ jobs:
           p = Path('app/build.gradle.kts')
           s = p.read_text(encoding='utf-8')
           old = 'applicationId = "com.ab.khatma"'
-          new = 'applicationId = "com.ab.khatma.v09preview"'
+          new = 'applicationId = "com.ab.khatma.v10preview"'
           if old not in s:
               raise SystemExit('applicationId anchor not found')
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
-          print('Install-safe applicationId: com.ab.khatma.v09preview')
+          print('Install-safe applicationId: com.ab.khatma.v10preview')
           PY
 
-      - name: Build V0.9 Install Safe with Railway Server
+      - name: Build V0.10 Install Safe with Railway Server
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
@@ -162,12 +176,12 @@ jobs:
         run: |
           cp \
             extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-            AB_Khatma_V0.9_QURAN_HUSARY_INSTALL_SAFE.apk
+            AB_Khatma_V0.10_PRO_QURAN_INSTALL_SAFE.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.9_QURAN_HUSARY_INSTALL_SAFE_APK
-          path: AB_Khatma_V0.9_QURAN_HUSARY_INSTALL_SAFE.apk
+          name: AB_Khatma_V0.10_PRO_QURAN_INSTALL_SAFE_APK
+          path: AB_Khatma_V0.10_PRO_QURAN_INSTALL_SAFE.apk
           if-no-files-found: error
           retention-days: 30
