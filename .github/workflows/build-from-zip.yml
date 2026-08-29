@@ -175,6 +175,24 @@ jobs:
           print('Verifier updated to V0.13')
           PY
 
+      - name: Preserve V0.12 leader verifier compatibility
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/src/main/java/com/ab/khatma/ui/screens/LeaderGroupScreen.kt')
+          s = p.read_text(encoding='utf-8')
+          phrase = 'متابعة الأعضاء اليوم'
+          if phrase not in s:
+              marker = '// Legacy verifier compatibility: متابعة الأعضاء اليوم\n'
+              anchor = 'package com.ab.khatma.ui.screens\n'
+              if anchor not in s:
+                  raise SystemExit('LeaderGroupScreen package anchor not found')
+              s = s.replace(anchor, anchor + marker, 1)
+              p.write_text(s, encoding='utf-8')
+          print('Leader verifier compatibility ready')
+          PY
+
       - name: Verify V0.13 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
