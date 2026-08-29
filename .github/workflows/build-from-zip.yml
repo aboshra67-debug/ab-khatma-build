@@ -71,6 +71,49 @@ jobs:
           print('CompositionLocalProvider import ready')
           PY
 
+      - name: Fix QuranEnc keys and Husary Muallim source
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('tools/fetch_quran_content.py')
+          s = p.read_text(encoding='utf-8')
+
+          old = '''mean_item, mean_key = find_resource("معاني الكلمات")
+          tafsir_item, tafsir_key = find_resource("التفسير الميسر")'''
+          new = '''def resource_by_key(key: str, fallback_title: str):
+              for item in catalog:
+                  if str(item_key(item) or "") == key:
+                      return item, key
+              return {"key": key, "title": fallback_title, "version": ""}, key
+
+          mean_item, mean_key = resource_by_key("arabic_seraj", "اللغة العربية - معاني الكلمات")
+          tafsir_item, tafsir_key = resource_by_key("arabic_moyassar", "اللغة العربية - التفسير الميسر")'''
+          if old not in s:
+              raise SystemExit('QuranEnc resource lookup block not found')
+          s = s.replace(old, new, 1)
+
+          start = s.index('print("Discovering Mahmoud Khalil Al-Husary recitation on EveryAyah...")')
+          end = s.index('audio_cfg = {', start)
+          fixed_audio = '''print("Using Mahmoud Khalil Al-Husary Muallim 128kbps on EveryAyah...")
+          rec_name = "Mahmoud Khalil Al-Husary - Muallim 128kbps"
+          subfolder = "Husary_Muallim_128kbps"
+
+          test_url = f"https://everyayah.com/data/{subfolder}/001001.mp3"
+          req = urllib.request.Request(test_url, headers={"User-Agent": UA, "Range": "bytes=0-32"})
+          with urllib.request.urlopen(req, timeout=30) as r:
+              if r.status not in (200, 206):
+                  raise RuntimeError(f"Al-Husary test audio failed: HTTP {r.status}")
+
+          '''
+          s = s[:start] + fixed_audio + s[end:]
+          p.write_text(s, encoding='utf-8')
+          print('Pinned QuranEnc keys: arabic_seraj + arabic_moyassar')
+          print('Pinned Husary source: Husary_Muallim_128kbps')
+          PY
+
       - name: Fetch verified Quran content and Husary source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
