@@ -1,4 +1,4 @@
-name: Build AB Khatma V0.9 Quran Preview APK
+name: Build AB Khatma V0.9 Install Safe APK
 
 on:
   workflow_dispatch:
@@ -76,7 +76,6 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
 
           p = Path('tools/fetch_quran_content.py')
           s = p.read_text(encoding='utf-8')
@@ -128,7 +127,22 @@ jobs:
           test -s app/src/main/assets/quran/quran-moyassar.json
           test -s app/src/main/assets/quran/husary-audio.json
 
-      - name: Build V0.9 Preview with Railway Server
+      - name: Make V0.9 install-safe beside existing app
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/build.gradle.kts')
+          s = p.read_text(encoding='utf-8')
+          old = 'applicationId = "com.ab.khatma"'
+          new = 'applicationId = "com.ab.khatma.v09preview"'
+          if old not in s:
+              raise SystemExit('applicationId anchor not found')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          print('Install-safe applicationId: com.ab.khatma.v09preview')
+          PY
+
+      - name: Build V0.9 Install Safe with Railway Server
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
@@ -148,12 +162,12 @@ jobs:
         run: |
           cp \
             extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-            AB_Khatma_V0.9_QURAN_HUSARY_MEANINGS_PREVIEW.apk
+            AB_Khatma_V0.9_QURAN_HUSARY_INSTALL_SAFE.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.9_QURAN_HUSARY_MEANINGS_APK
-          path: AB_Khatma_V0.9_QURAN_HUSARY_MEANINGS_PREVIEW.apk
+          name: AB_Khatma_V0.9_QURAN_HUSARY_INSTALL_SAFE_APK
+          path: AB_Khatma_V0.9_QURAN_HUSARY_INSTALL_SAFE.apk
           if-no-files-found: error
           retention-days: 30
