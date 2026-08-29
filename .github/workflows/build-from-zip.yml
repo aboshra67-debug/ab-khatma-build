@@ -1,4 +1,4 @@
-name: Build AB Khatma APK
+name: Build AB Khatma V0.8 Preview APK
 
 on:
   workflow_dispatch:
@@ -15,11 +15,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract project
+      - name: Extract V0.8 project
         run: |
           rm -rf extracted
           mkdir -p extracted
-          unzip -q Khatma_Daily_V0_4_BUILD_READY.zip -d extracted
+          unzip -q Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE.zip -d extracted
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -43,55 +43,37 @@ jobs:
             "platforms;android-36" \
             "build-tools;36.0.0"
 
-      - name: Fix dependencies for Android 36
-        working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
-        run: |
-          sed -i 's/compose-bom:2026.08.00/compose-bom:2026.06.00/' app/build.gradle.kts
-          sed -i 's/activity-compose:1.13.0/activity-compose:1.12.4/' app/build.gradle.kts
-          sed -i 's/core-ktx:1.18.0/core-ktx:1.17.0/' app/build.gradle.kts
-
-      - name: Fix Debug Manifest
-        working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
-        run: |
-          mkdir -p app/src/debug
-
-          cat > app/src/debug/AndroidManifest.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools">
-
-              <application
-                  android:usesCleartextTraffic="true"
-                  tools:replace="android:usesCleartextTraffic" />
-
-          </manifest>
-          EOF
-
-      - name: Verify project
-        working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
+      - name: Verify V0.8 source
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 tools/verify_project.py
 
-      - name: Build APK with Railway Server
-        working-directory: extracted/Khatma_Daily_V0_4_BUILD_READY
+      - name: Build V0.8 Preview with Railway Server
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
             -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app"
 
+      - name: Verify APK signature
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose --print-certs \
+            app/build/outputs/apk/debug/app-debug.apk
+
       - name: Check APK exists
         run: |
-          test -f extracted/Khatma_Daily_V0_4_BUILD_READY/app/build/outputs/apk/debug/app-debug.apk
+          test -f extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Rename APK
         run: |
           cp \
-            extracted/Khatma_Daily_V0_4_BUILD_READY/app/build/outputs/apk/debug/app-debug.apk \
-            AB_Khatma_V0.4_SERVER_CONNECTED.apk
+            extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
+            AB_Khatma_V0.8_PREVIEW_AB_THEMES.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.4_SERVER_CONNECTED_APK
-          path: AB_Khatma_V0.4_SERVER_CONNECTED.apk
+          name: AB_Khatma_V0.8_PREVIEW_AB_THEMES_APK
+          path: AB_Khatma_V0.8_PREVIEW_AB_THEMES.apk
           if-no-files-found: error
           retention-days: 30
