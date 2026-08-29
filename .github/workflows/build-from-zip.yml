@@ -1,4 +1,4 @@
-name: Build AB Khatma V0.8 Preview APK
+name: Build AB Khatma V0.9 Quran Preview APK
 
 on:
   workflow_dispatch:
@@ -9,17 +9,22 @@ on:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract V0.8 project
+      - name: Extract stable V0.8 core
         run: |
           rm -rf extracted
           mkdir -p extracted
           unzip -q Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE.zip -d extracted
+
+      - name: Apply V0.9 Quran Husary patch
+        run: |
+          python3 v0_9/apply_v09_patch.py \
+            extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -43,7 +48,7 @@ jobs:
             "platforms;android-36" \
             "build-tools;36.0.0"
 
-      - name: Fix V0.8 Compose import
+      - name: Preserve V0.8 HomeScreen compile fix
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 - <<'PY'
@@ -60,12 +65,21 @@ jobs:
           print('CompositionLocalProvider import ready')
           PY
 
-      - name: Verify V0.8 source
+      - name: Fetch verified Quran content and Husary source
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 tools/fetch_quran_content.py
+
+      - name: Verify V0.9 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 tools/verify_project.py
+          test -s app/src/main/assets/quran/quran-uthmani.json
+          test -s app/src/main/assets/quran/quran-word-meanings.json
+          test -s app/src/main/assets/quran/quran-moyassar.json
+          test -s app/src/main/assets/quran/husary-audio.json
 
-      - name: Build V0.8 Preview with Railway Server
+      - name: Build V0.9 Preview with Railway Server
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
@@ -85,12 +99,12 @@ jobs:
         run: |
           cp \
             extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-            AB_Khatma_V0.8_PREVIEW_AB_THEMES.apk
+            AB_Khatma_V0.9_QURAN_HUSARY_MEANINGS_PREVIEW.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.8_PREVIEW_AB_THEMES_APK
-          path: AB_Khatma_V0.8_PREVIEW_AB_THEMES.apk
+          name: AB_Khatma_V0.9_QURAN_HUSARY_MEANINGS_APK
+          path: AB_Khatma_V0.9_QURAN_HUSARY_MEANINGS_PREVIEW.apk
           if-no-files-found: error
           retention-days: 30
