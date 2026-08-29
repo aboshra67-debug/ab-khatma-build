@@ -46,6 +46,22 @@ jobs:
           unzip -t v0_10/patch_v010.zip
           unzip -o -q v0_10/patch_v010.zip -d extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
 
+      - name: Fix V0.10 Compose PaddingValues compatibility
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/src/main/java/com/ab/khatma/ui/screens/QuranScreen.kt')
+          s = p.read_text(encoding='utf-8')
+          old = 'PaddingValues(vertical = 10.dp, bottom = 24.dp)'
+          new = 'PaddingValues(start = 0.dp, top = 10.dp, end = 0.dp, bottom = 24.dp)'
+          count = s.count(old)
+          if count != 2:
+              raise SystemExit(f'Expected 2 PaddingValues anchors, found {count}')
+          p.write_text(s.replace(old, new), encoding='utf-8')
+          print('Fixed 2 PaddingValues calls')
+          PY
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
