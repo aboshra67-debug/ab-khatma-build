@@ -23,8 +23,14 @@ jobs:
 
       - name: Apply V0.9 Quran Husary patch
         run: |
-          python3 v0_9/apply_v09_patch.py \
-            extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+          cat v0_9/chunks/part00.b64 \
+              v0_9/chunks/part01.b64 \
+              v0_9/chunks/part02.b64 \
+              v0_9/chunks/part03.b64 \
+              v0_9/chunks/part04.b64 > v0_9/patch_v09.b64
+          base64 -d v0_9/patch_v09.b64 > v0_9/patch_v09.zip
+          unzip -t v0_9/patch_v09.zip
+          unzip -o -q v0_9/patch_v09.zip -d extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
