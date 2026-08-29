@@ -1,4 +1,4 @@
-name: Build AB Khatma V0.11 Calm Mushaf APK
+name: Build AB Khatma V0.12 Leader Dashboard APK
 
 on:
   workflow_dispatch:
@@ -52,6 +52,11 @@ jobs:
               v0_11/bin/part01.bin > v0_11/patch_v011.zip
           unzip -t v0_11/patch_v011.zip
           unzip -o -q v0_11/patch_v011.zip -d extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+
+      - name: Apply V0.12 leader dashboard patch
+        run: |
+          unzip -t v0_12/patch_v012.zip
+          unzip -o -q v0_12/patch_v012.zip -d extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
 
       - name: Fix Compose PaddingValues compatibility
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
@@ -155,7 +160,7 @@ jobs:
         run: |
           python3 tools/fetch_quran_content.py
 
-      - name: Verify V0.11 source
+      - name: Verify V0.12 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 tools/verify_project.py
@@ -164,7 +169,7 @@ jobs:
           test -s app/src/main/assets/quran/quran-moyassar.json
           test -s app/src/main/assets/quran/husary-audio.json
 
-      - name: Make V0.11 install-safe beside existing app
+      - name: Make V0.12 install-safe beside existing app
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 - <<'PY'
@@ -172,14 +177,14 @@ jobs:
           p = Path('app/build.gradle.kts')
           s = p.read_text(encoding='utf-8')
           old = 'applicationId = "com.ab.khatma"'
-          new = 'applicationId = "com.ab.khatma.v11preview"'
+          new = 'applicationId = "com.ab.khatma.v12preview"'
           if old not in s:
               raise SystemExit('applicationId anchor not found')
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
-          print('Install-safe applicationId: com.ab.khatma.v11preview')
+          print('Install-safe applicationId: com.ab.khatma.v12preview')
           PY
 
-      - name: Build V0.11 Install Safe with Railway Server
+      - name: Build V0.12 Install Safe with Railway Server
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
@@ -199,12 +204,12 @@ jobs:
         run: |
           cp \
             extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-            AB_Khatma_V0.11_CALM_MUSHAF_INSTALL_SAFE.apk
+            AB_Khatma_V0.12_LEADER_DASHBOARD_INSTALL_SAFE.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.11_CALM_MUSHAF_INSTALL_SAFE_APK
-          path: AB_Khatma_V0.11_CALM_MUSHAF_INSTALL_SAFE.apk
+          name: AB_Khatma_V0.12_LEADER_DASHBOARD_INSTALL_SAFE_APK
+          path: AB_Khatma_V0.12_LEADER_DASHBOARD_INSTALL_SAFE.apk
           if-no-files-found: error
           retention-days: 30
