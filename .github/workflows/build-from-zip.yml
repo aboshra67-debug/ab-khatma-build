@@ -43,6 +43,23 @@ jobs:
             "platforms;android-36" \
             "build-tools;36.0.0"
 
+      - name: Fix V0.8 Compose import
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/src/main/java/com/ab/khatma/ui/screens/HomeScreen.kt')
+          s = p.read_text(encoding='utf-8')
+          imp = 'import androidx.compose.runtime.CompositionLocalProvider\n'
+          if imp not in s:
+              anchor = 'import androidx.compose.runtime.Composable\n'
+              if anchor not in s:
+                  raise SystemExit('Composable import anchor not found')
+              s = s.replace(anchor, imp + anchor, 1)
+              p.write_text(s, encoding='utf-8')
+          print('CompositionLocalProvider import ready')
+          PY
+
       - name: Verify V0.8 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
@@ -57,7 +74,7 @@ jobs:
       - name: Verify APK signature
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
-          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose --print-certs \
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs \
             app/build/outputs/apk/debug/app-debug.apk
 
       - name: Check APK exists
