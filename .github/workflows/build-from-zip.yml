@@ -158,6 +158,23 @@ jobs:
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: python3 tools/fetch_quran_content.py
 
+      - name: Fix V0.13 verifier version
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('tools/verify_project.py')
+          s = p.read_text(encoding='utf-8')
+          old_code = "'versionCode 12': 'versionCode = 12' in app_gradle"
+          old_name = "'versionName 0.12.0': 'versionName = \"0.12.0\"' in app_gradle"
+          if old_code not in s or old_name not in s:
+              raise SystemExit('Expected V0.12 verifier anchors not found')
+          s = s.replace(old_code, "'versionCode 13': 'versionCode = 13' in app_gradle", 1)
+          s = s.replace(old_name, "'versionName 0.13.0': 'versionName = \"0.13.0\"' in app_gradle", 1)
+          p.write_text(s, encoding='utf-8')
+          print('Verifier updated to V0.13')
+          PY
+
       - name: Verify V0.13 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
