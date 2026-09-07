@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - temp-lulu-v51-transfer-bridge
-    paths:
-      - '.github/workflows/lulu-v51-public-transfer.yml'
 
 permissions:
   contents: write
