@@ -19,7 +19,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          URL='https://tmpfiles.org/dl/wTw9kF4m8f7f/ab_lulu_v5.1_salma_shakir_unsigned.apk'
+          URL='https://tmpfiles.org/dl/wUwh4owWogck/ab_lulu_v5.1_salma_shakir_unsigned.apk'
           curl -fL --retry 3 --retry-delay 2 "$URL" -o /tmp/AB_Lulu_V5.1_SALMA_SHAKIR_UNSIGNED.apk
           echo '3a8e85e1135fa183defbf76d880c57133215ffa96bc992e18f3be23b918bda24  /tmp/AB_Lulu_V5.1_SALMA_SHAKIR_UNSIGNED.apk' | sha256sum -c -
           test "$(stat -c %s /tmp/AB_Lulu_V5.1_SALMA_SHAKIR_UNSIGNED.apk)" = '3045099'
