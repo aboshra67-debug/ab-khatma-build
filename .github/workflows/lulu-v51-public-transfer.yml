@@ -1,0 +1,41 @@
+name: Lulu V5.1 Temporary Release Transfer
+
+on:
+  push:
+    branches:
+      - temp-lulu-v51-transfer-bridge
+    paths:
+      - '.github/workflows/lulu-v51-public-transfer.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: temp-lulu-v51-transfer-bridge
+      - name: Download exact verified unsigned APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://tmpfiles.org/dl/wTw9kF4m8f7f/ab_lulu_v5.1_salma_shakir_unsigned.apk'
+          curl -fL --retry 3 --retry-delay 2 "$URL" -o /tmp/AB_Lulu_V5.1_SALMA_SHAKIR_UNSIGNED.apk
+          echo '3a8e85e1135fa183defbf76d880c57133215ffa96bc992e18f3be23b918bda24  /tmp/AB_Lulu_V5.1_SALMA_SHAKIR_UNSIGNED.apk' | sha256sum -c -
+          test "$(stat -c %s /tmp/AB_Lulu_V5.1_SALMA_SHAKIR_UNSIGNED.apk)" = '3045099'
+      - name: Publish temporary release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='lulu-v51-unsigned-transfer-20260907'
+          gh release delete "$TAG" --yes --cleanup-tag >/dev/null 2>&1 || true
+          gh release create "$TAG" \
+            /tmp/AB_Lulu_V5.1_SALMA_SHAKIR_UNSIGNED.apk#AB_Lulu_V5.1_SALMA_SHAKIR_UNSIGNED.apk \
+            --target temp-lulu-v51-transfer-bridge \
+            --title 'Temporary Lulu V5.1 unsigned transfer' \
+            --notes 'Temporary verified transfer asset. SHA-256: 3a8e85e1135fa183defbf76d880c57133215ffa96bc992e18f3be23b918bda24'
+          gh release view "$TAG" --json url,assets
