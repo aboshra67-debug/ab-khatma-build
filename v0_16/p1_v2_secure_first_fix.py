@@ -38,6 +38,16 @@ replace_exact(
 )
 replace_exact("app/build.gradle.kts", "versionCode = 16\n        versionName = \"0.16.0\"",
               "versionCode = 17\n        versionName = \"0.16.1\"")
+replace_exact(
+    "tools/verify_project.py",
+    "'versionCode 16': 'versionCode = 16' in app_gradle",
+    "'versionCode 17': 'versionCode = 17' in app_gradle",
+)
+replace_exact(
+    "tools/verify_project.py",
+    "'versionName 0.16.0': 'versionName = \"0.16.0\"' in app_gradle",
+    "'versionName 0.16.1': 'versionName = \"0.16.1\"' in app_gradle",
+)
 assert "Screen.SecureV2" in Path(root + "ui/screens/AppRoot.kt").read_text()
 assert "if (!BuildConfig.V2_PREVIEW_ENABLED)" in Path(root + "AppViewModel.kt").read_text()
 print("PASS: Staging routes directly to authenticated V2; V1 startup sync disabled; version 0.16.1.")
