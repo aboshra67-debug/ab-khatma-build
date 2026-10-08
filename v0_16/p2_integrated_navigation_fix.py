@@ -102,6 +102,14 @@ exact('if (item.status == "active") {\n                                OutlinedB
       'if (item.status == "active") {\n                                OutlinedButton(onClick = {\n                                    if (chatGroupId')
 # Keep screen navigation explicit and stable across recreation and sessions.
 p.write_text(s, encoding="utf-8")
+build = Path("app/build.gradle.kts")
+b = build.read_text(encoding="utf-8")
+assert b.count('versionCode = 17') == 1 and b.count('versionName = "0.16.1"') == 1
+build.write_text(b.replace('versionCode = 17', 'versionCode = 18').replace('versionName = "0.16.1"', 'versionName = "0.16.2"'), encoding="utf-8")
+verifier = Path("tools/verify_project.py")
+v = verifier.read_text(encoding="utf-8")
+assert v.count("'versionCode 17'") == 1 and v.count("'versionName 0.16.1'") == 1
+verifier.write_text(v.replace("'versionCode 17'", "'versionCode 18'").replace("'versionName 0.16.1'", "'versionName 0.16.2'").replace("'versionCode = 17'", "'versionCode = 18'").replace('versionName = \\"0.16.1\\"', 'versionName = \\"0.16.2\\"'), encoding="utf-8")
 assert "الحساب الآمن التجريبي" not in s
 assert "section == \"group\"" in s
 assert "section = \"create\"" in s
