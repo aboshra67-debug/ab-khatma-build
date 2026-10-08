@@ -1,4 +1,4 @@
-name: Build AB Khatma V0.13 Auto Reminders APK
+name: Build AB Khatma V0.14 V2 Staging Linked Test APK
 
 on:
   workflow_dispatch:
@@ -285,18 +285,26 @@ jobs:
           p = Path('app/build.gradle.kts')
           s = p.read_text(encoding='utf-8')
           old = 'applicationId = "com.ab.khatma"'
-          new = 'applicationId = "com.ab.khatma.v14preview"'
+          new = 'applicationId = "com.ab.khatma.v14stage"'
           if old not in s:
               raise SystemExit('applicationId anchor not found')
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
-          print('Install-safe applicationId: com.ab.khatma.v14preview')
+          print('Install-safe applicationId: com.ab.khatma.v14stage')
           PY
 
-      - name: Build V0.14 Install Safe with Railway Server
+      - name: Verify V0.14 V2 staging-only URLs
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          test -s app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+          grep -q 'V2_PREVIEW_ENABLED' app/build.gradle.kts
+          grep -q 'versionCode = 14' app/build.gradle.kts
+
+      - name: Build V0.14 Linked to Isolated Railway V2 Staging
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
-            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app"
+            -PKHATMA_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
 
       - name: Verify APK signature
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
@@ -310,12 +318,12 @@ jobs:
       - name: Rename APK
         run: |
           cp extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-             AB_Khatma_V0.14_AUTO_REMINDERS_INSTALL_SAFE.apk
+             AB_Khatma_V0.14_V2_STAGING_LINKED_TEST.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.14_AUTO_REMINDERS_INSTALL_SAFE_APK
-          path: AB_Khatma_V0.14_AUTO_REMINDERS_INSTALL_SAFE.apk
+          name: AB_Khatma_V0.14_V2_STAGING_LINKED_TEST_APK
+          path: AB_Khatma_V0.14_V2_STAGING_LINKED_TEST.apk
           if-no-files-found: error
           retention-days: 30
