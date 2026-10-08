@@ -1,4 +1,4 @@
-name: Build Khatma V0.17 Page Khatma Staging Test
+name: Build Khatma V0.17 P4 Pages Chat Staging Test
 
 on:
   workflow_dispatch:
@@ -8,6 +8,7 @@ on:
       - 'v0_14/**'
       - 'v0_15/**'
       - 'v0_16/**'
+      - 'v0_17/**'
   push:
     branches:
       - main
@@ -278,6 +279,32 @@ jobs:
           grep -q 'versionCode = 19' app/build.gradle.kts
           test -s app/src/main/java/com/ab/khatma/secure/PagePlanner.kt
 
+      - name: Apply V0.17 P4 private chat controls
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_17/p4_chat_actions.py"
+          python3 "$GITHUB_WORKSPACE/v0_17/p4_chat_ui.py"
+          python3 - <<'PY'
+          from pathlib import Path
+          g = Path('app/build.gradle.kts')
+          content = g.read_text(encoding='utf-8')
+          assert content.count('versionCode = 19') == 1
+          assert content.count('versionName = "0.17.0-beta"') == 1
+          content = content.replace('versionCode = 19', 'versionCode = 20')
+          content = content.replace('versionName = "0.17.0-beta"', 'versionName = "0.17.1-beta"')
+          g.write_text(content, encoding='utf-8')
+          v = Path('tools/verify_project.py')
+          checks = v.read_text(encoding='utf-8')
+          assert 'versionCode 19' in checks and '0.17.0-beta' in checks
+          checks = checks.replace('versionCode 19', 'versionCode 20').replace('versionCode = 19', 'versionCode = 20')
+          checks = checks.replace('0.17.0-beta', '0.17.1-beta')
+          v.write_text(checks, encoding='utf-8')
+          PY
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 20' app/build.gradle.kts
+          grep -q 'SecureV2Api.deleteMessage' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+
       - name: Verify V0.16 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
@@ -296,7 +323,7 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root = Path("extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out = Path("AB_Khatma_V0.17_P3_SAFE_SOURCE.zip")
+          out = Path("AB_Khatma_V0.17_P4_SAFE_SOURCE.zip")
           assert (root / "app/build.gradle.kts").is_file()
           assert (root / "app/src/main/assets/quran/quran-uthmani.json").is_file()
           excluded_dirs = {".git", ".gradle", "build", "__pycache__", ".idea"}
@@ -327,8 +354,8 @@ jobs:
       - name: Upload verified V0.16 Safe Source
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.17_P3_SAFE_SOURCE
-          path: AB_Khatma_V0.17_P3_SAFE_SOURCE.zip
+          name: AB_Khatma_V0.17_P4_SAFE_SOURCE
+          path: AB_Khatma_V0.17_P4_SAFE_SOURCE.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -340,7 +367,7 @@ jobs:
           p = Path('app/build.gradle.kts')
           s = p.read_text(encoding='utf-8')
           old = 'applicationId = "com.ab.khatma"'
-          new = 'applicationId = "com.ab.khatma.v17pagetest"'
+          new = 'applicationId = "com.ab.khatma.v17p4staging"'
           if old not in s:
               raise SystemExit('applicationId anchor not found')
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
@@ -366,12 +393,12 @@ jobs:
       - name: Rename APK
         run: |
           cp extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-             AB_Khatma_V0.17_P3_PAGE_KHATMA_STAGING_TEST.apk
+             AB_Khatma_V0.17_P4_PAGES_CHAT_STAGING_TEST.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.17_P3_PAGE_KHATMA_STAGING_TEST_APK
-          path: AB_Khatma_V0.17_P3_PAGE_KHATMA_STAGING_TEST.apk
+          name: AB_Khatma_V0.17_P4_PAGES_CHAT_STAGING_TEST_APK
+          path: AB_Khatma_V0.17_P4_PAGES_CHAT_STAGING_TEST.apk
           if-no-files-found: error
           retention-days: 30
