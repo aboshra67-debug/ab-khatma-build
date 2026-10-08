@@ -204,7 +204,22 @@ jobs:
           print('Leader verifier compatibility ready')
           PY
 
-      - name: Verify V0.13 source
+      - name: Apply V0.14 opt-in secure client patch
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          base64 -d "$GITHUB_WORKSPACE/v0_14/v014_secure_client_patch.b64" > /tmp/khatma_v014_patch.zip
+          unzip -t /tmp/khatma_v014_patch.zip
+          unzip -o -q /tmp/khatma_v014_patch.zip -d .
+          git apply --check v014_existing_files.patch
+          git apply v014_existing_files.patch
+          test -s app/src/main/java/com/ab/khatma/secure/SecureV2Api.kt
+          test -s app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+          grep -q 'versionCode = 14' app/build.gradle.kts
+          grep -q 'V2_PREVIEW_ENABLED' app/build.gradle.kts
+          python3 tools/verify_project.py
+
+      - name: Verify V0.14 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 tools/verify_project.py
@@ -216,13 +231,13 @@ jobs:
           test -s app/src/main/java/com/ab/khatma/reminders/ReadingReminderScheduler.kt
 
       # Non-destructive recovery artifact: created before the preview applicationId is changed.
-      - name: Archive verified V0.13 Safe Source
+      - name: Archive verified V0.14 Safe Source
         run: |
           python3 - <<'PY'
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root = Path("extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out = Path("AB_Khatma_V0.13_RECOVERED_SAFE_SOURCE.zip")
+          out = Path("AB_Khatma_V0.14_RECOVERED_SAFE_SOURCE.zip")
           assert (root / "app/build.gradle.kts").is_file()
           assert (root / "app/src/main/assets/quran/quran-uthmani.json").is_file()
           excluded_dirs = {".git", ".gradle", "build", "__pycache__", ".idea"}
@@ -238,7 +253,7 @@ jobs:
           assert files, "No project source files found"
           with ZipFile(out, "w", compression=ZIP_DEFLATED, compresslevel=6) as z:
               z.writestr("RECOVERY_README.txt",
-                         "AB Khatma V0.13 source reconstructed from V0.8 and V0.9-V0.13 "
+                         "AB Khatma V0.14 source reconstructed from V0.8 and V0.9-V0.14 "
                          "GitHub patch chain.\nThis archive precedes the separate preview "
                          "applicationId change.\nNo signing keys included.\n"
                          "Build and test before release; signing identity must be retained for "
@@ -250,15 +265,15 @@ jobs:
           print("Recovered source ZIP:", out, "files:", len(files), "bytes:", out.stat().st_size)
           PY
 
-      - name: Upload verified V0.13 Safe Source
+      - name: Upload verified V0.14 Safe Source
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.13_RECOVERED_SAFE_SOURCE
-          path: AB_Khatma_V0.13_RECOVERED_SAFE_SOURCE.zip
+          name: AB_Khatma_V0.14_RECOVERED_SAFE_SOURCE
+          path: AB_Khatma_V0.14_RECOVERED_SAFE_SOURCE.zip
           if-no-files-found: error
           retention-days: 30
 
-      - name: Make V0.13 install-safe beside existing app
+      - name: Make V0.14 install-safe beside existing app
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 - <<'PY'
@@ -266,14 +281,14 @@ jobs:
           p = Path('app/build.gradle.kts')
           s = p.read_text(encoding='utf-8')
           old = 'applicationId = "com.ab.khatma"'
-          new = 'applicationId = "com.ab.khatma.v13preview"'
+          new = 'applicationId = "com.ab.khatma.v14preview"'
           if old not in s:
               raise SystemExit('applicationId anchor not found')
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
-          print('Install-safe applicationId: com.ab.khatma.v13preview')
+          print('Install-safe applicationId: com.ab.khatma.v14preview')
           PY
 
-      - name: Build V0.13 Install Safe with Railway Server
+      - name: Build V0.14 Install Safe with Railway Server
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
@@ -291,12 +306,12 @@ jobs:
       - name: Rename APK
         run: |
           cp extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-             AB_Khatma_V0.13_AUTO_REMINDERS_INSTALL_SAFE.apk
+             AB_Khatma_V0.14_AUTO_REMINDERS_INSTALL_SAFE.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.13_AUTO_REMINDERS_INSTALL_SAFE_APK
-          path: AB_Khatma_V0.13_AUTO_REMINDERS_INSTALL_SAFE.apk
+          name: AB_Khatma_V0.14_AUTO_REMINDERS_INSTALL_SAFE_APK
+          path: AB_Khatma_V0.14_AUTO_REMINDERS_INSTALL_SAFE.apk
           if-no-files-found: error
           retention-days: 30
