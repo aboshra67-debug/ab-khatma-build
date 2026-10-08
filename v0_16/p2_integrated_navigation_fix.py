@@ -87,7 +87,7 @@ exact('                items(groups, key = { it.groupId }) { item ->',
       '                items(groups.filter { section == "home" || (section == "group" && it.groupId == selectedGroupId) }, key = { it.groupId }) { item ->')
 exact('                            OutlinedButton(onClick = { onOpenQuran(item.juz) }) { Text("قراءة الجزء في المصحف") }',
       '                            if (section == "home") {\n'
-      '                                Button(onClick = { selectedGroupId = item.groupId; section = "group"; groupInfo = null; chatGroupId = null; planGroupId = null }) {\n'
+      '                                Button(onClick = { selectedGroupId = item.groupId; section = "group"; groupInfo = null; chatGroupId = null }) {\n'
       '                                    Text(if (item.status == "active") "فتح المجموعة" else "متابعة طلب الانضمام")\n'
       '                                }\n'
       '                            } else {\n'
