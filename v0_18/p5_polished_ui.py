@@ -227,7 +227,7 @@ replace('''                            } else if (item.completed) Text("✓ تم
 # Existing group chat section keeps its state + all actions. Open automatically from tab.
 start=s.index('''                                OutlinedButton(onClick = {
                                     if (chatGroupId == item.groupId) {''')
-end=s.index('''                                if (chatGroupId == item.groupId) {''',start)
+end=s.index('''                                if (chatGroupId == item.groupId) {\n                                    Text(''',start)
 s=s[:start]+'''                                Text("محادثة المجموعة",
                                     style = MaterialTheme.typography.titleMedium)
 '''+s[end:]
