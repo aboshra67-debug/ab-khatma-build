@@ -385,6 +385,23 @@ jobs:
           print('Install-safe applicationId: com.ab.khatma.v16updatestage')
           PY
 
+      - name: Bind staging launcher to original Kotlin package
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/AndroidManifest.xml')
+          s=p.read_text(encoding='utf-8')
+          assert s.count('android:name=".MainActivity"') == 1
+          assert s.count('android:name=".KhatmaApplication"') == 1
+          s=s.replace('android:name=".MainActivity"',
+                      'android:name="com.ab.khatma.MainActivity"')
+          s=s.replace('android:name=".KhatmaApplication"',
+                      'android:name="com.ab.khatma.KhatmaApplication"')
+          p.write_text(s,encoding='utf-8')
+          print('PASS staging manifest points to real Kotlin launcher and application classes')
+          PY
+
       - name: Build V0.16 Install Safe with Railway Server
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
@@ -436,7 +453,7 @@ jobs:
             adb shell pidof com.ab.khatma.v18p5design
             adb shell uiautomator dump /sdcard/window.xml
             adb pull /sdcard/window.xml khatma-window.xml
-            grep -q "أهلًا بك في ختمة" khatma-window.xml
+            grep -q "أنشئ حسابك" khatma-window.xml
             ! grep -q "Upgrade to the authenticated V2 API" khatma-window.xml
             adb shell screencap -p /sdcard/khatma-start.png
             adb pull /sdcard/khatma-start.png khatma-start.png
