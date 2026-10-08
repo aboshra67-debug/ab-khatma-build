@@ -110,6 +110,13 @@ verifier = Path("tools/verify_project.py")
 v = verifier.read_text(encoding="utf-8")
 assert v.count("'versionCode 17'") == 1 and v.count("'versionName 0.16.1'") == 1
 verifier.write_text(v.replace("'versionCode 17'", "'versionCode 18'").replace("'versionName 0.16.1'", "'versionName 0.16.2'").replace("'versionCode = 17'", "'versionCode = 18'").replace('versionName = \\"0.16.1\\"', 'versionName = \\"0.16.2\\"'), encoding="utf-8")
+verifier_path = Path("tools/verify_project.py")
+verified = verifier_path.read_text(encoding="utf-8")
+if 'versionName = \\"0.16.1\\"' in verified:
+    verified = verified.replace('versionName = \\"0.16.1\\"', 'versionName = \\"0.16.2\\"')
+if "0.16.1" in verified:
+    verified = verified.replace("0.16.1", "0.16.2")
+verifier_path.write_text(verified, encoding="utf-8")
 assert "الحساب الآمن التجريبي" not in s
 assert "section == \"group\"" in s
 assert "section = \"create\"" in s
