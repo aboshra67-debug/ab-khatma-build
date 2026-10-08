@@ -402,3 +402,44 @@ jobs:
           path: AB_Khatma_V0.17_P4_PAGES_CHAT_STAGING_TEST.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Configure KVM permissions for Android emulator
+        run: |
+          sudo sh -c 'echo KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm" > /etc/udev/rules.d/99-kvm4all.rules'
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Emulator smoke test of actual signed APK startup
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            set -e
+            adb install -r AB_Khatma_V0.17_P4_PAGES_CHAT_STAGING_TEST.apk
+            adb shell am start -n com.ab.khatma.v17p4staging/com.ab.khatma.MainActivity
+            sleep 12
+            adb shell pidof com.ab.khatma.v17p4staging
+            adb shell uiautomator dump /sdcard/window.xml
+            adb pull /sdcard/window.xml khatma-window.xml
+            grep -q "أهلًا بك في ختمة" khatma-window.xml
+            ! grep -q "Upgrade to the authenticated V2 API" khatma-window.xml
+            adb shell screencap -p /sdcard/khatma-start.png
+            adb pull /sdcard/khatma-start.png khatma-start.png
+            adb logcat -d -v brief > khatma-emulator-logcat.txt
+            ! grep -q "FATAL EXCEPTION" khatma-emulator-logcat.txt
+
+      - name: Upload emulator visual and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB_Khatma_V0.17_P4_EmulatorStartup
+          path: |
+            khatma-start.png
+            khatma-window.xml
+            khatma-emulator-logcat.txt
+          if-no-files-found: warn
+          retention-days: 7
