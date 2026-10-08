@@ -277,7 +277,7 @@ fun PagePlanner(token: String, groupId: Long, leader: Boolean, onRead: () -> Uni
                             val copy = copyNumber.toIntOrNull() ?: 0
                             check(copy > 0) { "رقم النسخة غير صحيح" }
                             withContext(Dispatchers.IO) {
-                                PageApi.manual(token, plan.id, member, safeDate, copy, start, end)
+                                PageApi.manual(token, selected?.id ?: error("اختر الختمة"), member, safeDate, copy, start, end)
                             }
                             refresh()
                             notice = "تم إنشاء التكليف، مع منع تكرار الصفحات"
@@ -288,7 +288,7 @@ fun PagePlanner(token: String, groupId: Long, leader: Boolean, onRead: () -> Uni
             if (leader && selected?.mode == "auto") {
                 OutlinedButton(onClick = { work {
                     val date = LocalDate.parse(taskDate).toString()
-                    withContext(Dispatchers.IO) { PageApi.schedule(token, plan.id, date) }
+                    withContext(Dispatchers.IO) { PageApi.schedule(token, selected?.id ?: error("اختر الختمة"), date) }
                     refresh()
                     notice = "تمت جدولة اليوم"
                 } }, enabled = !running) { Text("إنشاء جدول يوم محدد") }
