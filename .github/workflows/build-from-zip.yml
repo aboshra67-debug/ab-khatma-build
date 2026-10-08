@@ -1,4 +1,4 @@
-name: Build Khatma V0.16 Central Updates Staging Preview
+name: Build Khatma V0.16 P1 Authenticated Start Staging
 
 on:
   workflow_dispatch:
@@ -250,6 +250,16 @@ jobs:
           grep -q 'UpdateGate()' app/src/main/java/com/ab/khatma/MainActivity.kt
           python3 tools/verify_project.py
 
+      - name: Apply V0.16 P1 secure-first startup fix
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_16/p1_v2_secure_first_fix.py"
+          grep -q 'versionCode = 17' app/build.gradle.kts
+          grep -q 'if (BuildConfig.V2_PREVIEW_ENABLED) Screen.SecureV2' app/src/main/java/com/ab/khatma/ui/screens/AppRoot.kt
+          grep -q 'if (!BuildConfig.V2_PREVIEW_ENABLED)' app/src/main/java/com/ab/khatma/AppViewModel.kt
+          python3 tools/verify_project.py
+
       - name: Verify V0.16 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
@@ -268,7 +278,7 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root = Path("extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out = Path("AB_Khatma_V0.16_RECOVERED_SAFE_SOURCE.zip")
+          out = Path("AB_Khatma_V0.16_P1_RECOVERED_SAFE_SOURCE.zip")
           assert (root / "app/build.gradle.kts").is_file()
           assert (root / "app/src/main/assets/quran/quran-uthmani.json").is_file()
           excluded_dirs = {".git", ".gradle", "build", "__pycache__", ".idea"}
@@ -299,8 +309,8 @@ jobs:
       - name: Upload verified V0.16 Safe Source
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.16_RECOVERED_SAFE_SOURCE
-          path: AB_Khatma_V0.16_RECOVERED_SAFE_SOURCE.zip
+          name: AB_Khatma_V0.16_P1_RECOVERED_SAFE_SOURCE
+          path: AB_Khatma_V0.16_P1_RECOVERED_SAFE_SOURCE.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -312,7 +322,7 @@ jobs:
           p = Path('app/build.gradle.kts')
           s = p.read_text(encoding='utf-8')
           old = 'applicationId = "com.ab.khatma"'
-          new = 'applicationId = "com.ab.khatma.v16updatestage"'
+          new = 'applicationId = "com.ab.khatma.v16p1authstage"'
           if old not in s:
               raise SystemExit('applicationId anchor not found')
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
@@ -338,12 +348,12 @@ jobs:
       - name: Rename APK
         run: |
           cp extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-             AB_Khatma_V0.16_CENTRAL_UPDATES_STAGING_PREVIEW.apk
+             AB_Khatma_V0.16_P1_SECURE_ENTRY_STAGING_PREVIEW.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.16_CENTRAL_UPDATES_STAGING_PREVIEW_APK
-          path: AB_Khatma_V0.16_CENTRAL_UPDATES_STAGING_PREVIEW.apk
+          name: AB_Khatma_V0.16_P1_SECURE_ENTRY_STAGING_PREVIEW_APK
+          path: AB_Khatma_V0.16_P1_SECURE_ENTRY_STAGING_PREVIEW.apk
           if-no-files-found: error
           retention-days: 30
