@@ -1,4 +1,4 @@
-name: Build AB Khatma V0.13 Auto Reminders APK
+name: Build Khatma V0.15 Staging Share and Group Chat APK
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/build-from-zip.yml'
       - 'v0_14/**'
+      - 'v0_15/**'
   push:
     branches:
       - main
@@ -223,7 +224,18 @@ jobs:
           grep -q 'V2_PREVIEW_ENABLED' app/build.gradle.kts
           python3 tools/verify_project.py
 
-      - name: Verify V0.14 source
+      - name: Apply V0.15 share-invite and protected chat safe patch
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          base64 -d "$GITHUB_WORKSPACE/v0_15/khatma_v015_share_chat_final.b64" > /tmp/khatma_v015_patch.zip
+          unzip -t /tmp/khatma_v015_patch.zip
+          unzip -o -q /tmp/khatma_v015_patch.zip -d .
+          grep -q 'versionCode = 15' app/build.gradle.kts
+          grep -q 'fun messages(token' app/src/main/java/com/ab/khatma/secure/SecureV2Api.kt
+          grep -q 'مشاركة الدعوة' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+
+      - name: Verify V0.15 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 tools/verify_project.py
@@ -235,13 +247,13 @@ jobs:
           test -s app/src/main/java/com/ab/khatma/reminders/ReadingReminderScheduler.kt
 
       # Non-destructive recovery artifact: created before the preview applicationId is changed.
-      - name: Archive verified V0.14 Safe Source
+      - name: Archive verified V0.15 Safe Source
         run: |
           python3 - <<'PY'
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root = Path("extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out = Path("AB_Khatma_V0.14_RECOVERED_SAFE_SOURCE.zip")
+          out = Path("AB_Khatma_V0.15_RECOVERED_SAFE_SOURCE.zip")
           assert (root / "app/build.gradle.kts").is_file()
           assert (root / "app/src/main/assets/quran/quran-uthmani.json").is_file()
           excluded_dirs = {".git", ".gradle", "build", "__pycache__", ".idea"}
@@ -257,7 +269,7 @@ jobs:
           assert files, "No project source files found"
           with ZipFile(out, "w", compression=ZIP_DEFLATED, compresslevel=6) as z:
               z.writestr("RECOVERY_README.txt",
-                         "AB Khatma V0.14 source reconstructed from V0.8 and V0.9-V0.14 "
+                         "AB Khatma V0.15 source reconstructed from V0.8 and V0.9-V0.15 "
                          "GitHub patch chain.\nThis archive precedes the separate preview "
                          "applicationId change.\nNo signing keys included.\n"
                          "Build and test before release; signing identity must be retained for "
@@ -269,15 +281,15 @@ jobs:
           print("Recovered source ZIP:", out, "files:", len(files), "bytes:", out.stat().st_size)
           PY
 
-      - name: Upload verified V0.14 Safe Source
+      - name: Upload verified V0.15 Safe Source
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.14_RECOVERED_SAFE_SOURCE
-          path: AB_Khatma_V0.14_RECOVERED_SAFE_SOURCE.zip
+          name: AB_Khatma_V0.15_RECOVERED_SAFE_SOURCE
+          path: AB_Khatma_V0.15_RECOVERED_SAFE_SOURCE.zip
           if-no-files-found: error
           retention-days: 30
 
-      - name: Make V0.14 install-safe beside existing app
+      - name: Make V0.15 install-safe beside existing app
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 - <<'PY'
@@ -285,18 +297,19 @@ jobs:
           p = Path('app/build.gradle.kts')
           s = p.read_text(encoding='utf-8')
           old = 'applicationId = "com.ab.khatma"'
-          new = 'applicationId = "com.ab.khatma.v14preview"'
+          new = 'applicationId = "com.ab.khatma.v15chatstage"'
           if old not in s:
               raise SystemExit('applicationId anchor not found')
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
-          print('Install-safe applicationId: com.ab.khatma.v14preview')
+          print('Install-safe applicationId: com.ab.khatma.v15chatstage')
           PY
 
-      - name: Build V0.14 Install Safe with Railway Server
+      - name: Build V0.15 Install Safe with Railway Server
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
-            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app"
+            -PKHATMA_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
 
       - name: Verify APK signature
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
@@ -310,12 +323,12 @@ jobs:
       - name: Rename APK
         run: |
           cp extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-             AB_Khatma_V0.14_AUTO_REMINDERS_INSTALL_SAFE.apk
+             AB_Khatma_V0.15_AUTO_REMINDERS_INSTALL_SAFE.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.14_AUTO_REMINDERS_INSTALL_SAFE_APK
-          path: AB_Khatma_V0.14_AUTO_REMINDERS_INSTALL_SAFE.apk
+          name: AB_Khatma_V0.15_AUTO_REMINDERS_INSTALL_SAFE_APK
+          path: AB_Khatma_V0.15_AUTO_REMINDERS_INSTALL_SAFE.apk
           if-no-files-found: error
           retention-days: 30
