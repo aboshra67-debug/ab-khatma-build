@@ -226,6 +226,7 @@ old_tail='''                            } // detail-only actions
     }
     }
 }'''
+s = s.rstrip()
 assert s.endswith(old_tail), "Unrecognized layout nesting"
 s=s[:-len(old_tail)]+'''                            } // detail-only actions
                         }
