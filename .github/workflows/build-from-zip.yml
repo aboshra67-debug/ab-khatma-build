@@ -108,12 +108,19 @@ jobs:
         with:
           gradle-version: '9.5.0'
 
-      - name: Verify preinstalled Android SDK (avoid removed legacy tools package)
+      - name: Configure preinstalled Android SDK command-line tools
         run: |
-          echo "ANDROID_HOME=${ANDROID_HOME:-}"
-          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-}"
-          command -v sdkmanager
-          sdkmanager --version
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          test -d "$SDK_ROOT"
+          if [ -x "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          else
+            SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          fi
+          test -n "$SDKMANAGER" && test -x "$SDKMANAGER"
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
+          "$SDKMANAGER" --version
 
       - name: Install Android SDK 36
         run: |
