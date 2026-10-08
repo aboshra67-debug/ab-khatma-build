@@ -84,7 +84,7 @@ fun PremiumLoginPanel(
             contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource(R.mipmap.ic_launcher),
+                painter = painterResource(R.drawable.ab_khatma_mark),
                 contentDescription = "شعار ختمة",
                 modifier = Modifier.size(91.dp)
             )
