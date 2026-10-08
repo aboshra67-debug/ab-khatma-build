@@ -204,6 +204,49 @@ jobs:
           test -s app/src/main/java/com/ab/khatma/reminders/ReadingReminderWorker.kt
           test -s app/src/main/java/com/ab/khatma/reminders/ReadingReminderScheduler.kt
 
+      # Non-destructive recovery artifact: created before the preview applicationId is changed.
+      - name: Archive verified V0.13 Safe Source
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          root = Path("extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
+          out = Path("AB_Khatma_V0.13_RECOVERED_SAFE_SOURCE.zip")
+          assert (root / "app/build.gradle.kts").is_file()
+          assert (root / "app/src/main/assets/quran/quran-uthmani.json").is_file()
+          excluded_dirs = {".git", ".gradle", "build", "__pycache__", ".idea"}
+          sensitive_suffixes = {".keystore", ".jks", ".p12", ".pem", ".key"}
+          files = [
+              p for p in root.rglob("*")
+              if p.is_file()
+              and not (set(p.relative_to(root).parts) & excluded_dirs)
+              and not p.name.startswith(".env")
+              and p.name != "local.properties"
+              and p.suffix.lower() not in sensitive_suffixes
+          ]
+          assert files, "No project source files found"
+          with ZipFile(out, "w", compression=ZIP_DEFLATED, compresslevel=6) as z:
+              z.writestr("RECOVERY_README.txt",
+                         "AB Khatma V0.13 source reconstructed from V0.8 and V0.9-V0.13 "
+                         "GitHub patch chain.\nThis archive precedes the separate preview "
+                         "applicationId change.\nNo signing keys included.\n"
+                         "Build and test before release; signing identity must be retained for "
+                         "an in-place update.\n")
+              for p in sorted(files):
+                  z.write(p, p.relative_to(root.parent).as_posix())
+          with ZipFile(out) as z:
+              assert z.testzip() is None, "Source ZIP corrupted"
+          print("Recovered source ZIP:", out, "files:", len(files), "bytes:", out.stat().st_size)
+          PY
+
+      - name: Upload verified V0.13 Safe Source
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB_Khatma_V0.13_RECOVERED_SAFE_SOURCE
+          path: AB_Khatma_V0.13_RECOVERED_SAFE_SOURCE.zip
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Make V0.13 install-safe beside existing app
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
