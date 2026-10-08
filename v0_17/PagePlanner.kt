@@ -78,6 +78,15 @@ private object PageApi {
             .put("scheduling", schedule).put("assignment_mode", distribution)
             .put("repeat_mode", "manual"))
     }
+    fun manual(t: String, runId: Long, member: Long, date: String, copy: Int, a: Int, b: Int) {
+        call(t, "/runs/$runId/manual-task", "POST", JSONObject()
+            .put("membership_id", member).put("reading_date", date)
+            .put("copy_number", copy).put("start_page", a).put("end_page", b))
+    }
+    fun schedule(t: String, runId: Long, date: String) {
+        val iso = LocalDate.parse(date).toString()
+        call(t, "/runs/$runId/schedule-day?day=$iso", "POST")
+    }
     fun save(t: String, task: Long, last: Int) {
         call(t, "/tasks/$task/progress", "POST", JSONObject().put("completed_through", last))
     }
@@ -99,6 +108,13 @@ fun PagePlanner(token: String, groupId: Long, leader: Boolean, onRead: () -> Uni
     var goal by remember { mutableStateOf("once") }
     var schedule by remember { mutableStateOf("full") }
     var distribution by remember { mutableStateOf("auto") }
+    var people by remember(groupId) { mutableStateOf<List<SecureV2Api.MemberInfo>>(emptyList()) }
+    var memberDropdown by remember { mutableStateOf(false) }
+    var chosenMember by remember { mutableStateOf<SecureV2Api.MemberInfo?>(null) }
+    var taskStart by remember { mutableStateOf("1") }
+    var taskEnd by remember { mutableStateOf("20") }
+    var taskDate by remember { mutableStateOf(LocalDate.now().toString()) }
+    var copyNumber by remember { mutableStateOf("1") }
 
     suspend fun refresh() {
         val newPlans = withContext(Dispatchers.IO) { PageApi.runs(token, groupId) }
@@ -121,7 +137,14 @@ fun PagePlanner(token: String, groupId: Long, leader: Boolean, onRead: () -> Uni
         }
     }
     LaunchedEffect(token, groupId) {
-        work { refresh() }
+        work {
+            refresh()
+            if (leader) {
+                people = withContext(Dispatchers.IO) {
+                    SecureV2Api.groupStatus(token, groupId).members
+                }
+            }
+        }
     }
 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -219,8 +242,58 @@ fun PagePlanner(token: String, groupId: Long, leader: Boolean, onRead: () -> Uni
             }
             OutlinedButton(onClick = onRead) { Text("فتح المصحف") }
             if (leader && selected?.mode == "manual") {
-                Text("التوزيع اليدوي متاح من واجهة القائد في التحديث التالي.",
-                    style = MaterialTheme.typography.bodySmall)
+                ElevatedCard {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("تكليف يدوي بالصفحات", style = MaterialTheme.typography.titleMedium)
+                        Box {
+                            OutlinedButton(onClick = { memberDropdown = true }) {
+                                Text(chosenMember?.name ?: "اختيار العضو")
+                            }
+                            DropdownMenu(expanded = memberDropdown, onDismissRequest = { memberDropdown = false }) {
+                                people.forEach { person ->
+                                    DropdownMenuItem(text = { Text(person.name) }, onClick = {
+                                        chosenMember = person
+                                        memberDropdown = false
+                                    })
+                                }
+                            }
+                        }
+                        OutlinedTextField(taskDate, { taskDate = it.take(10) },
+                            label = { Text("تاريخ التكليف YYYY-MM-DD") }, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(copyNumber, { copyNumber = it.filter(Char::isDigit).take(3) },
+                            label = { Text("رقم النسخة: 1 للختمة الواحدة") }, modifier = Modifier.fillMaxWidth())
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            OutlinedTextField(taskStart, { taskStart = it.filter(Char::isDigit).take(3) },
+                                label = { Text("من صفحة") }, modifier = Modifier.weight(1f))
+                            OutlinedTextField(taskEnd, { taskEnd = it.filter(Char::isDigit).take(3) },
+                                label = { Text("إلى صفحة") }, modifier = Modifier.weight(1f))
+                        }
+                        Button(onClick = { work {
+                            val member = chosenMember?.id ?: error("اختر العضو")
+                            val start = taskStart.toIntOrNull() ?: 0
+                            val end = taskEnd.toIntOrNull() ?: 0
+                            check(start in 1..604 && end in start..604) { "مدى الصفحات غير صحيح" }
+                            val safeDate = LocalDate.parse(taskDate).toString()
+                            val copy = copyNumber.toIntOrNull() ?: 0
+                            check(copy > 0) { "رقم النسخة غير صحيح" }
+                            withContext(Dispatchers.IO) {
+                                PageApi.manual(token, plan.id, member, safeDate, copy, start, end)
+                            }
+                            refresh()
+                            notice = "تم إنشاء التكليف، مع منع تكرار الصفحات"
+                        } }, enabled = !running) { Text("إضافة التكليف") }
+                    }
+                }
+            }
+            if (leader && selected?.mode == "auto") {
+                OutlinedButton(onClick = { work {
+                    val date = LocalDate.parse(taskDate).toString()
+                    withContext(Dispatchers.IO) { PageApi.schedule(token, plan.id, date) }
+                    refresh()
+                    notice = "تمت جدولة اليوم"
+                } }, enabled = !running) { Text("إنشاء جدول يوم محدد") }
+                OutlinedTextField(taskDate, { taskDate = it.take(10) },
+                    label = { Text("تاريخ اليوم المراد جدولته") }, modifier = Modifier.fillMaxWidth())
             }
         }
     }
