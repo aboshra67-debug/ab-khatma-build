@@ -52,11 +52,40 @@ jobs:
           unzip -t p19_source.zip | tail -n 1
           mkdir -p p19_src
           unzip -q p19_source.zip -d p19_src
+      - name: Restore public Android client settings from known-working P18
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/p19-browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({acceptDownloads:true});
+            await page.goto('https://firestorage.ai/ja/f/LbThokuWeZ0M',{waitUntil:'domcontentloaded',timeout:60000});
+            await page.getByRole('button',{name:'ダウンロード',exact:true}).waitFor({state:'visible',timeout:60000});
+            const [download]=await Promise.all([
+              page.waitForEvent('download',{timeout:60000}),
+              page.getByRole('button',{name:'ダウンロード',exact:true}).click()
+            ]);
+            await download.saveAs('android_public_config.zip');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)})
+          JS
+          echo '47975628483fae63d69b84464f3a01349fb7560ff91744c54f6c4d746e9b607c  android_public_config.zip' | sha256sum -c -
+          unzip -q android_public_config.zip -d /tmp/khatma-client-settings
+          test -s /tmp/khatma-client-settings/android_client_config.txt
       - name: Verify P19 source and build Android
         working-directory: p19_src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           python3 tools/verify_project.py
+          set -a
+          . /tmp/khatma-client-settings/android_client_config.txt
+          set +a
+          test -n "$KHATMA_FIREBASE_API_KEY"
+          test -n "$KHATMA_FIREBASE_APP_ID"
+          test -n "$KHATMA_GOOGLE_WEB_CLIENT_ID"
           gradle --no-daemon --stacktrace :app:assembleDebug \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
             -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
             -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
           find app/build/outputs/apk -type f -name '*.apk' -print
