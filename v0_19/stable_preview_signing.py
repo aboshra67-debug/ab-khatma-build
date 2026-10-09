@@ -14,7 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-EXPECTED_SHA256 = "3248c1ebdd2973a992a453919a4207317cdecf4cf0c7e8dc28dd7d9a5468b41"
+EXPECTED_SHA256 = "3248c1ebdd2973a992a453919a4207317cdecfc4cf0c7e8dc28dd7d9a5468b41"
 ALIAS = "khatma_preview"
 
 
