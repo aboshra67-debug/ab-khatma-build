@@ -53,6 +53,15 @@ edit(p,'''                Text(userName, style = MaterialTheme.typography.titleL
                 HorizontalDivider()
                 Text("رقم الحساب: " + id)''')
 u=root/"SecureV2Screen.kt"
+edit(u,'''    fun reload() = runTask {
+        val s = session ?: return@runTask
+        groups = withContext(Dispatchers.IO) { SecureV2Api.today(s.token) }
+    }''','''    fun reload() = runTask {
+        val s = session ?: return@runTask
+        val fresh = withContext(Dispatchers.IO) { SecureV2Api.today(s.token) }
+        groups = fresh
+        groupsLoaded = true
+    }''')
 edit(u,'''    var groups by remember { mutableStateOf<List<SecureV2Api.TodayItem>>(emptyList()) }''',
 '''    var groups by remember { mutableStateOf<List<SecureV2Api.TodayItem>>(emptyList()) }
     var groupsLoaded by remember { mutableStateOf(false) }''')
