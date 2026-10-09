@@ -14,6 +14,10 @@ def safe(path, before, after):
 
 layout=root/"KhatmaVisualHome.kt"
 safe(layout,
+ 'import androidx.compose.runtime.Composable',
+ 'import androidx.compose.runtime.Composable\n'
+ 'import androidx.compose.runtime.CompositionLocalProvider')
+safe(layout,
  'import androidx.compose.ui.platform.LocalConfiguration',
  'import androidx.compose.ui.platform.LocalConfiguration\n'
  'import androidx.compose.ui.platform.LocalLayoutDirection\n'
