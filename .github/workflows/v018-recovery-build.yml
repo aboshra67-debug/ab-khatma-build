@@ -1,8 +1,8 @@
-name: V0.18 P6 Noor Theme and Polished UI
+name: V0.19 Leader Dashboard 45 Members Safe Build
 on:
   pull_request:
     paths:
-      - 'v0_18/**'
+      - 'v0_19/**'
       - '.github/workflows/v018-recovery-build.yml'
   workflow_dispatch:
 permissions:
@@ -14,19 +14,19 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Retrieve verified P4 source from successful build
+      - name: Retrieve verified P6 safe source from successful build
         uses: actions/download-artifact@v4
         with:
-          run-id: 37846363844
+          run-id: 37856062187
           github-token: ${{ github.token }}
-          name: AB_Khatma_V0.17_P4_SAFE_SOURCE
+          name: AB_Khatma_V018_P6_SAFE_SOURCE
           path: baseline
       - name: Extract verified original without network Quran fetch
         run: |
           set -euo pipefail
-          unzip -t baseline/AB_Khatma_V0.17_P4_SAFE_SOURCE.zip
+          unzip -t baseline/AB_Khatma_V018_P6_SAFE_SOURCE.zip
           mkdir -p working
-          unzip -q baseline/AB_Khatma_V0.17_P4_SAFE_SOURCE.zip -d working
+          unzip -q baseline/AB_Khatma_V019_P7_SAFE_SOURCE.zip -d working
           test -s working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/src/main/assets/quran/quran-uthmani.json
       - uses: actions/setup-java@v4
         with:
@@ -47,22 +47,16 @@ jobs:
           test -n "$SDKMANAGER" && test -x "$SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
-      - name: Safe V0.18 UI patch
+      - name: Apply V0.19 Safe Leader Dashboard Patch
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/v0_18/p5_polished_ui.py"
+          python3 "$GITHUB_WORKSPACE/v0_19/p7_apply_leader_dashboard.py"
           python3 tools/verify_project.py
-          test -s app/src/main/java/com/ab/khatma/secure/KhatmaPolishedPanels.kt
-          grep -q 'versionCode = 21' app/build.gradle.kts
-      - name: Apply V0.18 P6 coherent Noor default
-        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
-        run: |
-          set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/v0_18/p6_noor_default.py"
-          python3 tools/verify_project.py
-          grep -q 'versionCode = 22' app/build.gradle.kts
-          grep -q 'prefs.getString("theme_style", KhatmaThemeStyle.NOOR.name)' app/src/main/java/com/ab/khatma/ui/theme/KhatmaTheme.kt
+          test -s app/src/main/java/com/ab/khatma/secure/KhatmaLeaderDashboard.kt
+          grep -q 'versionCode = 23' app/build.gradle.kts
+          grep -q 'items(filtered, key =' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+          ! grep -q 'details.members.forEach' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
 
       - name: Archive Safe Source
         run: |
@@ -70,7 +64,7 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root=Path("working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out=Path("AB_Khatma_V018_P6_SAFE_SOURCE.zip")
+          out=Path("AB_Khatma_V019_P7_SAFE_SOURCE.zip")
           files=[p for p in root.rglob("*") if p.is_file()
              and not (set(p.relative_to(root).parts) & {".gradle", "build", "__pycache__", ".git"})
              and not p.name.startswith(".env")
@@ -82,8 +76,8 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V018_P6_SAFE_SOURCE
-          path: AB_Khatma_V018_P6_SAFE_SOURCE.zip
+          name: AB_Khatma_V019_P7_SAFE_SOURCE
+          path: AB_Khatma_V019_P7_SAFE_SOURCE.zip
           if-no-files-found: error
       - name: Independent test app ID with absolute Android component names
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
@@ -94,7 +88,7 @@ jobs:
           s=p.read_text(encoding='utf-8')
           assert s.count('applicationId = "com.ab.khatma"') == 1
           p.write_text(s.replace('applicationId = "com.ab.khatma"',
-                        'applicationId = "com.ab.khatma.v18p6noor"'),encoding='utf-8')
+                        'applicationId = "com.ab.khatma.v19leadertest"'),encoding='utf-8')
           manifest=Path('app/src/main/AndroidManifest.xml')
           x=manifest.read_text(encoding='utf-8')
           assert x.count('android:name=".MainActivity"')==1
@@ -115,11 +109,11 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
       - name: Export Android APK
         run: |
-          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V018_P6_DESIGN_AUTH_TEST.apk
-          test -s AB_Khatma_V018_P6_DESIGN_AUTH_TEST.apk
-          sha256sum AB_Khatma_V018_P6_DESIGN_AUTH_TEST.apk
+          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V019_P7_LEADER_DASHBOARD_TEST.apk
+          test -s AB_Khatma_V019_P7_LEADER_DASHBOARD_TEST.apk
+          sha256sum AB_Khatma_V019_P7_LEADER_DASHBOARD_TEST.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V018_P6_DESIGN_AUTH_TEST_APK
-          path: AB_Khatma_V018_P6_DESIGN_AUTH_TEST.apk
+          name: AB_Khatma_V019_P7_LEADER_DASHBOARD_TEST_APK
+          path: AB_Khatma_V019_P7_LEADER_DASHBOARD_TEST.apk
           if-no-files-found: error
