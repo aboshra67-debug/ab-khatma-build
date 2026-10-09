@@ -1,5 +1,11 @@
 name: V0.18 P7 Compact Login and Clear Groups
 on:
+  push:
+    branches:
+      - 'fix/v018-p7-compact-auth-20261009'
+    paths:
+      - 'v0_18/**'
+      - '.github/workflows/v018-recovery-build.yml'
   pull_request:
     paths:
       - 'v0_18/**'
