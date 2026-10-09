@@ -10,7 +10,7 @@ edit(api,'    fun checkSession(token: String): Boolean =',
 '''    fun myDisplayName(token: String): String =
         JSONObject(request("/auth/me", token)).getString("name")
     fun updateDisplayName(token: String, newName: String): String =
-        JSONObject(request("/auth/profile", token, "PATCH",
+        JSONObject(request("/auth/profile", token, "PUT",
             JSONObject().put("name", newName.trim()))).getString("name")
 
     fun checkSession(token: String): Boolean =''')
