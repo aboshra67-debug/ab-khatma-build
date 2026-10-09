@@ -1,0 +1,1 @@
+P24 / version 40. The reader restores page-by-page navigation. Next advances to the following surah after the final page. Earlier features are retained.
