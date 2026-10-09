@@ -27,3 +27,21 @@ jobs:
         run: |
           npm install --prefix /tmp/browser playwright
           /tmp/browser/node_modules/.bin/playwright install chromium
+      - name: Retrieve P24 verified source
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({acceptDownloads:true});
+            await page.goto('https://firestorage.ai/ja/f/rw1WXtd7XP3k',{waitUntil:'domcontentloaded',timeout:60000});
+            const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+            await button.waitFor({state:'visible',timeout:60000});
+            const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+            await download.saveAs('source.zip');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo 'b319b2e24a1e2a967d7102ffe039988dd43fdd1a4db905f1db08be3077e3ca82  source.zip' | sha256sum -c -
+          mkdir -p src
+          unzip -q source.zip -d src
