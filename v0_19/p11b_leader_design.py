@@ -128,7 +128,7 @@ new='''                            if (groupTab == "leader" && item.status == "a
                                 )
                             }
 '''
-text=text[:i]+new+text[j:].replace(end,"                            // All existing read/chat handlers remain on their tabs.",1)
+text=text[:i]+new+text[j:].replace(end,"                            } // All existing read/chat handlers remain on their tabs.",1)
 u.write_text(text,encoding="utf-8")
 v=Path("tools/verify_project.py")
 s=v.read_text(encoding="utf-8")
