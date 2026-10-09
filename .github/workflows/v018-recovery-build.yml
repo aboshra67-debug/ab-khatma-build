@@ -1,4 +1,4 @@
-name: V0.19 P9 Safer Google Login APK + Safe Source
+name: V0.19 P10 Configured Firebase Google Login + Safe Source
 on:
   push:
     branches:
@@ -99,6 +99,14 @@ jobs:
           grep -q 'versionCode = 25' app/build.gradle.kts
           grep -q 'enabled = !busy && googleReady' app/src/main/java/com/ab/khatma/secure/KhatmaPolishedPanels.kt
 
+      - name: Apply V0.19 P10 supplied Google OAuth (Safe Patch)
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p10_enable_google_oauth.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 26' app/build.gradle.kts
+
       - name: Configure public Firebase client identifiers from supplied JSON
         run: |
           python3 - <<'PY'
@@ -106,9 +114,10 @@ jobs:
           from pathlib import Path
           c=json.loads(Path('v0_19/firebase_public_client.json').read_text())
           assert c["firebase_project_id"] == "ab-khatma"
-          assert c["registered_android_package"] == "com.ab.khatma"
-          assert c["firebase_android_app_id"].startswith("1:")
+          assert c["registered_android_package"] == "com.ab.khatma.preview"
+          assert c["firebase_android_app_id"] == "1:812962740222:android:4cce0addaa5210d24a32af"
           assert c["firebase_api_key"].startswith("AIza")
+          assert c["google_web_client_id"].endswith(".apps.googleusercontent.com")
           with open(os.environ["GITHUB_ENV"],"a",encoding="utf-8") as env:
               env.write("KHATMA_FIREBASE_PROJECT_ID="+c["firebase_project_id"]+"\n")
               env.write("KHATMA_FIREBASE_APP_ID="+c["firebase_android_app_id"]+"\n")
@@ -123,7 +132,7 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root=Path("working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out=Path("AB_Khatma_V019_P9_GOOGLE_SAFE_SOURCE.zip")
+          out=Path("AB_Khatma_V019_P10_GOOGLE_SAFE_SOURCE.zip")
           files=[p for p in root.rglob("*") if p.is_file()
              and not (set(p.relative_to(root).parts) & {".gradle", "build", "__pycache__", ".git"})
              and not p.name.startswith(".env")
@@ -135,8 +144,8 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V019_P9_GOOGLE_SAFE_SOURCE
-          path: AB_Khatma_V019_P9_GOOGLE_SAFE_SOURCE.zip
+          name: AB_Khatma_V019_P10_GOOGLE_SAFE_SOURCE
+          path: AB_Khatma_V019_P10_GOOGLE_SAFE_SOURCE.zip
           if-no-files-found: error
       - name: Keep preview separate without changing registered production package
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
@@ -161,11 +170,11 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
       - name: Export Android APK
         run: |
-          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V019_P9_GOOGLE_DESIGN_AUTH_TEST.apk
-          test -s AB_Khatma_V019_P9_GOOGLE_DESIGN_AUTH_TEST.apk
-          sha256sum AB_Khatma_V019_P9_GOOGLE_DESIGN_AUTH_TEST.apk
+          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V019_P10_GOOGLE_AUTH_PREVIEW.apk
+          test -s AB_Khatma_V019_P10_GOOGLE_AUTH_PREVIEW.apk
+          sha256sum AB_Khatma_V019_P10_GOOGLE_AUTH_PREVIEW.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V019_P9_GOOGLE_DESIGN_AUTH_TEST_APK
-          path: AB_Khatma_V019_P9_GOOGLE_DESIGN_AUTH_TEST.apk
+          name: AB_Khatma_V019_P10_GOOGLE_AUTH_PREVIEW_APK
+          path: AB_Khatma_V019_P10_GOOGLE_AUTH_PREVIEW.apk
           if-no-files-found: error
