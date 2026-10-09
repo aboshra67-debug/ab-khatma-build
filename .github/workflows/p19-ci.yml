@@ -1,11 +1,26 @@
-name: P19 Build
+name: P19 Source Access Check
 on:
   push:
-    branches:
-      - p19-mushaf-build-20261010
+    branches: [p19-mushaf-build-20261010]
 jobs:
-  check:
+  probe:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: echo Build environment ready
+      - name: Inspect temporary source share
+        run: |
+          python3 - <<'PY'
+          import urllib.request, re
+          url = 'https://firestorage.ai/ja/f/btI8J2ohfegz'
+          try:
+              request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+              with urllib.request.urlopen(request, timeout=25) as r:
+                  body = r.read(200000).decode('utf-8', errors='replace')
+                  print('response status:', r.status)
+                  print('content type:', r.headers.get('Content-Type'))
+                  print('body length:', len(body))
+              for keyword in ['download', 'avch', 'api/', '.zip', 'btI8']:
+                  print(keyword, [body[max(0,m.start()-80):m.start()+145][:225] for m in list(re.finditer(re.escape(keyword), body, re.I))[:5]])
+          except Exception as exc:
+              print('Network error:', str(exc))
+              raise
+          PY
