@@ -37,7 +37,7 @@ jobs:
           (async()=>{
             const browser=await chromium.launch({headless:true});
             const page=await browser.newPage({acceptDownloads:true});
-            await page.goto('https://firestorage.ai/ja/f/btI8J2ohfegz',{waitUntil:'domcontentloaded',timeout:60000});
+            await page.goto('https://firestorage.ai/ja/f/qKYwvwKXIIox',{waitUntil:'domcontentloaded',timeout:60000});
             await page.getByRole('button',{name:'ダウンロード',exact:true}).waitFor({state:'visible',timeout:60000});
             const [download]=await Promise.all([
               page.waitForEvent('download',{timeout:60000}),
@@ -48,7 +48,7 @@ jobs:
             await browser.close();
           })().catch(e=>{console.error(e);process.exit(1)})
           JS
-          echo 'bc7db5b94e651e2e96802d5290489ea8fa48d8e27084717dc76aea764c8d0713  p19_source.zip' | sha256sum -c -
+          echo 'f97b74109b26b9ddb49d106006a6e3024b45cd536c1e578bccf81cf18b19304a  p19_source.zip' | sha256sum -c -
           unzip -t p19_source.zip | tail -n 1
           mkdir -p p19_src
           unzip -q p19_source.zip -d p19_src
