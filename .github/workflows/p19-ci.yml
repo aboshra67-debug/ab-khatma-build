@@ -1,34 +1,64 @@
-name: P19 Source Download Check
+name: Build P19 Mushaf from Verified Source
 on:
   push:
     branches: [p19-mushaf-build-20261010]
 jobs:
-  probe:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Inspect dynamic share in headless browser
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+      - name: Download exact P19 safe-source archive
         run: |
           npm install --prefix /tmp/p19-browser playwright
           /tmp/p19-browser/node_modules/.bin/playwright install chromium
           node <<'JS'
-          const { chromium } = require('/tmp/p19-browser/node_modules/playwright');
-          (async () => {
+          const {chromium}=require('/tmp/p19-browser/node_modules/playwright');
+          (async()=>{
             const browser=await chromium.launch({headless:true});
             const page=await browser.newPage({acceptDownloads:true});
-            page.on('download', async d => {
-              const path=await d.path();
-              console.log('DOWNLOAD SUCCESS:',d.suggestedFilename(),path);
-            });
             await page.goto('https://firestorage.ai/ja/f/btI8J2ohfegz',{waitUntil:'domcontentloaded',timeout:60000});
-            await page.waitForTimeout(14000);
-            console.log('FINAL URL:',page.url().split('?')[0]);
-            console.log('BODY:',(await page.locator('body').innerText()).slice(0,3600));
-            console.log('BUTTONS:',await page.locator('button').allTextContents());
-            console.log('LINKS:',(await page.locator('a').allTextContents()).slice(0,35));
+            await page.getByRole('button',{name:'ダウンロード',exact:true}).waitFor({state:'visible',timeout:60000});
+            const [download]=await Promise.all([
+              page.waitForEvent('download',{timeout:60000}),
+              page.getByRole('button',{name:'ダウンロード',exact:true}).click()
+            ]);
+            await download.saveAs('p19_source.zip');
+            console.log('Saved source archive:',download.suggestedFilename());
             await browser.close();
-          })().catch(e=>{console.error(String(e));process.exit(1)})
+          })().catch(e=>{console.error(e);process.exit(1)})
           JS
+          echo 'bc7db5b94e651e2e96802d5290489ea8fa48d8e27084717dc76aea764c8d0713  p19_source.zip' | sha256sum -c -
+          unzip -t p19_source.zip | tail -n 1
+          mkdir -p p19_src
+          unzip -q p19_source.zip -d p19_src
+      - name: Verify P19 source and build Android
+        working-directory: p19_src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 tools/verify_project.py
+          gradle --no-daemon --stacktrace :app:assembleDebug \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+          find app/build/outputs/apk -type f -name '*.apk' -print
+      - name: Publish unsigned APK for local owner-key signing
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB_Khatma_P19_UNSIGNED_BUILD_FOR_OWNER_SIGNING
+          path: p19_src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
