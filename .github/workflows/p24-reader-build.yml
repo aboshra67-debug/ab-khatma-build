@@ -1,4 +1,4 @@
-name: P24 Build Check
+name: P24 Page Reader Build
 on:
   push:
     branches: [release/p24-page-next-surah-v40]
@@ -7,4 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo P24 build environment ready
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Environment check
+        run: |
+          test -d "${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "P24 Android build environment ready"
