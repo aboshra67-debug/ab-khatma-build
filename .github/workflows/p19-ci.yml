@@ -1,0 +1,11 @@
+name: P19 Build
+on:
+  push:
+    branches:
+      - p19-mushaf-build-20261010
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo Build environment ready
