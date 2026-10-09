@@ -216,8 +216,25 @@ jobs:
           path: AB_Khatma_P13_UNSIGNED_OFFLINE_TOOLS.tar.gz
           if-no-files-found: error
 
-      - name: Check permanent preview signing secrets
+      - name: Choose safe signing route
         if: github.event_name != 'pull_request'
+        env:
+          LOCAL_KEYSTORE: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
+          LOCAL_KEY_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$LOCAL_KEYSTORE" ] && [ -z "$LOCAL_KEY_PASSWORD" ]; then
+            echo 'KHATMA_CAN_SIGN=false' >> "$GITHUB_ENV"
+            echo 'No signing secrets configured. Exporting unsigned preview artifact only.'
+          elif [ -n "$LOCAL_KEYSTORE" ] && [ -n "$LOCAL_KEY_PASSWORD" ]; then
+            echo 'KHATMA_CAN_SIGN=true' >> "$GITHUB_ENV"
+            echo 'Permanent signing available.'
+          else
+            echo 'Signing secrets are incomplete; refusing to sign.' >&2
+            exit 1
+          fi
+      - name: Check permanent preview signing secrets
+        if: env.KHATMA_CAN_SIGN == 'true'
         env:
           KHATMA_PREVIEW_KEYSTORE_B64: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
           KHATMA_PREVIEW_STORE_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
@@ -226,7 +243,7 @@ jobs:
           python3 v0_19/stable_preview_signing.py prepare
 
       - name: Permanently sign and verify preview APK
-        if: github.event_name != 'pull_request'
+        if: env.KHATMA_CAN_SIGN == 'true'
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         env:
           KHATMA_PREVIEW_STORE_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
@@ -234,13 +251,13 @@ jobs:
           set -euo pipefail
           python3 "$GITHUB_WORKSPACE/v0_19/stable_preview_signing.py" sign
       - name: Export Android APK
-        if: github.event_name != 'pull_request'
+        if: env.KHATMA_CAN_SIGN == 'true'
         run: |
           cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-preview-stable.apk AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW.apk
           test -s AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW.apk
           sha256sum AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW.apk
       - uses: actions/upload-artifact@v4
-        if: github.event_name != 'pull_request'
+        if: env.KHATMA_CAN_SIGN == 'true'
         with:
           name: AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW_APK
           path: AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW.apk
