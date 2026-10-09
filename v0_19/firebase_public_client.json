@@ -1,0 +1,9 @@
+{
+  "firebase_project_id": "ab-khatma",
+  "firebase_android_app_id": "1:812962740222:android:4cce0addaa5210d24a32af",
+  "firebase_api_key": "AIzaSyDrp3OaUAlae_wmgkOyNJxHHdvDAZxQS5o",
+  "google_web_client_id": "812962740222-528oec0p7pljih67epmqig38ro86n856.apps.googleusercontent.com",
+  "registered_android_package": "com.ab.khatma.preview",
+  "note": "Preview Firebase configuration from updated 2026-10-09 google-services (1).json. Web OAuth is enabled; new APK signature still requires Firebase fingerprint registration. Public identifiers only, no service account key.",
+  "registered_sha1": "59:32:6D:3A:1E:0F:31:84:36:9E:5A:39:B9:DF:0C:22:25:6B:D9:CF"
+}

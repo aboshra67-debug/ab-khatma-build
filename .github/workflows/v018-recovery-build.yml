@@ -1,10 +1,11 @@
-name: V0.18 P7 Compact Login and Clear Groups
+name: V0.19 P17 Full Images + 3D Buttons + Stable Signing
 on:
   push:
     branches:
-      - 'fix/v018-p7-compact-auth-20261009'
+      - 'feature/khatma-firebase-google-20261009'
     paths:
       - 'v0_18/**'
+      - 'v0_19/**'
       - '.github/workflows/v018-recovery-build.yml'
   pull_request:
     paths:
@@ -79,13 +80,125 @@ jobs:
           grep -q 'versionCode = 23' app/build.gradle.kts
           grep -q 'if (session != null) TopAppBar' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
 
+      - name: Add real Firebase Google sign-in (no fake OAuth)
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p8_google_integration.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 24' app/build.gradle.kts
+          grep -q 'GoogleIdTokenCredential' app/src/main/java/com/ab/khatma/secure/KhatmaGoogleSignIn.kt
+          grep -q 'googleLogin' app/src/main/java/com/ab/khatma/secure/SecureV2Api.kt
+
+      - name: Apply V0.19 P9 safe login UI and OAuth guards
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p9_auth_ui.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 25' app/build.gradle.kts
+          grep -q 'enabled = !busy && googleReady' app/src/main/java/com/ab/khatma/secure/KhatmaPolishedPanels.kt
+
+      - name: Apply V0.19 P10 supplied Google OAuth (Safe Patch)
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p10_enable_google_oauth.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 26' app/build.gradle.kts
+
+      - name: Apply P11 UI and profile patch
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p11a_profile_refresh.py"
+          python3 "$GITHUB_WORKSPACE/v0_19/p11b_leader_design.py"
+          python3 tools/verify_project.py
+
+      - name: Apply P12 calm shared hub and login
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p12_calm_login_home.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 28' app/build.gradle.kts
+          grep -q 'KhatmaCalmHome' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+          grep -q 'GoogleAuthProvider' app/src/main/java/com/ab/khatma/secure/KhatmaGoogleSignIn.kt
+
+      - name: P13 require unsigned preview and permanent signer
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p13_require_stable_signing.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 29' app/build.gradle.kts
+          grep -q 'signingConfig = null' app/build.gradle.kts
+
+      - name: Apply P14 approved image-card home Safe Patch
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p14_visual_home.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 30' app/build.gradle.kts
+          grep -q 'KhatmaVisualHome' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+          test -s app/src/main/res/drawable-nodpi/p14_art_atlas.webp
+
+      - name: Apply P15 safe reference-layout repair
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p15_visual_repair.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 31' app/build.gradle.kts
+          grep -q 'LocalLayoutDirection provides LayoutDirection.Ltr' app/src/main/java/com/ab/khatma/secure/KhatmaVisualHome.kt
+
+      - name: Apply P16 3D-style home visuals
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check "Pillow==11.3.0"
+          python3 "$GITHUB_WORKSPACE/v0_19/p16_build_android.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 32' app/build.gradle.kts
+          test -s app/src/main/res/drawable-nodpi/home_card_mushaf.png
+          test -s app/src/main/res/drawable-nodpi/home_hero_masjid.png
+
+      - name: Apply P17 3D raised cards and full image fit
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p17_full_images_3d_cards.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 33' app/build.gradle.kts
+          grep -q 'pressedElevation=2.dp' app/src/main/java/com/ab/khatma/secure/KhatmaVisualHome.kt
+
+      - name: Configure public Firebase client identifiers from supplied JSON
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          c=json.loads(Path('v0_19/firebase_public_client.json').read_text())
+          assert c["firebase_project_id"] == "ab-khatma"
+          assert c["registered_android_package"] == "com.ab.khatma.preview"
+          assert c["firebase_android_app_id"] == "1:812962740222:android:4cce0addaa5210d24a32af"
+          assert c["firebase_api_key"].startswith("AIza")
+          assert c["google_web_client_id"].endswith(".apps.googleusercontent.com")
+          with open(os.environ["GITHUB_ENV"],"a",encoding="utf-8") as env:
+              env.write("KHATMA_FIREBASE_PROJECT_ID="+c["firebase_project_id"]+"\n")
+              env.write("KHATMA_FIREBASE_APP_ID="+c["firebase_android_app_id"]+"\n")
+              env.write("KHATMA_FIREBASE_API_KEY="+c["firebase_api_key"]+"\n")
+              env.write("KHATMA_GOOGLE_WEB_CLIENT_ID="+c["google_web_client_id"]+"\n")
+          print("Firebase project: ab-khatma; Web OAuth client configured:",bool(c["google_web_client_id"]))
+          PY
+
       - name: Archive Safe Source
         run: |
           python3 - <<'PY'
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root=Path("working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out=Path("AB_Khatma_V018_P7_SAFE_SOURCE.zip")
+          out=Path("AB_Khatma_V019_P17_3D_BUTTONS_SAFE_SOURCE.zip")
           files=[p for p in root.rglob("*") if p.is_file()
              and not (set(p.relative_to(root).parts) & {".gradle", "build", "__pycache__", ".git"})
              and not p.name.startswith(".env")
@@ -97,44 +210,98 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V018_P7_SAFE_SOURCE
-          path: AB_Khatma_V018_P7_SAFE_SOURCE.zip
+          name: AB_Khatma_V019_P17_3D_BUTTONS_SAFE_SOURCE
+          path: AB_Khatma_V019_P17_3D_BUTTONS_SAFE_SOURCE.zip
           if-no-files-found: error
-      - name: Independent test app ID with absolute Android component names
+      - name: Keep preview separate without changing registered production package
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('app/build.gradle.kts')
-          s=p.read_text(encoding='utf-8')
-          assert s.count('applicationId = "com.ab.khatma"') == 1
-          p.write_text(s.replace('applicationId = "com.ab.khatma"',
-                        'applicationId = "com.ab.khatma.v18p7compact"'),encoding='utf-8')
-          manifest=Path('app/src/main/AndroidManifest.xml')
-          x=manifest.read_text(encoding='utf-8')
-          assert x.count('android:name=".MainActivity"')==1
-          assert x.count('android:name=".KhatmaApplication"')==1
-          x=x.replace('android:name=".MainActivity"','android:name="com.ab.khatma.MainActivity"')
-          x=x.replace('android:name=".KhatmaApplication"','android:name="com.ab.khatma.KhatmaApplication"')
-          manifest.write_text(x,encoding='utf-8')
-          PY
-      - name: Build signed debug test APK
+          grep -q 'applicationId = "com.ab.khatma"' app/build.gradle.kts
+          grep -q 'applicationIdSuffix = ".preview"' app/build.gradle.kts
+          # Actual debug package is com.ab.khatma.preview; it must be registered
+          # separately in Firebase with the SHA-1/SHA-256 from this APK.
+      - name: Build unsigned preview APK
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
             -PKHATMA_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app" \
-            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
-      - name: Verify debug signature
-        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app" \
+            -PKHATMA_FIREBASE_PROJECT_ID="$KHATMA_FIREBASE_PROJECT_ID" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID"
+      - name: Package unsigned preview and official offline signing tools
+        if: github.event_name != 'pull_request'
         run: |
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
-      - name: Export Android APK
-        run: |
-          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V018_P7_DESIGN_AUTH_TEST.apk
-          test -s AB_Khatma_V018_P7_DESIGN_AUTH_TEST.apk
-          sha256sum AB_Khatma_V018_P7_DESIGN_AUTH_TEST.apk
+          set -euo pipefail
+          out=AB_Khatma_P13_UNSIGNED_OFFLINE_TOOLS
+          sdk="$ANDROID_HOME/build-tools/36.0.0"
+          apkdir=working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug
+          mkdir -p "$out/tools/lib"
+          test "$(find "$apkdir" -maxdepth 1 -name '*-unsigned.apk' | wc -l)" -eq 1
+          cp "$apkdir/"*-unsigned.apk "$out/unsigned.apk"
+          cp "$sdk/apksigner" "$out/tools/"
+          cp "$sdk/zipalign" "$out/tools/"
+          zipalign_cpp="$(ldd "$sdk/zipalign" | grep -F 'libc++.so' | awk '{print $3; exit}')"
+          test -n "$zipalign_cpp" && test -f "$zipalign_cpp"
+          cp -L "$zipalign_cpp" "$out/tools/libc++.so"
+          cp "$sdk/lib/apksigner.jar" "$out/tools/lib/"
+          sha256sum "$out/unsigned.apk" "$out/tools/lib/apksigner.jar" > "$out/SHA256SUMS.txt"
+          tar -czf "${out}.tar.gz" "$out"
       - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
         with:
-          name: AB_Khatma_V018_P7_DESIGN_AUTH_TEST_APK
-          path: AB_Khatma_V018_P7_DESIGN_AUTH_TEST.apk
+          name: AB_Khatma_P13_UNSIGNED_OFFLINE_TOOLS
+          path: AB_Khatma_P13_UNSIGNED_OFFLINE_TOOLS.tar.gz
           if-no-files-found: error
+
+      - name: Choose safe signing route
+        if: github.event_name != 'pull_request'
+        env:
+          LOCAL_KEYSTORE: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
+          LOCAL_KEY_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$LOCAL_KEYSTORE" ] && [ -z "$LOCAL_KEY_PASSWORD" ]; then
+            echo 'KHATMA_CAN_SIGN=false' >> "$GITHUB_ENV"
+            echo 'No signing secrets configured. Exporting unsigned preview artifact only.'
+          elif [ -n "$LOCAL_KEYSTORE" ] && [ -n "$LOCAL_KEY_PASSWORD" ]; then
+            echo 'KHATMA_CAN_SIGN=true' >> "$GITHUB_ENV"
+            echo 'Permanent signing available.'
+          else
+            echo 'Signing secrets are incomplete; refusing to sign.' >&2
+            exit 1
+          fi
+      - name: Check permanent preview signing secrets
+        if: env.KHATMA_CAN_SIGN == 'true'
+        env:
+          KHATMA_PREVIEW_KEYSTORE_B64: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
+          KHATMA_PREVIEW_STORE_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          python3 v0_19/stable_preview_signing.py prepare
+
+      - name: Permanently sign and verify preview APK
+        if: env.KHATMA_CAN_SIGN == 'true'
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        env:
+          KHATMA_PREVIEW_STORE_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/stable_preview_signing.py" sign
+      - name: Export Android APK
+        if: env.KHATMA_CAN_SIGN == 'true'
+        run: |
+          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-preview-stable.apk AB_Khatma_V019_P17_3D_BUTTONS_PREVIEW.apk
+          test -s AB_Khatma_V019_P17_3D_BUTTONS_PREVIEW.apk
+          sha256sum AB_Khatma_V019_P17_3D_BUTTONS_PREVIEW.apk
+      - uses: actions/upload-artifact@v4
+        if: env.KHATMA_CAN_SIGN == 'true'
+        with:
+          name: AB_Khatma_V019_P17_3D_BUTTONS_PREVIEW_APK
+          path: AB_Khatma_V019_P17_3D_BUTTONS_PREVIEW.apk
+          if-no-files-found: error
+      - name: Remove temporary signing material
+        if: always()
+        run: |
+          rm -rf "${RUNNER_TEMP}/ab-khatma-preview-private"
