@@ -203,7 +203,7 @@ jobs:
           cp "$apkdir/"*-unsigned.apk "$out/unsigned.apk"
           cp "$sdk/apksigner" "$out/tools/"
           cp "$sdk/zipalign" "$out/tools/"
-          zipalign_cpp="$(ldd "$sdk/zipalign" | awk '/libc\\+\\+\\.so/ && $3 != "not" {print $3; exit}')"
+          zipalign_cpp="$(ldd "$sdk/zipalign" | grep -F 'libc++.so' | awk '{print $3; exit}')"
           test -n "$zipalign_cpp" && test -f "$zipalign_cpp"
           cp -L "$zipalign_cpp" "$out/tools/libc++.so"
           cp "$sdk/lib/apksigner.jar" "$out/tools/lib/"
