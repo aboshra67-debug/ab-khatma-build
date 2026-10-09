@@ -1,4 +1,4 @@
-name: Build Khatma V0.16 Central Updates Staging Preview
+name: Build Khatma V0.18 P5 Polished UI
 
 on:
   workflow_dispatch:
@@ -8,6 +8,8 @@ on:
       - 'v0_14/**'
       - 'v0_15/**'
       - 'v0_16/**'
+      - 'v0_17/**'
+      - 'v0_18/**'
   push:
     branches:
       - main
@@ -250,6 +252,70 @@ jobs:
           grep -q 'UpdateGate()' app/src/main/java/com/ab/khatma/MainActivity.kt
           python3 tools/verify_project.py
 
+      - name: Apply V0.16 P1 secure-first startup fix
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_16/p1_v2_secure_first_fix.py"
+          grep -q 'versionCode = 17' app/build.gradle.kts
+          grep -q 'if (BuildConfig.V2_PREVIEW_ENABLED) Screen.SecureV2' app/src/main/java/com/ab/khatma/ui/screens/AppRoot.kt
+          grep -q 'if (!BuildConfig.V2_PREVIEW_ENABLED)' app/src/main/java/com/ab/khatma/AppViewModel.kt
+          python3 tools/verify_project.py
+
+      - name: Apply V0.16 P2 unified navigation safe patch
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_16/p2_integrated_navigation_fix.py"
+          grep -q 'versionCode = 18' app/build.gradle.kts
+          grep -q 'section == "group"' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+          python3 tools/verify_project.py
+
+      - name: Apply V0.17 authenticated page khatma screen
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_17/p3_add_page_plans.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 19' app/build.gradle.kts
+          test -s app/src/main/java/com/ab/khatma/secure/PagePlanner.kt
+
+      - name: Apply V0.17 P4 private chat controls
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_17/p4_chat_actions.py"
+          python3 "$GITHUB_WORKSPACE/v0_17/p4_chat_ui.py"
+          python3 - <<'PY'
+          from pathlib import Path
+          g = Path('app/build.gradle.kts')
+          content = g.read_text(encoding='utf-8')
+          assert content.count('versionCode = 19') == 1
+          assert content.count('versionName = "0.17.0-beta"') == 1
+          content = content.replace('versionCode = 19', 'versionCode = 20')
+          content = content.replace('versionName = "0.17.0-beta"', 'versionName = "0.17.1-beta"')
+          g.write_text(content, encoding='utf-8')
+          v = Path('tools/verify_project.py')
+          checks = v.read_text(encoding='utf-8')
+          assert 'versionCode 19' in checks and '0.17.0-beta' in checks
+          checks = checks.replace('versionCode 19', 'versionCode 20').replace('versionCode = 19', 'versionCode = 20')
+          checks = checks.replace('0.17.0-beta', '0.17.1-beta')
+          v.write_text(checks, encoding='utf-8')
+          PY
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 20' app/build.gradle.kts
+          grep -q 'SecureV2Api.deleteMessage' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+
+      - name: Apply V0.18 polished layout without altering backend
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_18/p5_polished_ui.py"
+          test -s app/src/main/java/com/ab/khatma/secure/KhatmaPolishedPanels.kt
+          grep -q 'versionCode = 21' app/build.gradle.kts
+          grep -q 'KhatmaPolishedLogin(' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+          python3 tools/verify_project.py
+
       - name: Verify V0.16 source
         working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
@@ -268,7 +334,7 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root = Path("extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out = Path("AB_Khatma_V0.16_RECOVERED_SAFE_SOURCE.zip")
+          out = Path("AB_Khatma_V0.18_P5_SAFE_SOURCE.zip")
           assert (root / "app/build.gradle.kts").is_file()
           assert (root / "app/src/main/assets/quran/quran-uthmani.json").is_file()
           excluded_dirs = {".git", ".gradle", "build", "__pycache__", ".idea"}
@@ -299,8 +365,8 @@ jobs:
       - name: Upload verified V0.16 Safe Source
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.16_RECOVERED_SAFE_SOURCE
-          path: AB_Khatma_V0.16_RECOVERED_SAFE_SOURCE.zip
+          name: AB_Khatma_V0.18_P5_SAFE_SOURCE
+          path: AB_Khatma_V0.18_P5_SAFE_SOURCE.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -312,11 +378,28 @@ jobs:
           p = Path('app/build.gradle.kts')
           s = p.read_text(encoding='utf-8')
           old = 'applicationId = "com.ab.khatma"'
-          new = 'applicationId = "com.ab.khatma.v16updatestage"'
+          new = 'applicationId = "com.ab.khatma.v18p5design"'
           if old not in s:
               raise SystemExit('applicationId anchor not found')
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
           print('Install-safe applicationId: com.ab.khatma.v16updatestage')
+          PY
+
+      - name: Bind staging launcher to original Kotlin package
+        working-directory: extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/AndroidManifest.xml')
+          s=p.read_text(encoding='utf-8')
+          assert s.count('android:name=".MainActivity"') == 1
+          assert s.count('android:name=".KhatmaApplication"') == 1
+          s=s.replace('android:name=".MainActivity"',
+                      'android:name="com.ab.khatma.MainActivity"')
+          s=s.replace('android:name=".KhatmaApplication"',
+                      'android:name="com.ab.khatma.KhatmaApplication"')
+          p.write_text(s,encoding='utf-8')
+          print('PASS staging manifest points to real Kotlin launcher and application classes')
           PY
 
       - name: Build V0.16 Install Safe with Railway Server
@@ -338,12 +421,53 @@ jobs:
       - name: Rename APK
         run: |
           cp extracted/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk \
-             AB_Khatma_V0.16_CENTRAL_UPDATES_STAGING_PREVIEW.apk
+             AB_Khatma_V0.18_P5_POLISHED_UI_TEST.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V0.16_CENTRAL_UPDATES_STAGING_PREVIEW_APK
-          path: AB_Khatma_V0.16_CENTRAL_UPDATES_STAGING_PREVIEW.apk
+          name: AB_Khatma_V0.18_P5_POLISHED_UI_TEST_APK
+          path: AB_Khatma_V0.18_P5_POLISHED_UI_TEST.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Configure KVM permissions for Android emulator
+        run: |
+          sudo sh -c 'echo KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm" > /etc/udev/rules.d/99-kvm4all.rules'
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Emulator smoke test of actual signed APK startup
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            set -e
+            adb install -r AB_Khatma_V0.18_P5_POLISHED_UI_TEST.apk
+            adb shell am start -n com.ab.khatma.v18p5design/com.ab.khatma.MainActivity
+            sleep 12
+            adb shell pidof com.ab.khatma.v18p5design
+            adb shell uiautomator dump /sdcard/window.xml
+            adb pull /sdcard/window.xml khatma-window.xml
+            grep -q "أنشئ حسابك" khatma-window.xml
+            ! grep -q "Upgrade to the authenticated V2 API" khatma-window.xml
+            adb shell screencap -p /sdcard/khatma-start.png
+            adb pull /sdcard/khatma-start.png khatma-start.png
+            adb logcat -d -v brief > khatma-emulator-logcat.txt
+            ! grep -q "FATAL EXCEPTION" khatma-emulator-logcat.txt
+
+      - name: Upload emulator visual and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB_Khatma_V0.18_P5_EmulatorStartup
+          path: |
+            khatma-start.png
+            khatma-window.xml
+            khatma-emulator-logcat.txt
+          if-no-files-found: warn
+          retention-days: 7
