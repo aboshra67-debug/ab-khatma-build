@@ -14,7 +14,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.5.0'
-      - name: Environment check
+      - name: Prepare Android SDK
         run: |
-          test -d "${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          echo "P24 Android build environment ready"
+          TOOL=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+      - name: Install Platform
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
