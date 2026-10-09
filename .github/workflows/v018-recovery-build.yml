@@ -191,6 +191,28 @@ jobs:
             -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
             -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
             -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID"
+      - name: Package unsigned preview and official offline signing tools
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          out=AB_Khatma_P13_UNSIGNED_OFFLINE_TOOLS
+          sdk="$ANDROID_HOME/build-tools/36.0.0"
+          apkdir=working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug
+          mkdir -p "$out/tools/lib"
+          test "$(find "$apkdir" -maxdepth 1 -name '*-unsigned.apk' | wc -l)" -eq 1
+          cp "$apkdir/"*-unsigned.apk "$out/unsigned.apk"
+          cp "$sdk/apksigner" "$out/tools/"
+          cp "$sdk/zipalign" "$out/tools/"
+          cp "$sdk/lib/apksigner.jar" "$out/tools/lib/"
+          sha256sum "$out/unsigned.apk" "$out/tools/lib/apksigner.jar" > "$out/SHA256SUMS.txt"
+          tar -czf "${out}.tar.gz" "$out"
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          name: AB_Khatma_P13_UNSIGNED_OFFLINE_TOOLS
+          path: AB_Khatma_P13_UNSIGNED_OFFLINE_TOOLS.tar.gz
+          if-no-files-found: error
+
       - name: Check permanent preview signing secrets
         if: github.event_name != 'pull_request'
         env:
