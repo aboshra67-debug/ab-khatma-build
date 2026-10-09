@@ -1,4 +1,4 @@
-name: V0.18 P6 Noor Theme and Polished UI
+name: V0.18 P7 Compact Login and Clear Groups
 on:
   pull_request:
     paths:
@@ -64,13 +64,22 @@ jobs:
           grep -q 'versionCode = 22' app/build.gradle.kts
           grep -q 'prefs.getString("theme_style", KhatmaThemeStyle.NOOR.name)' app/src/main/java/com/ab/khatma/ui/theme/KhatmaTheme.kt
 
+      - name: Apply V0.18 P7 compact onboarding and clear status
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_18/p7_compact_auth_ui.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 23' app/build.gradle.kts
+          grep -q 'if (session != null) TopAppBar' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+
       - name: Archive Safe Source
         run: |
           python3 - <<'PY'
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root=Path("working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out=Path("AB_Khatma_V018_P6_SAFE_SOURCE.zip")
+          out=Path("AB_Khatma_V018_P7_SAFE_SOURCE.zip")
           files=[p for p in root.rglob("*") if p.is_file()
              and not (set(p.relative_to(root).parts) & {".gradle", "build", "__pycache__", ".git"})
              and not p.name.startswith(".env")
@@ -82,8 +91,8 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V018_P6_SAFE_SOURCE
-          path: AB_Khatma_V018_P6_SAFE_SOURCE.zip
+          name: AB_Khatma_V018_P7_SAFE_SOURCE
+          path: AB_Khatma_V018_P7_SAFE_SOURCE.zip
           if-no-files-found: error
       - name: Independent test app ID with absolute Android component names
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
@@ -94,7 +103,7 @@ jobs:
           s=p.read_text(encoding='utf-8')
           assert s.count('applicationId = "com.ab.khatma"') == 1
           p.write_text(s.replace('applicationId = "com.ab.khatma"',
-                        'applicationId = "com.ab.khatma.v18p6noor"'),encoding='utf-8')
+                        'applicationId = "com.ab.khatma.v18p7compact"'),encoding='utf-8')
           manifest=Path('app/src/main/AndroidManifest.xml')
           x=manifest.read_text(encoding='utf-8')
           assert x.count('android:name=".MainActivity"')==1
@@ -115,11 +124,11 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
       - name: Export Android APK
         run: |
-          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V018_P6_DESIGN_AUTH_TEST.apk
-          test -s AB_Khatma_V018_P6_DESIGN_AUTH_TEST.apk
-          sha256sum AB_Khatma_V018_P6_DESIGN_AUTH_TEST.apk
+          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V018_P7_DESIGN_AUTH_TEST.apk
+          test -s AB_Khatma_V018_P7_DESIGN_AUTH_TEST.apk
+          sha256sum AB_Khatma_V018_P7_DESIGN_AUTH_TEST.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V018_P6_DESIGN_AUTH_TEST_APK
-          path: AB_Khatma_V018_P6_DESIGN_AUTH_TEST.apk
+          name: AB_Khatma_V018_P7_DESIGN_AUTH_TEST_APK
+          path: AB_Khatma_V018_P7_DESIGN_AUTH_TEST.apk
           if-no-files-found: error
