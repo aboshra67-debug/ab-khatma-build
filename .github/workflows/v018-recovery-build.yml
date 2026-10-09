@@ -107,6 +107,14 @@ jobs:
           python3 tools/verify_project.py
           grep -q 'versionCode = 26' app/build.gradle.kts
 
+      - name: Apply P11 UI and profile patch
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p11a_profile_refresh.py"
+          python3 "$GITHUB_WORKSPACE/v0_19/p11b_leader_design.py"
+          python3 tools/verify_project.py
+
       - name: Configure public Firebase client identifiers from supplied JSON
         run: |
           python3 - <<'PY'
