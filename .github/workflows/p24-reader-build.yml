@@ -23,3 +23,7 @@ jobs:
         run: |
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare source downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
