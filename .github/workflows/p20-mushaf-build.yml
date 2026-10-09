@@ -57,5 +57,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: P20-unsigned-apk
-          path: src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk
+          path: src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
