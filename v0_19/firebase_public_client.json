@@ -1,0 +1,8 @@
+{
+  "firebase_project_id": "ab-khatma",
+  "firebase_android_app_id": "1:812962740222:android:cc37ec7718d457d64a32af",
+  "firebase_api_key": "AIzaSyDrp3OaUAlae_wmgkOyNJxHHdvDAZxQS5o",
+  "google_web_client_id": "",
+  "registered_android_package": "com.ab.khatma",
+  "note": "Public Firebase app identifiers only. No service-account keys. Web OAuth client ID is missing from the user-supplied google-services.json."
+}
