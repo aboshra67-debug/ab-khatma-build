@@ -1,4 +1,4 @@
-name: Build P19 Mushaf from Verified Source
+name: Build P20 Mushaf UI from Verified Source
 on:
   push:
     branches: [p19-mushaf-build-20261010]
@@ -37,7 +37,7 @@ jobs:
           (async()=>{
             const browser=await chromium.launch({headless:true});
             const page=await browser.newPage({acceptDownloads:true});
-            await page.goto('https://firestorage.ai/ja/f/qKYwvwKXIIox',{waitUntil:'domcontentloaded',timeout:60000});
+            await page.goto('https://firestorage.ai/ja/f/Qw97FryW8PGv',{waitUntil:'domcontentloaded',timeout:60000});
             await page.getByRole('button',{name:'ダウンロード',exact:true}).waitFor({state:'visible',timeout:60000});
             const [download]=await Promise.all([
               page.waitForEvent('download',{timeout:60000}),
@@ -48,7 +48,7 @@ jobs:
             await browser.close();
           })().catch(e=>{console.error(e);process.exit(1)})
           JS
-          echo 'f97b74109b26b9ddb49d106006a6e3024b45cd536c1e578bccf81cf18b19304a  p19_source.zip' | sha256sum -c -
+          echo '14f501d5123d93946373a32313c3ffc118c4edc86ed69e1fb13783da0c923da2  p19_source.zip' | sha256sum -c -
           unzip -t p19_source.zip | tail -n 1
           mkdir -p p19_src
           unzip -q p19_source.zip -d p19_src
@@ -92,7 +92,7 @@ jobs:
       - name: Publish unsigned APK for local owner-key signing
         uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_P19_UNSIGNED_BUILD_FOR_OWNER_SIGNING
+          name: AB_Khatma_P20_UNSIGNED_BUILD_FOR_LOCAL_SIGNING
           path: p19_src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
           retention-days: 7
