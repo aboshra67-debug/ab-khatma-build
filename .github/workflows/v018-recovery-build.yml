@@ -1,4 +1,4 @@
-name: V0.19 P11 Islamic Leader Profile APK + Source
+name: V0.19 P12 Calm Login and Shared Home APK + Source
 on:
   push:
     branches:
@@ -115,6 +115,16 @@ jobs:
           python3 "$GITHUB_WORKSPACE/v0_19/p11b_leader_design.py"
           python3 tools/verify_project.py
 
+      - name: Apply P12 calm shared hub and login
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p12_calm_login_home.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 28' app/build.gradle.kts
+          grep -q 'KhatmaCalmHome' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
+          grep -q 'GoogleAuthProvider' app/src/main/java/com/ab/khatma/secure/KhatmaGoogleSignIn.kt
+
       - name: Configure public Firebase client identifiers from supplied JSON
         run: |
           python3 - <<'PY'
@@ -140,7 +150,7 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root=Path("working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out=Path("AB_Khatma_V019_P11_ISLAMIC_SAFE_SOURCE.zip")
+          out=Path("AB_Khatma_V019_P12_CALM_SAFE_SOURCE.zip")
           files=[p for p in root.rglob("*") if p.is_file()
              and not (set(p.relative_to(root).parts) & {".gradle", "build", "__pycache__", ".git"})
              and not p.name.startswith(".env")
@@ -152,8 +162,8 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V019_P11_ISLAMIC_SAFE_SOURCE
-          path: AB_Khatma_V019_P11_ISLAMIC_SAFE_SOURCE.zip
+          name: AB_Khatma_V019_P12_CALM_SAFE_SOURCE
+          path: AB_Khatma_V019_P12_CALM_SAFE_SOURCE.zip
           if-no-files-found: error
       - name: Keep preview separate without changing registered production package
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
@@ -178,11 +188,11 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
       - name: Export Android APK
         run: |
-          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V019_P11_ISLAMIC_AUTH_PREVIEW.apk
-          test -s AB_Khatma_V019_P11_ISLAMIC_AUTH_PREVIEW.apk
-          sha256sum AB_Khatma_V019_P11_ISLAMIC_AUTH_PREVIEW.apk
+          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V019_P12_CALM_AUTH_PREVIEW.apk
+          test -s AB_Khatma_V019_P12_CALM_AUTH_PREVIEW.apk
+          sha256sum AB_Khatma_V019_P12_CALM_AUTH_PREVIEW.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V019_P11_ISLAMIC_AUTH_PREVIEW_APK
-          path: AB_Khatma_V019_P11_ISLAMIC_AUTH_PREVIEW.apk
+          name: AB_Khatma_V019_P12_CALM_AUTH_PREVIEW_APK
+          path: AB_Khatma_V019_P12_CALM_AUTH_PREVIEW.apk
           if-no-files-found: error
