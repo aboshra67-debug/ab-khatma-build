@@ -32,8 +32,7 @@ edit(p,'''        colors = CardDefaults.elevatedCardColors(containerColor = Mate
     ) {
         Column(Modifier.padding(17.dp)''',
 '''        colors = CardDefaults.elevatedCardColors(containerColor = Color(0xFFFFFEF9)),
-        shape = RoundedCornerShape(22.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE7DDC6))
+        shape = RoundedCornerShape(22.dp)
     ) {
         Column(Modifier.padding(17.dp)''')
 
