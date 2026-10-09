@@ -120,7 +120,7 @@ fun KhatmaCalmLogin(
                 }
                 OutlinedTextField(password, onPasswordChange,
                     label = { Text("كلمة المرور") },
-                    leadingIcon = { Icon(Icons.Default.LockOutline, null) },
+                    leadingIcon = { Icon(Icons.Default.Lock, null) },
                     trailingIcon = {
                         IconButton(onClick = { showPassword = !showPassword }) {
                             Icon(if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
