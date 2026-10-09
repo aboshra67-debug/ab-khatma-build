@@ -1,0 +1,10 @@
+name: P24 Build Check
+on:
+  push:
+    branches: [release/p24-page-next-surah-v40]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo P24 build environment ready
