@@ -1,4 +1,4 @@
-name: V0.19 P12 Calm Login and Shared Home APK + Source
+name: V0.19 P13 Permanent Preview Signing + P12 UI
 on:
   push:
     branches:
@@ -125,6 +125,15 @@ jobs:
           grep -q 'KhatmaCalmHome' app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt
           grep -q 'GoogleAuthProvider' app/src/main/java/com/ab/khatma/secure/KhatmaGoogleSignIn.kt
 
+      - name: P13 require unsigned preview and permanent signer
+        working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/p13_require_stable_signing.py"
+          python3 tools/verify_project.py
+          grep -q 'versionCode = 29' app/build.gradle.kts
+          grep -q 'signingConfig = null' app/build.gradle.kts
+
       - name: Configure public Firebase client identifiers from supplied JSON
         run: |
           python3 - <<'PY'
@@ -150,7 +159,7 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
           root=Path("working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE")
-          out=Path("AB_Khatma_V019_P12_CALM_SAFE_SOURCE.zip")
+          out=Path("AB_Khatma_V019_P13_STABLE_SIGNING_SAFE_SOURCE.zip")
           files=[p for p in root.rglob("*") if p.is_file()
              and not (set(p.relative_to(root).parts) & {".gradle", "build", "__pycache__", ".git"})
              and not p.name.startswith(".env")
@@ -162,8 +171,8 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: AB_Khatma_V019_P12_CALM_SAFE_SOURCE
-          path: AB_Khatma_V019_P12_CALM_SAFE_SOURCE.zip
+          name: AB_Khatma_V019_P13_STABLE_SIGNING_SAFE_SOURCE
+          path: AB_Khatma_V019_P13_STABLE_SIGNING_SAFE_SOURCE.zip
           if-no-files-found: error
       - name: Keep preview separate without changing registered production package
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
@@ -172,7 +181,7 @@ jobs:
           grep -q 'applicationIdSuffix = ".preview"' app/build.gradle.kts
           # Actual debug package is com.ab.khatma.preview; it must be registered
           # separately in Firebase with the SHA-1/SHA-256 from this APK.
-      - name: Build signed debug test APK
+      - name: Build unsigned preview APK
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
           gradle --no-daemon clean :app:assembleDebug \
@@ -182,17 +191,36 @@ jobs:
             -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
             -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
             -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID"
-      - name: Verify debug signature
+      - name: Check permanent preview signing secrets
+        if: github.event_name != 'pull_request'
+        env:
+          KHATMA_PREVIEW_KEYSTORE_B64: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
+          KHATMA_PREVIEW_STORE_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          python3 v0_19/stable_preview_signing.py prepare
+
+      - name: Permanently sign and verify preview APK
+        if: github.event_name != 'pull_request'
         working-directory: working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        env:
+          KHATMA_PREVIEW_STORE_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
         run: |
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/v0_19/stable_preview_signing.py" sign
       - name: Export Android APK
+        if: github.event_name != 'pull_request'
         run: |
-          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-debug.apk AB_Khatma_V019_P12_CALM_AUTH_PREVIEW.apk
-          test -s AB_Khatma_V019_P12_CALM_AUTH_PREVIEW.apk
-          sha256sum AB_Khatma_V019_P12_CALM_AUTH_PREVIEW.apk
+          cp working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug/app-preview-stable.apk AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW.apk
+          test -s AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW.apk
+          sha256sum AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW.apk
       - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
         with:
-          name: AB_Khatma_V019_P12_CALM_AUTH_PREVIEW_APK
-          path: AB_Khatma_V019_P12_CALM_AUTH_PREVIEW.apk
+          name: AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW_APK
+          path: AB_Khatma_V019_P13_STABLE_SIGNED_PREVIEW.apk
           if-no-files-found: error
+      - name: Remove temporary signing material
+        if: always()
+        run: |
+          rm -rf "${RUNNER_TEMP}/ab-khatma-preview-private"
