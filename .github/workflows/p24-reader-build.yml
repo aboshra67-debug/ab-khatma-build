@@ -79,3 +79,10 @@ jobs:
             -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
             -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
             -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Publish compiled APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P24-built-apk
+          path: src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
