@@ -1,0 +1,1 @@
+P20 Mushaf interface design build: versionCode 36; changes limited to QuranScreen UI, verifier, and a decorative medallion image.
