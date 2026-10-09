@@ -26,7 +26,7 @@ jobs:
           set -euo pipefail
           unzip -t baseline/AB_Khatma_V018_P6_SAFE_SOURCE.zip
           mkdir -p working
-          unzip -q baseline/AB_Khatma_V019_P7_SAFE_SOURCE.zip -d working
+          unzip -q baseline/AB_Khatma_V018_P6_SAFE_SOURCE.zip -d working
           test -s working/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/src/main/assets/quran/quran-uthmani.json
       - uses: actions/setup-java@v4
         with:
