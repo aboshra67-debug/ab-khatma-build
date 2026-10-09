@@ -63,3 +63,19 @@ jobs:
           echo '47975628483fae63d69b84464f3a01349fb7560ff91744c54f6c4d746e9b607c  public_config.zip' | sha256sum -c -
           mkdir -p configs
           unzip -q public_config.zip -d configs
+      - name: Verify P24 and build Android APK
+        working-directory: src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 tools/verify_project.py
+          python3 tools/check_p24_paging.py
+          python3 tools/check_p22_surah_isolation.py
+          grep -q 'versionCode = 40' app/build.gradle.kts
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon :app:assembleDebug \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
