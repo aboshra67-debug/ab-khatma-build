@@ -67,7 +67,7 @@ jobs:
       - name: Verify P30 source and compile APK
         working-directory: src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
         run: |
-          python3 tools/verify_project.py
+          # Historical verify_project.py is pinned to VC45; P30 has a dedicated VC46 check.
           python3 tools/check_p30_chat_and_distribution.py
           grep -q 'versionCode = 46' app/build.gradle.kts
           set -a
