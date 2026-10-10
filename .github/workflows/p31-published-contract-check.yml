@@ -1,0 +1,46 @@
+name: P31 Published Distribution API Contract
+on:
+  push:
+    branches: [checks/p31-api-contract-20261010]
+jobs:
+  check-public-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read live published schema, require secure P31 routes, and prohibit unauthorized writes
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.request, urllib.error
+          base="https://khatma-v2-api-staging.up.railway.app"
+          def call(method,path,body=None):
+              req=urllib.request.Request(base+path,data=None if body is None else json.dumps(body).encode(),method=method,
+                  headers={"Accept":"application/json","Content-Type":"application/json"})
+              start=time.monotonic()
+              try:
+                  with urllib.request.urlopen(req, timeout=12) as response:
+                      return response.status, response.read(),round(time.monotonic()-start,3)
+              except urllib.error.HTTPError as exc:
+                  return exc.code, exc.read(),round(time.monotonic()-start,3)
+          status, raw, elapsed=call("GET","/openapi.json")
+          assert status==200, ("openapi",status)
+          schema=json.loads(raw)
+          for path,method in [
+              ("/v3/runs/{run_id}/rotate-reader","post"),
+              ("/v3/runs/{run_id}/distribution-history","get"),
+              ("/v3/runs/{run_id}/tasks","get"),
+              ("/v3/tasks/{task_id}/progress","post"),
+          ]:
+              assert method in schema.get("paths",{}).get(path,{}), (path,method)
+              print("P31 ROUTE PRESENT:",method.upper(),path)
+          status,raw,elapsed=call("POST","/v3/runs/987654321/rotate-reader",
+              {"membership_id":987654321,"effective_date":"2026-10-10","copy_number":1,
+              "start_juz":1,"portion":"first","start_page":1,"end_page":11,"swap_each_khatma":True})
+          assert status==401, ("unauthorized distribution must not succeed", status,raw[:120])
+          print("P31 UNAUTHENTICATED WRITE REJECTED:",status,elapsed)
+          status,raw,elapsed=call("GET","/v3/runs/987654321/tasks")
+          assert status==401,("reader isolation",status)
+          print("P31 UNAUTHENTICATED READER REJECTED:",status,elapsed)
+          status,raw,elapsed=call("GET","/v3/health")
+          assert status==200,("health",status)
+          print("P31 API HEALTH:",status,elapsed)
+          PY
