@@ -6,4 +6,18 @@ jobs:
   tools:
     runs-on: ubuntu-latest
     steps:
-      - run: echo android tools
+      - name: Collect Android SDK command-line tools
+        run: |
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          MANAGER=$(find "$SDK/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          "$MANAGER" "build-tools;36.0.0"
+          mkdir -p public_tools
+          cp "$SDK/build-tools/36.0.0/lib/apksigner.jar" public_tools/
+          cp "$SDK/build-tools/36.0.0/zipalign" public_tools/
+          ls -lh public_tools/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-public-tool-bundle
+          path: public_tools/
+          if-no-files-found: error
+          retention-days: 2
