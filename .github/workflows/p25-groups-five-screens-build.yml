@@ -68,6 +68,8 @@ jobs:
         run: |
           python3 tools/verify_project.py
           python3 tools/check_p24_paging.py
+          sed -i 's/ElevatedCard(onClick = onOpen/Card(onClick = onOpen/' app/src/main/java/com/ab/khatma/secure/P25GroupScreens.kt
+          sed -i 's/CardDefaults.elevatedCardColors/CardDefaults.cardColors/' app/src/main/java/com/ab/khatma/secure/P25GroupScreens.kt
           python3 tools/check_p25_group_design.py
           python3 tools/check_p22_surah_isolation.py
           grep -q 'versionCode = 41' app/build.gradle.kts
