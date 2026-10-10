@@ -1,0 +1,33 @@
+name: P31 Safe Auth Reachability Probe
+on:
+  push:
+    branches: [release/p31-khatma-distribution-v47]
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify public API health and synthetic rejected login
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.request, urllib.error
+          base = "https://khatma-v2-api-staging.up.railway.app"
+          probes = [
+             ("GET", "/v3/health", None, {200}),
+             ("POST", "/v2/auth/login", {"user_id": 999999999999, "password": "not-a-real-credential"}, {401, 422}),
+          ]
+          for method, path, payload, expected in probes:
+              body = None if payload is None else json.dumps(payload).encode()
+              req = urllib.request.Request(base+path, data=body, method=method,
+                 headers={"Accept":"application/json","Content-Type":"application/json"})
+              before = time.monotonic()
+              try:
+                  with urllib.request.urlopen(req,timeout=12) as resp:
+                      status=resp.status
+              except urllib.error.HTTPError as exc:
+                  status=exc.code
+              elapsed=round(time.monotonic()-before,2)
+              print(f"{method} {path}: HTTP {status} in {elapsed}s")
+              if status not in expected: raise SystemExit("Unexpected status")
+          PY
