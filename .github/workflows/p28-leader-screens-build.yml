@@ -1,0 +1,92 @@
+name: P28 Four Approved Leader Screens Android Build
+on:
+  push:
+    branches: [release/p28-four-leader-tabs-v44]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Prepare Android SDK
+        run: |
+          TOOL=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+      - name: Install Platform
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare source downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - name: Retrieve P24 verified source
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({acceptDownloads:true});
+            await page.goto('https://firestorage.ai/ja/f/t9B0CBvLEoRC',{waitUntil:'domcontentloaded',timeout:60000});
+            const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+            await button.waitFor({state:'visible',timeout:60000});
+            const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+            await download.saveAs('source.zip');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo 'a479be73695d1bc7893858caa847b886039349e9d359a98e9868d296bf5a9d8a  source.zip' | sha256sum -c -
+          mkdir -p src
+          unzip -q source.zip -d src
+      - name: Restore P18 Android public client configuration
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({acceptDownloads:true});
+            await page.goto('https://firestorage.ai/ja/f/LbThokuWeZ0M',{waitUntil:'domcontentloaded',timeout:60000});
+            const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+            await button.waitFor({state:'visible',timeout:60000});
+            const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+            await download.saveAs('public_config.zip');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '47975628483fae63d69b84464f3a01349fb7560ff91744c54f6c4d746e9b607c  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Verify P24 and build Android APK
+        working-directory: src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 tools/verify_project.py
+          python3 tools/check_p24_paging.py
+          python3 tools/check_p25_group_design.py
+          python3 tools/check_p26_numeric_manual.py
+          python3 tools/check_p27_network_messages.py
+          python3 tools/check_p28_leader_layout.py
+          python3 tools/check_p22_surah_isolation.py
+          grep -q 'versionCode = 44' app/build.gradle.kts
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon :app:assembleDebug \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Publish compiled APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P28-built-apk
+          path: src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
