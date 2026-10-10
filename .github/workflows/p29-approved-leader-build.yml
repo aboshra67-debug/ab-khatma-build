@@ -1,0 +1,109 @@
+name: P29 Approved Leader Four Tabs - Build and Sign Preview
+on:
+  push:
+    branches: [release/p29-leader-approved-v45]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Prepare Android SDK 36
+        run: |
+          TOOL=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - name: Download exact P29 Safe Source
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/PJixAxGGpunU',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('p29_safe_source.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '203b11562b58af2a97458ce78f8ee550e954a8ea7c92366de1c4a506a49bfc96  p29_safe_source.zip' | sha256sum -c -
+          mkdir -p src
+          unzip -q p29_safe_source.zip -d src
+      - name: Download existing Android Firebase public client configuration
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/LbThokuWeZ0M',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('public_config.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '47975628483fae63d69b84464f3a01349fb7560ff91744c54f6c4d746e9b607c  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Verify P29 source and compile APK
+        working-directory: src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE
+        run: |
+          python3 tools/verify_project.py
+          python3 tools/check_p29_approved_design.py
+          grep -q 'versionCode = 45' app/build.gradle.kts
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon --stacktrace :app:assembleDebug \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Sign APK using pre-existing owner-controlled preview key
+        env:
+          KHATMA_PREVIEW_KEYSTORE_B64: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
+          KHATMA_PREVIEW_STORE_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$KHATMA_PREVIEW_KEYSTORE_B64" || (echo 'Required stable preview key secret not configured' && exit 1)
+          test -n "$KHATMA_PREVIEW_STORE_PASSWORD" || (echo 'Required preview key password secret not configured' && exit 1)
+          echo "$KHATMA_PREVIEW_KEYSTORE_B64" | base64 -d > /tmp/khatma-sign.p12
+          chmod 600 /tmp/khatma-sign.p12
+          RAW=$(find src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug -name '*.apk' | head -n 1)
+          test -n "$RAW"
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -p -f 4 "$RAW" /tmp/p29-aligned.apk
+          export P29_KEY_PASSWORD="$KHATMA_PREVIEW_STORE_PASSWORD"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
+            --ks /tmp/khatma-sign.p12 --ks-type PKCS12 --ks-key-alias khatma_preview \
+            --ks-pass env:P29_KEY_PASSWORD --key-pass env:P29_KEY_PASSWORD \
+            --v2-signing-enabled true --v3-signing-enabled true \
+            --out AB_Khatma_P29_VC45_STABLE_PREVIEW_SIGNED.apk /tmp/p29-aligned.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs AB_Khatma_P29_VC45_STABLE_PREVIEW_SIGNED.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs AB_Khatma_P29_VC45_STABLE_PREVIEW_SIGNED.apk | grep -qi '3248c1ebdd2973a992a453919a4207317cdecfc4cf0c7e8dc28dd7d9a5468b41'
+          rm -f /tmp/khatma-sign.p12 /tmp/p29-aligned.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P29-VC45-Stable-Preview-Signed
+          path: AB_Khatma_P29_VC45_STABLE_PREVIEW_SIGNED.apk
+          if-no-files-found: error
+          retention-days: 7
