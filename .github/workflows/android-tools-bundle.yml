@@ -1,0 +1,9 @@
+name: Android Tool Bundle
+on:
+  push:
+    branches: [release/p24-page-next-surah-v40]
+jobs:
+  tools:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo android tools
