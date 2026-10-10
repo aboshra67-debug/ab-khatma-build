@@ -15,7 +15,7 @@ jobs:
           base = "https://khatma-v2-api-staging.up.railway.app"
           probes = [
              ("GET", "/v3/health", None, {200}),
-             ("POST", "/v2/auth/login", {"user_id": 999999999999, "password": "not-a-real-credential"}, {401, 422}),
+             ("POST", "/v2/auth/login", {"user_id": 987654321, "password": "not-a-real-credential"}, {401, 422}),
           ]
           for method, path, payload, expected in probes:
               body = None if payload is None else json.dumps(payload).encode()
