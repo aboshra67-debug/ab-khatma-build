@@ -79,31 +79,18 @@ jobs:
             -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
             -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
             -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
-      - name: Sign APK using pre-existing owner-controlled preview key
-        env:
-          KHATMA_PREVIEW_KEYSTORE_B64: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
-          KHATMA_PREVIEW_STORE_PASSWORD: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+      - name: Collect unsigned APK and local-signing tools
         run: |
-          set -euo pipefail
-          test -n "$KHATMA_PREVIEW_KEYSTORE_B64" || (echo 'Required stable preview key secret not configured' && exit 1)
-          test -n "$KHATMA_PREVIEW_STORE_PASSWORD" || (echo 'Required preview key password secret not configured' && exit 1)
-          echo "$KHATMA_PREVIEW_KEYSTORE_B64" | base64 -d > /tmp/khatma-sign.p12
-          chmod 600 /tmp/khatma-sign.p12
-          RAW=$(find src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug -name '*.apk' | head -n 1)
-          test -n "$RAW"
-          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -p -f 4 "$RAW" /tmp/p29-aligned.apk
-          export P29_KEY_PASSWORD="$KHATMA_PREVIEW_STORE_PASSWORD"
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
-            --ks /tmp/khatma-sign.p12 --ks-type PKCS12 --ks-key-alias khatma_preview \
-            --ks-pass env:P29_KEY_PASSWORD --key-pass env:P29_KEY_PASSWORD \
-            --v2-signing-enabled true --v3-signing-enabled true \
-            --out AB_Khatma_P29_VC45_STABLE_PREVIEW_SIGNED.apk /tmp/p29-aligned.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs AB_Khatma_P29_VC45_STABLE_PREVIEW_SIGNED.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs AB_Khatma_P29_VC45_STABLE_PREVIEW_SIGNED.apk | grep -qi '3248c1ebdd2973a992a453919a4207317cdecfc4cf0c7e8dc28dd7d9a5468b41'
-          rm -f /tmp/khatma-sign.p12 /tmp/p29-aligned.apk
+          mkdir -p unsigned_build
+          find src/Khatma_Daily_V0_8_WORKING_CORE_AB_THEMES_SAFE/app/build/outputs/apk/debug -type f -name '*.apk' -print -exec cp {} unsigned_build/app-debug-unsigned.apk \;
+          test -s unsigned_build/app-debug-unsigned.apk
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
+          cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
+          chmod +x unsigned_build/zipalign
+          sha256sum unsigned_build/*
       - uses: actions/upload-artifact@v4
         with:
-          name: AB-Khatma-P29-VC45-Stable-Preview-Signed
-          path: AB_Khatma_P29_VC45_STABLE_PREVIEW_SIGNED.apk
+          name: AB-Khatma-P29-VC45-UNSIGNED-LOCAL-SIGNING
+          path: unsigned_build/*
           if-no-files-found: error
           retention-days: 7
