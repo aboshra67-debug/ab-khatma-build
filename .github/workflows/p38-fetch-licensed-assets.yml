@@ -1,0 +1,35 @@
+name: P38 Fetch Licensed Adhkar and Makkah Adhan
+on:
+  push:
+    branches: [release/p38-adhkar-vc58]
+jobs:
+  assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download MIT adhkar and CC BY Makkah adhan
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle
+          curl -fL --retry 3 --max-time 90 'https://raw.githubusercontent.com/asellam/HisnElMuslim/master/hisn.json' -o bundle/hisn.json || curl -fL --retry 3 --max-time 90 'https://raw.githubusercontent.com/asellam/HisnElMuslim/main/hisn.json' -o bundle/hisn.json
+          curl -fL --retry 3 --max-time 30 'https://raw.githubusercontent.com/asellam/HisnElMuslim/master/LICENSE.md' -o bundle/hisn_LICENSE.md || curl -fL --retry 3 --max-time 30 'https://raw.githubusercontent.com/asellam/HisnElMuslim/main/LICENSE.md' -o bundle/hisn_LICENSE.md
+          python3 - <<'PY'
+          import json
+          f=json.load(open('bundle/hisn.json',encoding='utf-8'))
+          assert isinstance(f,dict) and len(f)>70, len(f)
+          assert all(isinstance(v.get('Adhkar'),list) for v in f.values())
+          print('Verified Arabic adhkar categories:',len(f))
+          PY
+          curl -fL --retry 3 --max-time 120 -A 'ABKhatma-Assets/1.0 (CC-BY attribution preserved)' 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Adhan%2C_Great_Mosque_of_Mecca_-_Jan_21%2C_2013.webm' -o bundle/makkah.webm
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 bundle/makkah.webm
+          ffmpeg -hide_banner -loglevel error -y -i bundle/makkah.webm -vn -ac 1 -ar 24000 -c:a libvorbis -q:a 3 bundle/adhan_makkah.ogg
+          test "$(stat -c%s bundle/adhan_makkah.ogg)" -gt 200000
+          rm bundle/makkah.webm
+          sha256sum bundle/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P38-Licensed-Adhkar-and-Makkah-Assets
+          path: bundle/*
+          retention-days: 5
