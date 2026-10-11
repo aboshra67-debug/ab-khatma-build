@@ -104,6 +104,10 @@ patch("app/build.gradle.kts", [
             applicationIdSuffix = ".preview"
             buildConfigField("String", "API_BASE_URL",""")
 ])
+patch("app/build.gradle.kts", [
+    ('    implementation("androidx.activity:activity-compose:1.12.4")',
+     '    implementation("androidx.activity:activity-compose:1.12.4")\n    implementation("androidx.fragment:fragment-ktx:1.8.9")')
+])
 (root / "P40_READER_COMFORT_NETWORK_PLAY_NOTES_AR.txt").write_text(
     "AB Khatma P40 VC61\n- Quran presentation: serif, compact line heights, no stretched justification.\n"
     "- Background group refresh errors: no repeated toast if cached data exists.\n"
