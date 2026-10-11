@@ -154,6 +154,17 @@ jobs:
           assert not list(p.rglob('*.p12')) and not list(p.rglob('*.jks'))
           print('P43 SAFE: original+colored 604 pages, identity, input zoom and no private keys')
           PY
+      - name: Apply P43 Compose clip import correction (safe one-line patch)
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/src/main/java/com/ab/khatma/ui/screens/P41OfflineMushafPage.kt')
+          body=p.read_text(encoding='utf-8')
+          old='import androidx.compose.foundation.clipToBounds'
+          assert body.count(old)==1, 'Refuse unsafe patch if baseline changed'
+          p.write_text(body.replace(old,'import androidx.compose.ui.draw.clipToBounds',1),encoding='utf-8')
+          print('One-line Compose clip import corrected; Quran source assets unchanged')
+          PY
       - name: Run strict P43 integrity and release checks
         working-directory: src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
         run: |
