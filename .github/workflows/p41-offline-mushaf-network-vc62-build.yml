@@ -1,0 +1,158 @@
+name: P41 Offline Madinah Mushaf VC62 Android
+on:
+  push:
+    branches: [release/p41-offline-mushaf-network-vc62]
+  workflow_dispatch:
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Install Android 36
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare pinned source downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - name: Fetch P41 patched safe source (SHA256 verified)
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/jwGpbF6tIYfz',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('P41_PATCHED_SAFE_SOURCE.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo 'eeb03fb5e1e6483fef6ce5855b43fa021533824b5cdf950da9eb7713407b47b7  P41_PATCHED_SAFE_SOURCE.zip' | sha256sum -c -
+          mkdir -p input
+          unzip -q P41_PATCHED_SAFE_SOURCE.zip -d input
+      - name: Download original approved Firebase Android client configuration
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/MxU3D1nwSkZs',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('public_config.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '8f688d435aad219c99a62ffe0d95b903befced229d9bb0dc52280e1e917a96a0  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Obtain full offline Madinah page assets and verify count
+        run: |
+          git clone --depth 1 https://github.com/Bsracc/daily-quran.git /tmp/verified_mushaf_pages
+          git -C /tmp/verified_mushaf_pages rev-parse HEAD > mushaf_asset_revision.txt
+          python3 <<'PY'
+          from pathlib import Path
+          from shutil import copyfile
+          import re
+          root=Path('/tmp/verified_mushaf_pages/app/src/main/assets/mushaf_pages')
+          files=list(root.rglob('*.webp'))
+          print('Asset files',len(files),'sample names', [p.name for p in files[:8]])
+          assert len(files)==604, ('expected 604 Madinah pages, found',len(files))
+          out=Path('input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE/app/src/main/assets/mushaf_pages')
+          out.mkdir(parents=True,exist_ok=True)
+          pages={}
+          for p in files:
+              match=re.search(r'(\d{1,3})$',p.stem)
+              assert match, ('unrecognized page filename',p.name)
+              page=int(match.group(1))
+              assert 1 <= page <= 604 and page not in pages, ('invalid duplicate page',page)
+              assert p.stat().st_size > 3000, ('suspicious image',p.name)
+              pages[page]=p
+          assert sorted(pages)==list(range(1,605)), 'all pages must exist exactly once'
+          for page,p in pages.items():
+              copyfile(p,out/f'{page:03d}.webp')
+          (out/'SOURCE_ATTRIBUTION.txt').write_text(
+              'Madinah Mushaf digital page calligraphy © King Fahd Glorious Quran Printing Complex.\n'
+              'KFGQPC usage rights: https://dm.qurancomplex.gov.sa/rights/\n'
+              'Pages distributed in the MIT-licensed Daily Quran app at https://github.com/Bsracc/daily-quran .\n'
+              'Quranic artwork remains owned by KFGQPC and must not be altered.\n',
+              encoding='utf-8'
+          )
+          print('PASS: 604 original pages bundled, total',sum(p.stat().st_size for p in pages.values()))
+          PY
+      - name: Verify P40 backward compatibility and P41 integrity
+        working-directory: input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('app/src/main/assets/quran')
+          for data in ('quran-uthmani','quran-moyassar','quran-word-meanings'):
+              assert len(json.loads((p/f'{data}.json').read_text())) == 6236
+          assert len(list(Path('app/src/main/assets/mushaf_pages').glob('*.webp')))==604
+          src=Path('app/src/main/java/com/ab/khatma/ui/screens/QuranScreen.kt').read_text()
+          assert 'P41OfflineMushafImage' in src and 'MushafPage(' in src
+          assert 'QuranMode.FLEX_TEXT' in src and 'onSelectAyah' in src
+          build=Path('app/build.gradle.kts').read_text()
+          assert 'versionCode = 62' in build
+          assert 'applicationIdSuffix = ".preview"' in build
+          assert 'androidx.fragment:fragment-ktx:1.8.9' in build
+          assert not list(Path('.').rglob('*.p12'))
+          assert not list(Path('.').rglob('*.jks'))
+          print('P41 static security and source checks OK')
+          PY
+      - name: Build debug APK and release AAB
+        working-directory: input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE
+        run: |
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon --stacktrace :app:assembleDebug :app:bundleRelease \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Collect artifacts including complete offline safe source
+        run: |
+          mkdir -p result
+          ROOT="input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE"
+          find "$ROOT/app/build/outputs" -type f \( -name '*.apk' -o -name '*.aab' \) -print
+          APK_PATH=$(find "$ROOT/app/build/outputs/apk/debug" -type f -name '*.apk' | head -n 1)
+          AAB_PATH=$(find "$ROOT/app/build/outputs/bundle/release" -type f -name '*.aab' | head -n 1)
+          test -n "$APK_PATH" && test -n "$AAB_PATH"
+          cp "$APK_PATH" result/P41_VC62_UNSIGNED.apk
+          cp "$AAB_PATH" result/P41_VC62_UNSIGNED_PLAY.aab
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" result/apksigner.jar
+          cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" result/zipalign
+          chmod +x result/zipalign
+          cd input
+          zip -qr ../result/AB_Khatma_V019_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE.zip AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE -x '*/build/*' '*/.gradle/*'
+          cd ..
+          sha256sum result/* | tee result/SHA256SUMS.txt
+          cp mushaf_asset_revision.txt result/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P41-VC62-FULL-SOURCE-AND-UNSIGNED
+          path: result/*
+          if-no-files-found: error
+          retention-days: 7
