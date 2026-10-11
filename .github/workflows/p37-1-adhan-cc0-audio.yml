@@ -1,0 +1,19 @@
+name: P37 Adhan CC0 Original Audio Retrieval
+on:
+  push:
+    branches: [release/p37-1-audio-asset]
+jobs:
+  retrieve-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download original freely licensed complete adhan
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --connect-timeout 15 --max-time 120 -A 'ABKhatma/1.0 (public-license audio download)'             'https://upload.wikimedia.org/wikipedia/commons/b/b0/Beautiful_adhan.ogg' -o adhan_full.ogg
+          echo 'a1fa4fd942401922c5c3301816384aae86956522  adhan_full.ogg' | sha1sum -c -
+          test "$(stat -c%s adhan_full.ogg)" -ge 1000000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-CC0-Complete-Adhan-Audio
+          path: adhan_full.ogg
+          retention-days: 3
