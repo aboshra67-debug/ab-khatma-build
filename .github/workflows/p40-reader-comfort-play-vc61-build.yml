@@ -98,8 +98,13 @@ jobs:
       - name: Collect unsigned artifacts for strictly local original-key signing
         run: |
           mkdir -p unsigned_build
-          cp src/AB_Khatma_P39_VC60_READER_DAILY_CONFIRM_SAFE_SOURCE/app/build/outputs/apk/debug/app-debug.apk unsigned_build/P40_VC61_UNSIGNED.apk
-          cp src/AB_Khatma_P39_VC60_READER_DAILY_CONFIRM_SAFE_SOURCE/app/build/outputs/bundle/release/app-release.aab unsigned_build/P40_VC61_UNSIGNED_PLAY.aab
+          echo "Available build outputs:"
+          find src/AB_Khatma_P39_VC60_READER_DAILY_CONFIRM_SAFE_SOURCE/app/build/outputs -type f \( -name '*.apk' -o -name '*.aab' \) -print
+          APK_PATH=$(find src/AB_Khatma_P39_VC60_READER_DAILY_CONFIRM_SAFE_SOURCE/app/build/outputs/apk/debug -type f -name '*.apk' | head -n 1)
+          AAB_PATH=$(find src/AB_Khatma_P39_VC60_READER_DAILY_CONFIRM_SAFE_SOURCE/app/build/outputs/bundle/release -type f -name '*.aab' | head -n 1)
+          test -n "$APK_PATH" && test -n "$AAB_PATH"
+          cp "$APK_PATH" unsigned_build/P40_VC61_UNSIGNED.apk
+          cp "$AAB_PATH" unsigned_build/P40_VC61_UNSIGNED_PLAY.aab
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
           cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
           chmod +x unsigned_build/zipalign
