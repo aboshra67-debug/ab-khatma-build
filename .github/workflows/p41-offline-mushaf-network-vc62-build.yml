@@ -93,7 +93,14 @@ jobs:
           for page,p in pages.items():
               with PILImage.open(p) as im:
                   assert im.width >= 900 and im.height >= 1400
-                  im.convert('RGB').save(out/f'{page:03d}.webp',format='WEBP',quality=88,method=5)
+                  # Keep a crisp 960px reading width while bounding on-device size.
+                  reduced=im.convert('RGB')
+                  reduced.thumbnail((960,1600),resample=PILImage.Resampling.LANCZOS)
+                  target=out/f'{page:03d}.webp'
+                  for q in (77,67,57,47):
+                      reduced.save(target,format='WEBP',quality=q,method=4)
+                      if target.stat().st_size <= 190_000: break
+                  assert target.stat().st_size <= 190_000, ('page image exceeds portable budget',page,target.stat().st_size)
           (out/'SOURCE_ATTRIBUTION.txt').write_text(
               'Madinah Mushaf digital page calligraphy © King Fahd Glorious Quran Printing Complex.\n'
               'KFGQPC usage rights: https://dm.qurancomplex.gov.sa/rights/\n'
@@ -101,7 +108,10 @@ jobs:
               'Quranic artwork remains owned by KFGQPC and must not be altered.\n',
               encoding='utf-8'
           )
-          print('PASS: 604 original pages bundled, total',sum(p.stat().st_size for p in pages.values()))
+          img_bytes=sum(p.stat().st_size for p in out.glob('*.webp'))
+          assert img_bytes <= 115_000_000, ('offline pages total too large',img_bytes)
+          print('PASS: 604 portable offline images',img_bytes,'bytes')
+          print('Source original images bytes',sum(p.stat().st_size for p in pages.values()))
           # JPEG source has its own paper background; unlike alpha-only WebP,
           # it must NOT receive SrcIn colour tint.
           source=Path('input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE/app/src/main/java/com/ab/khatma/ui/screens/QuranScreen.kt')
