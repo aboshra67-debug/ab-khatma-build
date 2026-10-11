@@ -67,14 +67,16 @@ jobs:
           unzip -q public_config.zip -d configs
       - name: Obtain full offline Madinah page assets and verify count
         run: |
-          git clone --depth 1 https://github.com/Bsracc/daily-quran.git /tmp/verified_mushaf_pages
+          git clone --depth 1 https://github.com/akram-seid/quran-hd-images.git /tmp/verified_mushaf_pages
+          python3 -m pip install --disable-pip-version-check pillow
           git -C /tmp/verified_mushaf_pages rev-parse HEAD > mushaf_asset_revision.txt
           python3 <<'PY'
           from pathlib import Path
           from shutil import copyfile
           import re
-          root=Path('/tmp/verified_mushaf_pages/app/src/main/assets/mushaf_pages')
-          files=list(root.rglob('*.webp'))
+          from PIL import Image as PILImage
+          root=Path('/tmp/verified_mushaf_pages/images')
+          files=list(root.rglob('*.jpg'))
           print('Asset files',len(files),'sample names', [p.name for p in files[:8]])
           assert len(files)==604, ('expected 604 Madinah pages, found',len(files))
           out=Path('input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE/app/src/main/assets/mushaf_pages')
@@ -89,15 +91,26 @@ jobs:
               pages[page]=p
           assert sorted(pages)==list(range(1,605)), 'all pages must exist exactly once'
           for page,p in pages.items():
-              copyfile(p,out/f'{page:03d}.webp')
+              with PILImage.open(p) as im:
+                  assert im.width >= 900 and im.height >= 1400
+                  im.convert('RGB').save(out/f'{page:03d}.webp',format='WEBP',quality=88,method=5)
           (out/'SOURCE_ATTRIBUTION.txt').write_text(
               'Madinah Mushaf digital page calligraphy © King Fahd Glorious Quran Printing Complex.\n'
               'KFGQPC usage rights: https://dm.qurancomplex.gov.sa/rights/\n'
-              'Pages distributed in the MIT-licensed Daily Quran app at https://github.com/Bsracc/daily-quran .\n'
+              'Original Madani page images © KFGQPC. Reference image package from https://github.com/akram-seid/quran-hd-images .\n'
               'Quranic artwork remains owned by KFGQPC and must not be altered.\n',
               encoding='utf-8'
           )
           print('PASS: 604 original pages bundled, total',sum(p.stat().st_size for p in pages.values()))
+          # JPEG source has its own paper background; unlike alpha-only WebP,
+          # it must NOT receive SrcIn colour tint.
+          source=Path('input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE/app/src/main/java/com/ab/khatma/ui/screens/QuranScreen.kt')
+          text=source.read_text(encoding='utf-8')
+          tint='colorFilter = ColorFilter.tint(Color(0xFF271B17), BlendMode.SrcIn),'
+          assert text.count(tint)==1
+          source.write_text(text.replace(tint,'// Full-colour original page: preserve artwork pixels.'),encoding='utf-8')
+          notes=Path('input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE/P41_MUSHAF_AND_SERVER_SAFE_PATCH_AR.txt')
+          notes.write_text(notes.read_text(encoding='utf-8').replace('Daily Quran (MIT for code; Quran artworks © KFGQPC)', 'akram-seid/quran-hd-images (Quran.com-rendered Madani pages, artwork © KFGQPC)'),encoding='utf-8')
           PY
       - name: Verify P40 backward compatibility and P41 integrity
         working-directory: input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE
