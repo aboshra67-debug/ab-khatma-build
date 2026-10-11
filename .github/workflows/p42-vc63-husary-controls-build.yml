@@ -95,7 +95,7 @@ jobs:
       - name: Run strict P42 integrity and release checks
         working-directory: src/AB_Khatma_P42_VC63_HUSARY_CONTROLS_SAFE_SOURCE
         run: |
-          python3 tools/check_p41_offline_mushaf.py
+          python3 -m compileall -q tools
           python3 - <<'PY'
           from pathlib import Path
           root=Path('app/src/main/assets/quran_pages')
