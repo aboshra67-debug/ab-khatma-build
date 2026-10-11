@@ -1,5 +1,5 @@
 from pathlib import Path
-root = Path(__file__).resolve().parents[1]
+root = Path.cwd()
 
 def patch(rel, subs):
     file = root / rel
