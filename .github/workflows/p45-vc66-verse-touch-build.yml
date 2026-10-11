@@ -41,7 +41,7 @@ jobs:
       - name: Extract exact P43 complete Safe Source
         run: |
           test -s baseline/AB_Khatma_P44_VC65_COMPLETE_SAFE_SOURCE.zip
-          unzip -q baseline/AB_Khatma_P43_VC64_COMPLETE_SAFE_SOURCE.zip -d src
+          unzip -q baseline/AB_Khatma_P44_VC65_COMPLETE_SAFE_SOURCE.zip -d src
           test -d src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
       - name: Fetch pinned P44 add-only patch without private signing information
         run: |
