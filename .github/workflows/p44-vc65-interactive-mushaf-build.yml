@@ -33,7 +33,7 @@ jobs:
       - name: Download proven P43 baseline including original and colored Quran pages
         uses: actions/download-artifact@v4
         with:
-          name: AB-Khatma-P44-VC65-FULL-SAFE-SOURCE
+          name: AB-Khatma-P43-VC64-FULL-SAFE-SOURCE
           run-id: 38168659914
           github-token: ${{ github.token }}
           repository: aboshra67-debug/ab-khatma-build
