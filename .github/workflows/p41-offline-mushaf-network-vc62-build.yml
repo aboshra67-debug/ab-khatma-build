@@ -108,7 +108,22 @@ jobs:
           text=source.read_text(encoding='utf-8')
           tint='colorFilter = ColorFilter.tint(Color(0xFF271B17), BlendMode.SrcIn),'
           assert text.count(tint)==1
-          source.write_text(text.replace(tint,'// Full-colour original page: preserve artwork pixels.'),encoding='utf-8')
+          # The reader-only topbar condition must not leak into MissingQuranScreen.
+          text=text.replace(tint,'// Full-colour original page: preserve artwork pixels.')
+          split_at='private fun MissingQuranScreen('
+          assert text.count(split_at)==1
+          left,right=text.split(split_at,1)
+          wrong='if (displayMode != QuranMode.MADINA_PAGES || chromeVisible) TopAppBar('
+          assert left.count(wrong)==1 and right.count(wrong)==1
+          right=right.replace(wrong,'TopAppBar(',1)
+          # Keep pinch zoom up-to-date during a continuous gesture.
+          marker='    var panX by remember(page) { mutableFloatStateOf(0f) }'
+          assert text.count(marker)==1
+          text=left+split_at+right
+          text=text.replace(marker,'    val currentZoom by rememberUpdatedState(zoom)\n'+marker,1)
+          text=text.replace('val newZoom = (zoom * factor).coerceIn(1f, 2.5f)',
+                            'val newZoom = (currentZoom * factor).coerceIn(1f, 2.5f)')
+          source.write_text(text,encoding='utf-8')
           notes=Path('input/AB_Khatma_P41_VC62_OFFLINE_MUSHAF_SAFE_SOURCE/P41_MUSHAF_AND_SERVER_SAFE_PATCH_AR.txt')
           notes.write_text(notes.read_text(encoding='utf-8').replace('Daily Quran (MIT for code; Quran artworks © KFGQPC)', 'akram-seid/quran-hd-images (Quran.com-rendered Madani pages, artwork © KFGQPC)'),encoding='utf-8')
           PY
