@@ -133,10 +133,7 @@ jobs:
           (dst/'generation_audit.json').write_text(json.dumps({'vector_revision':revision,'pages':len(stats),'coloured_names':sum(s['divine_names'] for s in stats),'verse_digits':sum(s['verse_digits'] for s in stats)},ensure_ascii=False))
           print('P43 verified color pages',len(stats),'divine',sum(s['divine_names'] for s in stats),'verse digits',sum(s['verse_digits'] for s in stats),flush=True)
           PY
-      - name: Fix Compose clipping import without changing Quran artwork
-        run: |
-          PAGE=src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/src/main/java/com/ab/khatma/ui/screens/P41OfflineMushafPage.kt
-          grep -q '^import androidx.compose.foundation.clipToBounds
+      - name: Strict compare Quran original and color variants
         run: |
           python3 <<'PY'
           import pathlib, zipfile
