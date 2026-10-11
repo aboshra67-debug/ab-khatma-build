@@ -34,7 +34,7 @@ jobs:
             const browser=await chromium.launch({headless:true});
             try {
               const page=await browser.newPage({acceptDownloads:true});
-              await page.goto('https://firestorage.ai/ja/f/NWi61DxNxgAb',{waitUntil:'domcontentloaded',timeout:60000});
+              await page.goto('https://firestorage.ai/ja/f/KsuG0KcinUbQ',{waitUntil:'domcontentloaded',timeout:60000});
               const button=page.getByRole('button',{name:'ダウンロード',exact:true});
               await button.waitFor({state:'visible',timeout:60000});
               const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
@@ -42,7 +42,7 @@ jobs:
             } finally {await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
-          echo '8181a46295d0f384ca321c56b936074f784f36f42e570f009b16bdf8e2451da9  p36_safe_source.zip' | sha256sum -c -
+          echo '8a8edaf6de08c3f9e5022f8a932cccf01bfde982d1796bc6143e524c9c88b2ff  p36_safe_source.zip' | sha256sum -c -
           mkdir -p src
           unzip -q p36_safe_source.zip -d src
       - name: Download existing Android Firebase public client configuration
