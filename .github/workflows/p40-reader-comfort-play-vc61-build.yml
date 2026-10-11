@@ -1,0 +1,114 @@
+name: P40 Reader Comfort and Play Release VC61
+on:
+  push:
+    branches: [release/p40-reader-comfort-play-vc61]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Prepare Android SDK 36
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare pinned source downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - name: Download verified P39 source
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/KsuG0KcinUbQ',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('p39_baseline.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '8a8edaf6de08c3f9e5022f8a932cccf01bfde982d1796bc6143e524c9c88b2ff  p39_baseline.zip' | sha256sum -c -
+          mkdir -p src
+          unzip -q p39_baseline.zip -d src
+      - name: Download unchanged Android Firebase public config
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/MxU3D1nwSkZs',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('firebase_public.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '8f688d435aad219c99a62ffe0d95b903befced229d9bb0dc52280e1e917a96a0  firebase_public.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q firebase_public.zip -d configs
+      - name: Check baseline and apply P40 minimal patch
+        run: |
+          cd src/AB_Khatma_P39_VC60_READER_DAILY_CONFIRM_SAFE_SOURCE
+          python3 tools/check_p39_reader_home.py
+          python3 "$GITHUB_WORKSPACE/tools/apply_p40_reader_comfort.py"
+          grep -q 'versionCode = 61' app/build.gradle.kts
+          grep -q 'applicationIdSuffix = ".preview"' app/build.gradle.kts
+          grep -q 'fontFamily = FontFamily.Serif' app/src/main/java/com/ab/khatma/ui/screens/QuranScreen.kt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('app/src/main/assets/quran')
+          assert len(json.loads((p/'quran-uthmani.json').read_text()))==6236
+          assert len(json.loads((p/'quran-moyassar.json').read_text()))==6236
+          assert len(json.loads((p/'quran-word-meanings.json').read_text()))==6236
+          assert not list(Path('.').rglob('*.p12')) and not list(Path('.').rglob('*.jks'))
+          print('P40 source verification PASSED')
+          PY
+      - name: Build unsigned preview APK and Play AAB
+        working-directory: src/AB_Khatma_P39_VC60_READER_DAILY_CONFIRM_SAFE_SOURCE
+        run: |
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon --stacktrace :app:assembleDebug :app:bundleRelease \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Collect unsigned artifacts for strictly local original-key signing
+        run: |
+          mkdir -p unsigned_build
+          cp src/AB_Khatma_P39_VC60_READER_DAILY_CONFIRM_SAFE_SOURCE/app/build/outputs/apk/debug/app-debug.apk unsigned_build/P40_VC61_UNSIGNED.apk
+          cp src/AB_Khatma_P39_VC60_READER_DAILY_CONFIRM_SAFE_SOURCE/app/build/outputs/bundle/release/app-release.aab unsigned_build/P40_VC61_UNSIGNED_PLAY.aab
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
+          cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
+          chmod +x unsigned_build/zipalign
+          test -s unsigned_build/P40_VC61_UNSIGNED.apk
+          test -s unsigned_build/P40_VC61_UNSIGNED_PLAY.aab
+          sha256sum unsigned_build/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P40-VC61-UNSIGNED-LOCAL-SIGNING
+          path: unsigned_build/*
+          if-no-files-found: error
+          retention-days: 7
