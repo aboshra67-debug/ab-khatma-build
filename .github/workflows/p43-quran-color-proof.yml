@@ -1,0 +1,72 @@
+name: P43 Quran Colors Visual Proof
+on:
+  push:
+    branches: [release/p43-vc64-zoom-safe-colors]
+  workflow_dispatch:
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install verified PNG and SVG renderer
+        run: python3 -m pip install --break-system-packages lxml==6.0.2 pillow==12.1.1 cairosvg==2.8.2
+      - name: Prepare approved downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - name: Fetch P43 isolated source (hash pinned)
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/1CqwHhztynD6',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('p43-src.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '92b7d8c7e6f64ffec5c1f1359b969203923a3f2ee58db9b2fe5d04e81f258630  p43-src.zip' | sha256sum -c -
+          unzip -q p43-src.zip -d src
+      - name: Download sample immutable Madani SVG artwork
+        run: |
+          mkdir -p svg
+          python3 <<'PY'
+          import urllib.request, pathlib
+          revision='ae5786ab08597f8123575dec4e774f1eca195e0f'
+          for n in (1,4,233,604):
+              name=f'{n:03d}.svg'
+              url=f'https://raw.githubusercontent.com/mushafdatabase/MushafDatabase-Ligature-Based-SVG/{revision}/SVG%20V1.01/{name}'
+              req=urllib.request.Request(url,headers={'User-Agent':'ABKhatmaColorProof/1.0'})
+              with urllib.request.urlopen(req,timeout=60) as res: data=res.read()
+              assert len(data)>80000 and b'data-md-version="1.01"' in data
+              (pathlib.Path('svg')/name).write_bytes(data)
+              print(name,len(data))
+          PY
+      - name: Produce 4-page color quality proof
+        run: |
+          python3 src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/tools/colorize_mushaf_svg.py \
+            --svg-dir svg --output-dir previews --pages 1 4 233 604
+          python3 - <<'PY'
+          import json
+          from PIL import Image
+          from pathlib import Path
+          stats=json.loads(Path('previews/color_audit.json').read_text())
+          assert len(stats)==4 and sum(s['divine_names'] for s in stats)>10 and sum(s['verse_digits'] for s in stats)>20
+          for s in stats:
+              img=Image.open(Path('previews')/(s['page']+'.webp'))
+              assert img.size == (1260,2038)
+              img.resize((630,1019)).save(Path('previews')/(s['page']+'.png'))
+          print('proof PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: P43-SAFE-QURAN-COLOR-VISUAL-PROOF
+          path: previews/*
+          if-no-files-found: error
+          retention-days: 7
