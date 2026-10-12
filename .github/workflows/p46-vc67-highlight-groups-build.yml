@@ -178,7 +178,21 @@ jobs:
                   dest=root/name
                   assert dest.exists() or name=='tools/build_p46_verse_highlights.py'
                   dest.parent.mkdir(parents=True,exist_ok=True)
-                  dest.write_bytes(bundle.read(name))
+                  content=bundle.read(name)
+                  if name=='tools/build_p46_verse_highlights.py':
+                      # Render pure interior SVG pixels: antialiased edge RGB quantization
+                      # otherwise merges adjacent verse/line IDs into a wrong giant band.
+                      old="f'#{idx:02x}{line:02x}e0'"
+                      updated="f'#{idx:02x}{line*8:02x}e0'"
+                      text=content.decode('utf-8')
+                      assert text.count(old)==1
+                      text=text.replace(old,updated)
+                      old2='labels[:,:,:2] = np.where(pixels[:,:,3,None] > 92, pixels[:,:,:2], 0)'
+                      updated2='labels[:,:,0] = np.where(pixels[:,:,3] >= 250, pixels[:,:,0], 0)\\n    labels[:,:,1] = np.where(pixels[:,:,3] >= 250, (pixels[:,:,1] + 4)//8, 0)'
+                      assert text.count(old2)==1
+                      text=text.replace(old2,updated2.replace('\\n','\n'))
+                      content=text.encode('utf-8')
+                  dest.write_bytes(content)
           assert 'versionCode = 67' in (root/'app/build.gradle.kts').read_text()
           assert len(list((root/'app/src/main/assets/quran_pages').glob('*.webp')))==604
           assert len(list((root/'app/src/main/assets/quran_pages_colored').glob('*.webp')))==604
