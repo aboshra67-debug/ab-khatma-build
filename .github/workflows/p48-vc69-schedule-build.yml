@@ -1,7 +1,7 @@
-name: P48.1 VC70 Interface and Licensed Adhan Repair
+name: P49 VC71 Full 30-Day Reader Schedule
 on:
   push:
-    branches: [release/p48-1-vc70-ui-adhan-fixes]
+    branches: [release/p49-vc71-full-30day-reader-schedule]
   workflow_dispatch:
 permissions:
   contents: read
@@ -67,7 +67,7 @@ jobs:
         run: |
           python3 p48/apply_p48.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
           test -f src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/src/main/res/raw/adhan_classic.ogg
-          grep -q 'versionCode = 70' src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build.gradle.kts
+          grep -q 'versionCode = 71' src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build.gradle.kts
       - name: Verify and bundle two licensed offline adhan recordings
         run: |
           set -euo pipefail
@@ -107,27 +107,27 @@ jobs:
           APK_PATH=$(find src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build/outputs/apk/release -type f -name '*.apk' | head -n 1)
           AAB_PATH=$(find src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build/outputs/bundle/release -type f -name '*.aab' | head -n 1)
           test -n "$APK_PATH" && test -n "$AAB_PATH"
-          cp "$APK_PATH" unsigned_build/P48_1_VC70_UNSIGNED_RELEASE.apk
-          cp "$AAB_PATH" unsigned_build/P48_1_VC70_UNSIGNED_PLAY.aab
+          cp "$APK_PATH" unsigned_build/P49_VC71_UNSIGNED_RELEASE.apk
+          cp "$AAB_PATH" unsigned_build/P49_VC71_UNSIGNED_PLAY.aab
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
           cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
           chmod +x unsigned_build/zipalign
           sha256sum unsigned_build/P48*
       - uses: actions/upload-artifact@v4
         with:
-          name: AB-Khatma-P48-1-VC70-UNSIGNED-LOCAL-SIGNING
+          name: AB-Khatma-P49-VC71-UNSIGNED-LOCAL-SIGNING
           path: unsigned_build/*
           if-no-files-found: error
           retention-days: 7
       - name: Archive complete P48 safe source with original Quran and adhan
         run: |
           cd src
-          zip -q -r -9 ../AB_Khatma_P48_1_VC70_COMPLETE_SAFE_SOURCE.zip AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE \
+          zip -q -r -9 ../AB_Khatma_P49_VC71_COMPLETE_SAFE_SOURCE.zip AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE \
             -x '*/build/*' '*/.gradle/*' '*.p12' '*.jks' '*.keystore' '*.pyc' '*/__pycache__/*'
-          unzip -t -q ../AB_Khatma_P48_1_VC70_COMPLETE_SAFE_SOURCE.zip
+          unzip -t -q ../AB_Khatma_P49_VC71_COMPLETE_SAFE_SOURCE.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: AB-Khatma-P48-1-VC70-FULL-SAFE-SOURCE
-          path: AB_Khatma_P48_1_VC70_COMPLETE_SAFE_SOURCE.zip
+          name: AB-Khatma-P49-VC71-FULL-SAFE-SOURCE
+          path: AB_Khatma_P49_VC71_COMPLETE_SAFE_SOURCE.zip
           if-no-files-found: error
           retention-days: 7
