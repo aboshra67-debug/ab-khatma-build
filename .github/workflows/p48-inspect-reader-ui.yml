@@ -1,0 +1,41 @@
+name: P48 read-only inspect reader and group UI
+on:
+  push:
+    branches: [release/p48-vc69-reader-schedule]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P47-VC68-FULL-SAFE-SOURCE
+          run-id: 38261002602
+          github-token: ${{ github.token }}
+          repository: aboshra67-debug/ab-khatma-build
+          path: baseline
+      - name: Inspect Kotlin group screens and routing (no secrets)
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          fn='baseline/AB_Khatma_P47_VC68_COMPLETE_SAFE_SOURCE.zip'
+          with zipfile.ZipFile(fn) as z:
+            names=z.namelist()
+            for name in names:
+              if name.endswith('.kt') and any(key in name for key in ('SecureV2Screen','P25GroupScreens','P28LeaderScreens','P34DailyDistributionTable','P39ReaderTodayHome','KhatmaVisualHome','KhatmaCalmScreens','MainActivity','SecureV2Api')):
+                data=z.read(name).decode('utf-8')
+                print('### FILE',name,'SIZE',len(data),'LINES',len(data.splitlines()),flush=True)
+                lines=data.splitlines()
+                selected=set()
+                for i,s in enumerate(lines):
+                  if any(k in s.lower() for k in ('جدولي','نصيبي','ابدأ القراءة','تمت القراءة','ختمات الصفحات','جدول الختمة','لوحة المتابعة','الرئيسية','رجوع','todaygroup','groupdetail','groupstatus','gettoday','getgroups','fetchgroups','loadgroups','error','refreshsession','group_home')):
+                    for j in range(max(0,i-4),min(len(lines),i+6)):
+                      selected.add(j)
+                for i in sorted(selected):
+                  print(f'{i+1:04d}|{lines[i]}',flush=True)
+          PY
