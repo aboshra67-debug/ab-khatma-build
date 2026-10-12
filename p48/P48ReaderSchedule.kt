@@ -30,7 +30,7 @@ private fun p48Date(d:String)=runCatching {
 }.getOrDefault(d)
 private fun p48Label(r:SecureV2Api.ScheduleRow)=when(r.status) {
  "completed"->"تمت القراءة ✓";"overdue"->"متأخر";"reassigned"->"أعاد القائد توزيعه";
- "excused"->"إعفاء القائد";"extended"->"تمديد الموعد";else->"مطلوب اليوم"
+ "excused"->"إعفاء القائد";"extended"->"تمديد الموعد";"upcoming"->"قادم";else->"مطلوب اليوم"
 }
 @Composable
 internal fun P48ReaderSchedule(token:String,groupId:Long,isLeader:Boolean,groupName:String,
