@@ -169,3 +169,115 @@ for folder,extension in [('quran_pages','webp'),('quran_pages_colored','webp'),
  assert len(files)==604,(folder,len(files))
 assert not list(root.rglob('*.p12')) and not list(root.rglob('*.jks'))
 print('P48 apply PASS: 4 allowlisted files; all 604 Quran assets preserved; P47 adhan unchanged')
+
+
+# P48.1 VC70: tightly scoped view corrections and two licensed offline adhan voices.
+# All original files and voices remain present; user storage/preferences are untouched.
+def safe_change(file, old, new):
+    contents = file.read_text(encoding="utf-8")
+    assert contents.count(old) == 1, (file.name, contents.count(old))
+    file.write_text(contents.replace(old, new, 1), encoding="utf-8")
+
+safe_change(gradle, 'versionCode = 69', 'versionCode = 70')
+safe_change(gradle, 'versionName = "0.19.42-p48-reader-schedule"',
+            'versionName = "0.19.43-p48-1-ui-adhan"')
+
+# The dedicated "جدولي" tab already leads to the same page; keep the tab and reading action.
+group_ui = base/'P25GroupScreens.kt'
+safe_change(group_ui, '''        OutlinedButton(onClick = onPlans, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+            Text("جدول الختمة وتسجيل الإنجاز")
+        }''',
+'''        // Navigation remains in the dedicated "جدولي" tab above; no duplicated button here.''')
+
+prayer_ui = root/'app/src/main/java/com/ab/khatma/ui/screens/PrayerPremiumScreen.kt'
+# Always present the full, fixed heading; scroll only the controls below it.
+safe_change(prayer_ui,
+'''        ModalBottomSheet(
+            onDismissRequest = { showSoundInfo = false },
+            containerColor = Ivory,
+            shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
+        ) {''',
+'''        ModalBottomSheet(
+            onDismissRequest = { showSoundInfo = false },
+            containerColor = Ivory,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
+        ) {''')
+safe_change(prayer_ui,
+'''                Modifier.fillMaxWidth().heightIn(max = 620.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text("صوت الأذان", color = DeepGreen, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold)
+                Text("اختَر صوتًا واستمع إلى تجربة. كل الأصوات تعمل دون إنترنت.",
+                    color = SoftText, fontSize = 12.sp, lineHeight = 18.sp)
+                listOf(''',
+'''                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text("صوت الأذان", color = DeepGreen, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold)
+                Text("اختَر صوتًا واستمع إلى تجربة. كل الأصوات تعمل دون إنترنت.",
+                    color = SoftText, fontSize = 12.sp, lineHeight = 18.sp)
+                Column(Modifier.fillMaxWidth().heightIn(max = 480.dp)
+                    .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(''')
+safe_change(prayer_ui,
+'''                Spacer(Modifier.height(18.dp))
+            }
+        }
+    }
+}''',
+'''                Spacer(Modifier.height(18.dp))
+                }
+            }
+        }
+    }
+}''')
+safe_change(prayer_ui,
+'''                    Triple("classic", "أذان عربي كلاسيكي", "تسجيل مختلف • 03:03 • CC BY-SA 4.0"),''',
+'''                    Triple("classic", "أذان عربي كلاسيكي", "تسجيل مختلف • 03:03 • CC BY-SA 4.0"),
+                    Triple("madinah", "أذان المسجد النبوي", "تسجيل ميداني • 03:07 • CC BY 3.0"),
+                    Triple("shalqar", "أذان مسجد شالقار", "تسجيل مسجد بكازاخستان • 02:35 • CC BY-SA 4.0"),''')
+safe_change(prayer_ui,
+'''                        "وAndrewler (CC BY-SA 4.0). تفاصيل التراخيص محفوظة في ملف المصادر.",''',
+'''                        "وAndrewler (CC BY-SA 4.0)، وejaz215 (CC BY 3.0)، وEsetok (CC BY-SA 4.0). تفاصيل التراخيص محفوظة في ملف المصادر.",''')
+
+prefs_file = root/'app/src/main/java/com/ab/khatma/prayer/AdhanPreferences.kt'
+contents = prefs_file.read_text(encoding='utf-8')
+assert contents.count('listOf("default", "makkah", "classic")') == 2
+prefs_file.write_text(contents.replace('listOf("default", "makkah", "classic")',
+          'listOf("default", "makkah", "classic", "madinah", "shalqar")'), encoding='utf-8')
+service_file = root/'app/src/main/java/com/ab/khatma/prayer/AdhanPlaybackService.kt'
+safe_change(service_file,
+'''                    "classic" -> R.raw.adhan_classic
+                    else -> R.raw.adhan_full''',
+'''                    "classic" -> R.raw.adhan_classic
+                    "madinah" -> R.raw.adhan_madinah
+                    "shalqar" -> R.raw.adhan_shalqar
+                    else -> R.raw.adhan_full''')
+
+(root/'ADHAN_EXTRA_P48_1_LICENSES.txt').write_text(
+"""OFFLINE ADHAN AUDIO SOURCES, P48.1 VC70
+1. Medina / Prophet's Mosque field recording
+   Author/source: ejaz215 / Freesound (as credited by Wikimedia Commons)
+   https://commons.wikimedia.org/wiki/File:33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg
+   License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+   https://creativecommons.org/licenses/by/3.0/
+   Distributed unchanged as adhan_madinah.ogg.
+
+2. Shalqar mosque, Kazakhstan (Matey Qoqanuly Mosque)
+   Author: Esetok
+   https://commons.wikimedia.org/wiki/File:Adhan_in_Shalqar_mosque.webm
+   License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+   https://creativecommons.org/licenses/by-sa/4.0/
+   Audio track extracted and re-encoded from the original video to adhan_shalqar.ogg.
+   The adapted audio track is distributed under CC BY-SA 4.0.
+Notes: No claim is made identifying an unnamed recording's individual muezzin.
+The previous three recordings remain untouched, with their existing credit files.
+""", encoding="utf-8")
+assert (root/'app/src/main/res/raw/adhan_classic.ogg').exists()
+assert (root/'app/src/main/res/raw/adhan_makkah.ogg').exists()
+assert (root/'app/src/main/res/raw/adhan_full.ogg').exists()
+print("P48.1 VC70 safe UI/adhan patch applied; extra audio downloaded in next CI step")
