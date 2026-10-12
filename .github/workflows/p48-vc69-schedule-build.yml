@@ -80,6 +80,10 @@ jobs:
             'https://upload.wikimedia.org/wikipedia/commons/4/4f/Adhan_in_Shalqar_mosque.webm' \
             -o /tmp/p48_1_shalqar.webm
           echo '5d7301c0c142d8e5d8f281f4dd02846eaf05529b  /tmp/p48_1_shalqar.webm' | sha1sum -c -
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ffmpeg >/dev/null
+          fi
           ffmpeg -nostdin -hide_banner -loglevel error \
             -i /tmp/p48_1_shalqar.webm -map 0:a:0 -vn -c:a libvorbis -qscale:a 4 \
             "$AUDIO_DIR/adhan_shalqar.ogg"
