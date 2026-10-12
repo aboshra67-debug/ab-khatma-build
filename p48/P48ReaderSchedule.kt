@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
 
@@ -34,6 +35,7 @@ private fun p48Label(r:SecureV2Api.ScheduleRow)=when(r.status) {
 }
 @Composable
 internal fun P48ReaderSchedule(token:String,groupId:Long,isLeader:Boolean,groupName:String,
+  todayAssignment:SecureV2Api.TodayItem?,
   onRead:(Int)->Unit,onChanged:()->Unit,onOpenPagePlans:()->Unit) {
  val scope=rememberCoroutineScope()
  var refresh by remember(token,groupId){mutableIntStateOf(0)}
@@ -58,7 +60,19 @@ internal fun P48ReaderSchedule(token:String,groupId:Long,isLeader:Boolean,groupN
      if(!isLeader||selected!=null) schedule=withContext(Dispatchers.IO){
        SecureV2Api.readingSchedule(token,groupId,if(isLeader)selected else null)
      }
-   }catch(e:Exception){error=e.message?:"تعذر تحميل الجدول"}
+   }catch(e:Exception){
+     val saved = todayAssignment
+     // P35 staging has no P48 history endpoint yet. Show ONLY today's saved duty;
+     // never synthesize older dues or interfere with leader's manual distribution.
+     if(!isLeader && e.message == "الخدمة غير متاحة على خادم التجربة" &&
+          saved?.assignmentId != null && saved.juz != null) {
+       val row=SecureV2Api.ScheduleRow(saved.assignmentId,
+         LocalDate.now(ZoneId.of("Africa/Cairo")).toString(),saved.juz,
+         if(saved.completed)"completed" else "today",!saved.completed,false,null,emptyList())
+       schedule=SecureV2Api.ReadingSchedule(listOf(row),0,if(saved.completed)0 else 1)
+       error="يظهر تكليف اليوم المحفوظ فقط. سجل المتأخرات وإجراءات القائد ينتظر تحديث السيرفر."
+     } else error=e.message?:"تعذر تحميل الجدول"
+   }
    finally{loading=false}
  }
  fun save(job:suspend()->Unit) {
