@@ -71,7 +71,9 @@ internal fun P48ReaderSchedule(token:String,groupId:Long,isLeader:Boolean,groupN
          !LocalDate.parse(it.startDate).isAfter(cairoToday) &&
          !LocalDate.parse(it.endDate).isBefore(cairoToday)
        }.getOrDefault(false)
-     } ?: savedPlans.maxByOrNull{it.id}
+     } ?: savedPlans.filter{run ->
+       runCatching{LocalDate.parse(run.startDate).isAfter(cairoToday)}.getOrDefault(false)
+     }.minByOrNull{it.startDate}
      pageDuties = pageRun?.let{run ->
        withContext(Dispatchers.IO) {
          PageApi.tasks(token,run.id).filter{!isLeader||it.memberId==selected}
@@ -131,9 +133,11 @@ internal fun P48ReaderSchedule(token:String,groupId:Long,isLeader:Boolean,groupN
        .minOrNull()?.let{if(it.isBefore(today.minusDays(29)))today.minusDays(29) else it} ?: today
      val calendarDays=(0 until 30).map{anchor.plusDays(it.toLong())}
      val usingPlan=pageRun!=null
-     val overdue=if(usingPlan)pageDuties.count{!it.finished && runCatching{LocalDate.parse(it.date).isBefore(today)}.getOrDefault(false)}
+     val overdue=if(usingPlan)pageDuties.count{!it.finished && runCatching{LocalDate.parse(it.date).isBefore(today)}.getOrDefault(false)}+
+       data.rows.count{it.status=="overdue" && pageDuties.none{task->task.date==it.date}}
        else data.overdueCount
-     val pending=if(usingPlan)pageDuties.count{!it.finished && runCatching{!LocalDate.parse(it.date).isAfter(today)}.getOrDefault(false)}
+     val pending=if(usingPlan)pageDuties.count{!it.finished && runCatching{!LocalDate.parse(it.date).isAfter(today)}.getOrDefault(false)}+
+       data.rows.count{it.canComplete && pageDuties.none{task->task.date==it.date}}
        else data.pendingCount
      Card(colors=CardDefaults.cardColors(containerColor=Color(0xFFFFF9EC))){
        Column(Modifier.fillMaxWidth().padding(12.dp)){
@@ -154,7 +158,9 @@ internal fun P48ReaderSchedule(token:String,groupId:Long,isLeader:Boolean,groupN
      // Each calendar day is visible even when a leader has not saved a duty for it.
      calendarDays.forEachIndexed { i,day->
        val duties=if(usingPlan)pageDuties.filter{it.date==day.toString()} else emptyList()
-       val juzRows=if(usingPlan)emptyList() else data.rows.filter{it.date==day.toString()}
+       // A day without a page-plan duty can still have a real saved daily-juz duty.
+       val juzRows=if(usingPlan && duties.isNotEmpty())emptyList()
+           else data.rows.filter{it.date==day.toString()}
        if(duties.isEmpty()&&juzRows.isEmpty()){
          Card(shape=RoundedCornerShape(10.dp),
            border=BorderStroke(if(day==today)2.dp else 1.dp,if(day==today)p48Green else Color(0xFFE4EAE3)),
