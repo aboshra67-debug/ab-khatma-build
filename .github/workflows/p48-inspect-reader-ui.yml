@@ -38,4 +38,18 @@ jobs:
                       selected.add(j)
                 for i in sorted(selected):
                   print(f'{i+1:04d}|{lines[i]}',flush=True)
+            for tail,ranges in {
+              'SecureV2Screen.kt': [(1,225),(310,406),(690,826),(850,930)],
+              'SecureV2Api.kt':[(1,165),(170,265)],
+              'P34DailyDistributionTable.kt':[(1,174)],
+              'P28LeaderScreens.kt':[(130,195),(210,310)],
+              'P39ReaderTodayHome.kt':[(1,110)]
+            }.items():
+              selected=next((n for n in names if n.endswith('/'+tail)),None)
+              if not selected: continue
+              lines=z.read(selected).decode('utf-8').splitlines()
+              print('### FULLRANGE',tail,flush=True)
+              for a,b in ranges:
+                for i in range(a-1,min(b,len(lines))):
+                  print(f'{i+1:04d}|{lines[i]}',flush=True)
           PY
