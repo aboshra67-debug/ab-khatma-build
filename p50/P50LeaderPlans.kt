@@ -54,7 +54,7 @@ private object P50Plans {
             val events=if(history==null) emptyList() else (0 until history.length()).map { j->
                 val e=history.getJSONObject(j)
                 val name=when(e.optString("action")){
-                    "assign"->"توزيع";"revise"->"تعديل";"reassign"->"إعادة توزيع"
+                    "assign"->"توزيع";"approve"->"اعتماد القائد";"revise"->"تعديل";"reassign"->"إعادة توزيع"
                     "reschedule"->"تغيير التاريخ";"extend"->"تمديد"
                     "excuse"->"إعفاء";"complete"->"قراءة مكتملة";else->"إجراء"}
                 name+" • "+e.optString("by")+" • "+e.optString("date").take(10)
