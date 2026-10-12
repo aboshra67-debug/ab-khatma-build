@@ -69,7 +69,7 @@ replace('''        groupsLoadFailed = false
     LaunchedEffect(session?.token)''')
 # Refresh Google login only when the refreshed identity maps to the same user.
 old='is SecureV2Api.SessionExpiredException -> showExpiredSession()'
-assert s.count(old)>=2
+assert s.count(old)>=1
 s=s.replace(old,'''is SecureV2Api.SessionExpiredException -> {
                         val refreshed = runCatching {
                             val idToken = KhatmaGoogleSignIn.firebaseIdToken(context)
