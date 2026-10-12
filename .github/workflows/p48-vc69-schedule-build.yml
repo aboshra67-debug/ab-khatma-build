@@ -33,7 +33,7 @@ jobs:
       - name: Reuse P47 tested source with original signed baseline and all Quran maps
         uses: actions/download-artifact@v4
         with:
-          name: AB-Khatma-P48-VC69-FULL-SAFE-SOURCE
+          name: AB-Khatma-P47-VC68-FULL-SAFE-SOURCE
           run-id: 38261002602
           github-token: ${{ github.token }}
           repository: aboshra67-debug/ab-khatma-build
@@ -91,7 +91,7 @@ jobs:
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
           cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
           chmod +x unsigned_build/zipalign
-          sha256sum unsigned_build/P47*
+          sha256sum unsigned_build/P48*
       - uses: actions/upload-artifact@v4
         with:
           name: AB-Khatma-P48-VC69-UNSIGNED-LOCAL-SIGNING
