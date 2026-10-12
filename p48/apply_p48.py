@@ -186,6 +186,10 @@ safe_change(screen,
 safe_change(gradle, 'versionCode = 69', 'versionCode = 70')
 safe_change(gradle, 'versionName = "0.19.42-p48-reader-schedule"',
             'versionName = "0.19.43-p48-1-ui-adhan"')
+# P49: install-over-current update, without changing package or signing key.
+safe_change(gradle, 'versionCode = 70', 'versionCode = 71')
+safe_change(gradle, 'versionName = "0.19.43-p48-1-ui-adhan"',
+            'versionName = "0.19.44-p49-thirty-day-schedule"')
 
 # The dedicated "جدولي" tab already leads to the same page; keep the tab and reading action.
 group_ui = base/'P25GroupScreens.kt'
