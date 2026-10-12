@@ -178,6 +178,11 @@ def safe_change(file, old, new):
     assert contents.count(old) == 1, (file.name, contents.count(old))
     file.write_text(contents.replace(old, new, 1), encoding="utf-8")
 
+# Reuse an already downloaded, server-persisted current duty when P35 lacks history API.
+safe_change(screen,
+    'groupName = chosen.groupName, onRead = { onOpenQuran(it) },',
+    'groupName = chosen.groupName, todayAssignment = chosen, onRead = { onOpenQuran(it) },')
+
 safe_change(gradle, 'versionCode = 69', 'versionCode = 70')
 safe_change(gradle, 'versionName = "0.19.42-p48-reader-schedule"',
             'versionName = "0.19.43-p48-1-ui-adhan"')
