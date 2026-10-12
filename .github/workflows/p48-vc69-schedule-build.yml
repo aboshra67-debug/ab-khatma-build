@@ -112,7 +112,7 @@ jobs:
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
           cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
           chmod +x unsigned_build/zipalign
-          sha256sum unsigned_build/P48*
+          sha256sum unsigned_build/P49*
       - uses: actions/upload-artifact@v4
         with:
           name: AB-Khatma-P49-VC71-UNSIGNED-LOCAL-SIGNING
