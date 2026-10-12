@@ -71,6 +71,13 @@ private object P50Plans {
         return Data(plan,duties,notices,result.optInt("overdue_count"),
             result.optInt("pending_count"),result.optInt("assigned_parts"))
     }
+    fun readers(token:String,gid:Long):List<SecureV2Api.MemberInfo> {
+        val array=call(token,"/groups/"+gid+"/leader-plan/readers").getJSONArray("members")
+        return (0 until array.length()).map{i->
+            val x=array.getJSONObject(i)
+            SecureV2Api.MemberInfo(x.getLong("membership_id"),x.getString("name"),null,false)
+        }
+    }
     fun create(token:String,gid:Long,start:String,days:Int,automatic:Boolean) {
         call(token,"/groups/"+gid+"/leader-plan","POST",JSONObject()
             .put("start_date",start).put("duration_days",days)
@@ -112,7 +119,7 @@ internal fun P50LeaderSchedule(token:String,groupId:Long,isLeader:Boolean,groupN
         loading=true;error=""
         try {
             data=withContext(Dispatchers.IO){P50Plans.load(token,groupId)}
-            if(isLeader)people=withContext(Dispatchers.IO){SecureV2Api.groupStatus(token,groupId).members}
+            if(isLeader)people=withContext(Dispatchers.IO){P50Plans.readers(token,groupId)}
         }catch(e:Exception){
             data=null
             error=if(e.message=="الخدمة غير متاحة على خادم التجربة")
