@@ -1,0 +1,175 @@
+name: P47 VC68 Adhan Audio Controls and Three Voices
+on:
+  push:
+    branches: [release/p47-vc68-adhan-controls]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Prepare Android SDK 36
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare restricted CI source downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - name: Reuse P46 stable source with 604 validated ayah maps
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P46-VC67-FULL-SAFE-SOURCE
+          run-id: 38250050967
+          github-token: ${{ github.token }}
+          repository: aboshra67-debug/ab-khatma-build
+          path: baseline
+      - name: Extract exact P46 Safe Source (do not rebuild or alter Quran maps)
+        run: |
+          test -s baseline/AB_Khatma_P46_VC67_COMPLETE_SAFE_SOURCE.zip
+          mkdir -p src
+          unzip -q baseline/AB_Khatma_P46_VC67_COMPLETE_SAFE_SOURCE.zip -d src
+          test -d src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          test "$(find src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/src/main/assets/quran_verse_highlights -type f -name '*.png' | wc -l)" -eq 604
+      - name: Download same trusted Firebase public client settings (unchanged)
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/nBo1EY9iX-PP',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('public_config.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '91fb83b2e7c315232e7f670074762fb7e0d22e06cc19da3cbea3b82cf501c411  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Fetch pinned P47 code-only adhan patch
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/-G8XN3-Xav9q',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('p47-code-patch.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '5d8a47883423a7ee120135d3fef50356b6cf50f9ef0c4bc76c46f0ae35486dc6  p47-code-patch.zip' | sha256sum -c -
+          python3 <<'PY'
+          import pathlib,zipfile
+          root=pathlib.Path('src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE')
+          allowed={
+            'app/build.gradle.kts',
+            'app/src/main/java/com/ab/khatma/prayer/AdhanAlarmReceiver.kt',
+            'app/src/main/java/com/ab/khatma/prayer/AdhanPreferences.kt',
+            'app/src/main/java/com/ab/khatma/prayer/AdhanPlaybackService.kt',
+            'app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt',
+            'app/src/main/java/com/ab/khatma/ui/screens/PrayerPremiumScreen.kt',
+          }
+          with zipfile.ZipFile('p47-code-patch.zip') as z:
+            assert set(z.namelist())==allowed, "Unexpected P47 code patch files"
+            for name in sorted(allowed):
+              dst=root/name
+              assert dst.is_file()
+              dst.write_bytes(z.read(name))
+          gradle=(root/'app/build.gradle.kts').read_text()
+          assert 'versionCode = 68' in gradle
+          assert 'applicationIdSuffix = ".preview"' in gradle
+          for path in ('quran_pages','quran_pages_colored','quran_verse_highlights','quran_verse_hitmaps'):
+            rootassets=root/'app/src/main/assets'/path
+            assert len(list(rootassets.glob('*.webp' if 'pages' in path else '*.png')))==604, path
+          assert not list(root.rglob('*.p12')) and not list(root.rglob('*.jks'))
+          print('P47 Safe Patch: 6 allowlisted files. Quran, groups, notifications schedule and login preserved.')
+          PY
+      - name: Add verified third full adhan sound from Wikimedia Commons
+        run: |
+          set -euo pipefail
+          mkdir -p src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/src/main/res/raw
+          curl -fLsS --retry 4 --retry-delay 2 -A 'ABKhatmaP47/1.0 contact via project GitHub' \
+            https://upload.wikimedia.org/wikipedia/commons/8/86/Azan.ogg \
+            -o src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/src/main/res/raw/adhan_classic.ogg
+          cd src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          echo 'ada13592b01c12b0128af40035ed7a803e08b563  app/src/main/res/raw/adhan_classic.ogg' | sha1sum -c -
+          cat > ADHAN_CLASSIC_LICENSE_P47.txt <<'LICENSE'
+          AB Khatma P47 — Additional adhan sound (unmodified)
+          Title: Azan.ogg
+          Author: Andrewler
+          Date: 3 September 2022
+          File: https://commons.wikimedia.org/wiki/File:Azan.ogg
+          Full copyright license: Creative Commons Attribution-ShareAlike 4.0 International
+          https://creativecommons.org/licenses/by-sa/4.0/
+          Source audio is distributed unmodified. The CC BY-SA 4.0 terms apply to this
+          recording, and recipients may obtain it from the original Wikimedia Commons link.
+          SHA-1: ada13592b01c12b0128af40035ed7a803e08b563
+          No endorsement from author or Wikimedia implied.
+          LICENSE
+          test -s app/src/main/res/raw/adhan_full.ogg
+          test -s app/src/main/res/raw/adhan_makkah.ogg
+      - name: Build unsigned preview APK and Play AAB
+        working-directory: src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+        run: |
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon --stacktrace :app:assembleDebug :app:bundleRelease \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Collect unsigned artifacts for local original signing
+        run: |
+          mkdir -p unsigned_build
+          APK_PATH=$(find src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build/outputs/apk/debug -type f -name '*.apk' | head -n 1)
+          AAB_PATH=$(find src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build/outputs/bundle/release -type f -name '*.aab' | head -n 1)
+          test -n "$APK_PATH" && test -n "$AAB_PATH"
+          cp "$APK_PATH" unsigned_build/P47_VC68_UNSIGNED.apk
+          cp "$AAB_PATH" unsigned_build/P47_VC68_UNSIGNED_PLAY.aab
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
+          cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
+          chmod +x unsigned_build/zipalign
+          sha256sum unsigned_build/P47*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P47-VC68-UNSIGNED-LOCAL-SIGNING
+          path: unsigned_build/*
+          if-no-files-found: error
+          retention-days: 7
+      - name: Archive complete P43 safe source with offline Quran
+        run: |
+          cd src
+          zip -q -r -9 ../AB_Khatma_P47_VC68_COMPLETE_SAFE_SOURCE.zip AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE \
+            -x '*/build/*' '*/.gradle/*' '*.p12' '*.jks' '*.keystore' '*.pyc' '*/__pycache__/*'
+          unzip -t -q ../AB_Khatma_P47_VC68_COMPLETE_SAFE_SOURCE.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P47-VC68-FULL-SAFE-SOURCE
+          path: AB_Khatma_P47_VC68_COMPLETE_SAFE_SOURCE.zip
+          if-no-files-found: error
+          retention-days: 7
