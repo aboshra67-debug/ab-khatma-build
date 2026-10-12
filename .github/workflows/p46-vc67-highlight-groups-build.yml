@@ -190,7 +190,7 @@ jobs:
                       old2='labels[:,:,:2] = np.where(pixels[:,:,3,None] > 92, pixels[:,:,:2], 0)'
                       updated2='labels[:,:,0] = np.where(pixels[:,:,3] >= 250, pixels[:,:,0], 0)\\n    labels[:,:,1] = np.where(pixels[:,:,3] >= 250, (pixels[:,:,1] + 4)//8, 0)'
                       assert text.count(old2)==1
-                      text=text.replace(old2,updated2.replace('\\n','\n'))
+                      text=text.replace(old2,updated2.replace(chr(92)+'n',chr(10)))
                       content=text.encode('utf-8')
                   dest.write_bytes(content)
           assert 'versionCode = 67' in (root/'app/build.gradle.kts').read_text()
