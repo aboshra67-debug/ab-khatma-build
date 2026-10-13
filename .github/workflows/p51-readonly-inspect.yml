@@ -1,0 +1,52 @@
+name: P51 read-only UI inspection
+on:
+  push:
+    branches: [release/p51-vc73-home-two-khatmas-legacy-schedule]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P47-VC68-FULL-SAFE-SOURCE
+          run-id: 38261002602
+          github-token: ${{ github.token }}
+          repository: aboshra67-debug/ab-khatma-build
+          path: baseline
+      - name: Inspect home and schedule code only
+        run: |
+          mkdir -p tmp_source
+          unzip -q baseline/AB_Khatma_P47_VC68_COMPLETE_SAFE_SOURCE.zip -d tmp_source
+          python3 - <<'PY'
+          from pathlib import Path
+          base=Path('tmp_source/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/src/main/java/com/ab/khatma')
+          patterns={
+            'secure/SecureV2Screen.kt':['P39ReaderTodayHome','section == "home"','P25','khatmas','groupTab','P48ReaderSchedule','P50LeaderSchedule','val groups','TodayItem','GroupItem','onPlans'],
+            'secure/P39ReaderTodayHome.kt':['@Composable','TodayItem','groups','group','ختمة','ورد','leader','onClick'],
+            'secure/P25GroupScreens.kt':['@Composable','onPlans','groupTab'],
+            'secure/SecureV2Api.kt':['data class TodayItem','data class MemberInfo','fun groupStatus','fun today','fun request'],
+            'secure/PageApi.kt':['object PageApi','data class','fun runs','fun tasks','fun save'],
+          }
+          for relative,terms in patterns.items():
+            path=base/relative
+            print('===FILE',relative,'FOUND',path.exists())
+            if not path.exists():continue
+            lines=path.read_text().splitlines()
+            if relative.endswith('P39ReaderTodayHome.kt'): selected=set(range(min(len(lines),280)))
+            elif relative.endswith('PageApi.kt'):selected=set(range(min(len(lines),200)))
+            else:
+              selected=set()
+              for i,line in enumerate(lines):
+                if any(t in line for t in terms):
+                  selected.update(range(max(0,i-8),min(len(lines),i+14)))
+            for i in sorted(selected):
+              line=lines[i]
+              if any(x in line for x in ('API_KEY','CLIENT_SECRET','PASSWORD','SIGNING','firebase_app_id')):
+                continue
+              print('%4d: %s'%(i+1,line))
+          PY
