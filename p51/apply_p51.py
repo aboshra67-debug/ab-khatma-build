@@ -55,6 +55,7 @@ patch(ward,
             }
         }
     }
+    }
 }''')
 
 ui=base/"SecureV2Screen.kt"
