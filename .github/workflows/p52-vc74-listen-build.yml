@@ -113,7 +113,8 @@ jobs:
           fi
           KS="$RUNNER_TEMP/ab_khatma_preview_stable.p12"
           umask 077
-          printf '%s' "$KS_B64" | base64 -d > "$KS"
+          printf '%s' "$KS_B64" | tr -d ' \r\n\t' | base64 -d > "$KS"
+          KS_PASS="$(printf '%s' "$KS_PASS" | tr -d '\r\n')"; export KS_PASS
           mkdir -p signed_build
           BT="$ANDROID_HOME/build-tools/36.0.0"
           "$BT/zipalign" -c -P 16 4 unsigned_build/P52_VC74_UNSIGNED_RELEASE.apk
