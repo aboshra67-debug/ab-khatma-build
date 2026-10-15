@@ -115,7 +115,31 @@ def surah_cuts(folder, s):
     return cuts, rows
 
 
+def debug_pair(folder, s, a):
+    x = decode(fetch(f"https://everyayah.com/data/{folder}/{s:03d}{a:03d}.mp3"), HSR)
+    y = decode(fetch(f"https://everyayah.com/data/{folder}/{s:03d}{a + 1:03d}.mp3"), HSR)
+    dx, hx = frames(x, HSR)
+    dy, hy = frames(y, HSR)
+    on_x = np.nonzero(dx > max(dx.max() - 35, -55))[0]
+    on_y = np.nonzero(dy > max(dy.max() - 35, -55))[0]
+    e = int(on_x[-1])
+    lines = [f"{s}:{a} len={len(dx)} voice_end_frame={e} median={np.median(dx[on_x[0]:e + 1]):.1f} join={hiss_join(x, y)}"]
+    for k in range(max(0, e - 40), min(len(dx), e + 5)):
+        lines.append(f"  x {k:5d} {dx[k]:6.1f} hi={hx[k]:.2f}")
+    y0 = int(on_y[0])
+    for k in range(max(0, y0 - 3), y0 + 12):
+        lines.append(f"  y {k:5d} {dy[k]:6.1f} hi={hy[k]:.2f}")
+    return "\n".join(lines)
+
+
 def main():
+    import os
+    if os.environ.get("DEBUG_PAIRS"):
+        out = []
+        for pair in os.environ["DEBUG_PAIRS"].split():
+            s, a = map(int, pair.split(":"))
+            out.append(debug_pair(sys.argv[1], s, a))
+        Path(sys.argv[2] + ".debug.txt").write_text("\n".join(out))
     folder, out = sys.argv[1], Path(sys.argv[2])
     surahs = [int(x) for x in sys.argv[3:]] or list(range(1, 115))
     result, report = {}, []

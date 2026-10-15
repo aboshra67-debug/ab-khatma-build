@@ -16,7 +16,7 @@ jobs:
           pip install --quiet numpy
       - name: Find where each Maher verse file already holds the start of the next verse
         run: |
-          python3 p67/p67_overlap.py MaherAlMuaiqly128kbps maher_joins.json $(cat p67/surahs_to_align.txt)
+          DEBUG_PAIRS="1:6 1:5 2:5 2:6 112:1" python3 p67/p67_overlap.py MaherAlMuaiqly128kbps maher_joins.json $(cat p67/surahs_to_align.txt)
           sha256sum maher_joins.json | tee maher_joins.json.sha256
           python3 - <<'PY'
           import json
@@ -28,8 +28,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG=maher-joins-v1
+          if [ "$(wc -w < p67/surahs_to_align.txt)" -lt 114 ]; then TAG=maher-joins-debug; fi
           gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "Maher Al-Muaiqly verse joins v1" \
             --notes "For each EveryAyah MaherAlMuaiqly128kbps verse: the time (ms) where the file already continues into the next verse (وصل). 0 = play the whole file." \
-            maher_joins.json maher_joins.json.sha256 maher_joins.json.report.json
+            maher_joins.json maher_joins.json.sha256 maher_joins.json.report.json maher_joins.json.debug.txt
