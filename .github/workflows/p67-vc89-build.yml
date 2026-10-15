@@ -220,6 +220,10 @@ jobs:
               "$GITHUB_WORKSPACE/quran_plain_pages_v1.zip" "$GITHUB_WORKSPACE/quran_plain_pages_v1.zip.sha256"
           fi
           TAG="p67-vc89-${GITHUB_RUN_ID}"
+          # earlier P67 trial releases and the one-time data-check releases are not needed any more
+          for OLD in $(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName -q '.[].tagName' | grep -E '^p67-vc89-|^maher-r1-timing-|^maher-joins-debug$' || true); do
+            [ "$OLD" = "$TAG" ] || gh release delete "$OLD" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          done
           cp AB_Khatma_P67_VC89_COMPLETE_SAFE_SOURCE.zip signed_build/
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "AB Khatma P67 — VC89 (signed)" \
