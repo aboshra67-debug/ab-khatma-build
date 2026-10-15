@@ -16,7 +16,7 @@ jobs:
           pip install --quiet numpy
       - name: Find where each Maher verse file already holds the start of the next verse
         run: |
-          DEBUG_PAIRS="1:6 1:5 2:5 2:6 112:1" python3 p67/p67_overlap.py MaherAlMuaiqly128kbps maher_joins.json $(cat p67/surahs_to_align.txt)
+          DEBUG_PAIRS="1:6 1:5 114:1 114:4" python3 p67/p67_overlap.py MaherAlMuaiqly128kbps maher_joins.json $(cat p67/surahs_to_align.txt)
           sha256sum maher_joins.json | tee maher_joins.json.sha256
           python3 - <<'PY'
           import json

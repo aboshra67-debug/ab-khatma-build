@@ -58,13 +58,13 @@ def hiss_join(x, y):
         return 0
     e = on_x[-1]
     voiced = dx[on_x[0]:e + 1]
-    if dx[e] < np.median(voiced) - 12:      # the voice fades out normally: nothing cut late
+    if dx[max(on_x[0], e - 2):e + 1].max() < np.median(voiced) - 12:   # the voice fades out normally
         return 0
     k = e
-    while k > on_x[0] and hx[k] >= 0.6:
+    while k > on_x[0] and hx[k] >= 0.5:
         k -= 1
     run = e - k                              # frames of hiss at the very end
-    if not (2 <= run <= 20) or hx[k] >= 0.5:
+    if not (2 <= run <= 8):                  # a short cut-off hiss, not a held final «سْ»
         return 0
     y0 = on_y[0]
     if hy[y0:y0 + 3].mean() < 0.6:          # the next verse does not start with a hissing letter
