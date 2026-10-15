@@ -69,7 +69,7 @@ def hiss_join(x, y):
     y0 = on_y[0]
     if hy[y0:y0 + 3].mean() < 0.6:          # the next verse does not start with a hissing letter
         return 0
-    return run * 10 + 10
+    return int(run) * 10 + 10
 
 TAIL = int(0.30 * SR)
 HEAD = int(3.0 * SR)
