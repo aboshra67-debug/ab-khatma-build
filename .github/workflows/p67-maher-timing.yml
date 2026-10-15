@@ -1,0 +1,43 @@
+name: P67 Maher verse timings (one-time data build)
+on:
+  push:
+    branches: [tools/p67-maher-timing]
+permissions:
+  contents: write
+jobs:
+  timing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          pip install --quiet numpy
+      - name: Align Maher Al-Muaiqly verse files inside his full-surah recording
+        run: |
+          SURAHS="$(cat p67/surahs_to_align.txt)"
+          python3 p67/p67_align.py MaherAlMuaiqly128kbps https://cdn.mp3quran.net/audio/maher-muaiqly/r1/ maher_r1_timing.json $SURAHS
+          python3 - <<'PY'
+          import json
+          r=json.load(open('maher_r1_timing.json.report.json'))
+          ok=[x for x in r if x['ok']]
+          print('OK', len(ok), 'of', len(r))
+          for x in r:
+              if not x['ok']: print('LEFT OUT', x)
+          PY
+          sha256sum maher_r1_timing.json | tee maher_r1_timing.json.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: maher-r1-timing
+          path: maher_r1_timing.json*
+      - name: Publish as a release asset (full run only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(wc -w < p67/surahs_to_align.txt)" -lt 114 ]; then echo "test subset - not published"; exit 0; fi
+          gh release delete maher-r1-timing-v1 --repo "$GITHUB_REPOSITORY" --yes 2>/dev/null || true
+          gh release create maher-r1-timing-v1 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Maher Al-Muaiqly r1 verse timings v1" \
+            --notes "Verse start/end (ms) inside cdn.mp3quran.net/audio/maher-muaiqly/r1 surah files, found by matching the EveryAyah verse audio. Surahs without a clear match are left out." \
+            maher_r1_timing.json maher_r1_timing.json.sha256 maher_r1_timing.json.report.json
