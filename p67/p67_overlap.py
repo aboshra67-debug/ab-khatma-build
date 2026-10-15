@@ -6,7 +6,9 @@ sound is found there (normalized correlation >= 0.8, the files come from one rec
 that sound begins, and the app goes straight on to verse N+1. Nothing is cut when the match is not clear.
 
 usage: python3 p67_overlap.py <everyayah_folder> <out.json> [surah numbers...]
-out: { "surah": [cutMs or 0 for every verse] }  (cut = play verse N only up to this time)
+out: { "surah": [[cutMs, headMs] for every verse] }
+  cutMs  = play this verse file only up to here (0 = the whole file)
+  headMs = where the voice starts in this file (used to start it without its silence after a joined verse)
 """
 import json
 import sys
@@ -32,7 +34,7 @@ def surah_cuts(folder, s):
 
     with ThreadPoolExecutor(8) as ex:
         verses = list(ex.map(verse, range(1, n + 1)))
-    cuts = [0] * n
+    cuts = [[0, int(voice_span(v)[0] * 1000 / SR)] for v in verses]
     rows = []
     for i in range(n - 1):
         x, y = verses[i], verses[i + 1]
@@ -48,7 +50,7 @@ def surah_cuts(folder, s):
         cut = x1 - overlap - int(0.03 * SR)
         ok = score >= GOOD and overlap >= int(0.12 * SR) and o >= y0 - int(0.05 * SR) and cut > x0 + SR
         if ok:
-            cuts[i] = int(cut * 1000 / SR)
+            cuts[i][0] = int(cut * 1000 / SR)
         rows.append((i + 1, round(score, 3), int(overlap * 1000 / SR), ok))
     return cuts, rows
 
