@@ -23,8 +23,9 @@ jobs:
           r=json.load(open('maher_r1_timing.json.report.json'))
           ok=[x for x in r if x['ok']]
           print('OK', len(ok), 'of', len(r))
+          print('::notice::OK %d of %d' % (len(ok), len(r)))
           for x in r:
-              if not x['ok']: print('LEFT OUT', x)
+              print('::notice::' + json.dumps(x, ensure_ascii=False))
           PY
           sha256sum maher_r1_timing.json | tee maher_r1_timing.json.sha256
       - uses: actions/upload-artifact@v4
@@ -35,9 +36,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ "$(wc -w < p67/surahs_to_align.txt)" -lt 114 ]; then echo "test subset - not published"; exit 0; fi
-          gh release delete maher-r1-timing-v1 --repo "$GITHUB_REPOSITORY" --yes 2>/dev/null || true
-          gh release create maher-r1-timing-v1 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+          TAG=maher-r1-timing-v1
+          if [ "$(wc -w < p67/surahs_to_align.txt)" -lt 114 ]; then TAG=maher-r1-timing-test; fi
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "Maher Al-Muaiqly r1 verse timings v1" \
             --notes "Verse start/end (ms) inside cdn.mp3quran.net/audio/maher-muaiqly/r1 surah files, found by matching the EveryAyah verse audio. Surahs without a clear match are left out." \
             maher_r1_timing.json maher_r1_timing.json.sha256 maher_r1_timing.json.report.json
