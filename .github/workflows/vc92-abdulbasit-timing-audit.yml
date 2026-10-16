@@ -38,6 +38,18 @@ jobs:
                   print('CONTEXT',term,i,raw[max(0,pos-160):pos+250].replace('\\n',' ')[:420])
                   pos+=len(term)
           PY
+      - name: Inspect public word 4-6 timing table for 73:4 murattal
+        run: |
+          curl -fsSL --max-time 30 -o /tmp/verse.html 'https://qul.tarteel.ai/surah_audio_files/2/segment_builder?chapter_id=73&verse=4'
+          python3 - <<'PY'
+          from html import unescape
+          import re
+          raw=open('/tmp/verse.html').read()
+          print('VERSE HTML LENGTH',len(raw))
+          for term in ('وَرَتِّلِ','تَرْتِيلًا','الْقُرْآنَ','word=4','073.mp3','verse=4'):
+              pos=raw.find(term)
+              print('VERSE',term,pos,unescape(re.sub(r'<[^>]+>',' ',raw[max(0,pos-300):pos+800]))[:900] if pos>=0 else 'NOT PRESENT')
+          PY
       - name: Verify a public ayah audio location without saving copyrighted audio
         run: |
           curl -IL --max-time 20 -sS 'https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/073004.mp3' | grep -Ei 'HTTP/|Content-Type|Content-Length' | tail -6
