@@ -1,0 +1,33 @@
+name: VC91 authentic paper flip asset audit
+on:
+  push:
+    branches: [tools/vc91-audio-source-audit]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audition-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download documented public-domain real book page turn
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --silent --show-error --output turning_a_page.ogg \
+            'https://upload.wikimedia.org/wikipedia/commons/6/6b/Turning_a_page.ogg'
+          test "$(stat -c%s turning_a_page.ogg)" -gt 10000
+          file turning_a_page.ogg
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 turning_a_page.ogg
+          sha256sum turning_a_page.ogg | tee turning_a_page.sha256
+          printf '%s\n' 'License: Public domain / planish, PDSounds, Wikimedia Commons.' \
+            'Source: https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg' \
+            'Not yet selected or trimmed for the Android release.' > SOURCE_LICENSE.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VC91-PUBLIC-DOMAIN-PAPER-TURN-ORIGINAL
+          path: |
+            turning_a_page.ogg
+            turning_a_page.sha256
+            SOURCE_LICENSE.txt
+          if-no-files-found: error
