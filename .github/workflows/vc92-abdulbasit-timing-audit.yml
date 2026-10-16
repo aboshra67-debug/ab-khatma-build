@@ -26,6 +26,18 @@ jobs:
           for key in ('73:4','073004','segments','audio_url','recitation/115'):
               print('OCCURRENCE',key,len(list(re.finditer(re.escape(key),raw))))
           PY
+      - name: Check verse 73:4 embedded published segment metadata, not estimated times
+        run: |
+          curl -fsSL --max-time 30 -o /tmp/qul.html 'https://qul.tarteel.ai/resources/recitation/115?ayah=73%3A4'
+          python3 - <<'PY'
+          raw=open('/tmp/qul.html').read()
+          for term in ('73:4', 'segments', 'data-audio-url', 'resource_download', 'Download json'):
+              pos=0
+              for i in range(min(raw.count(term),3)):
+                  pos=raw.find(term,pos)
+                  print('CONTEXT',term,i,raw[max(0,pos-160):pos+250].replace('\\n',' ')[:420])
+                  pos+=len(term)
+          PY
       - name: Verify a public ayah audio location without saving copyrighted audio
         run: |
           curl -IL --max-time 20 -sS 'https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/073004.mp3' | grep -Ei 'HTTP/|Content-Type|Content-Length' | tail -6
