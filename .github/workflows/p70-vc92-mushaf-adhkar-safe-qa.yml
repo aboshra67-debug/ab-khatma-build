@@ -1,0 +1,265 @@
+name: P70 VC92 Mushaf Geometry Adhkar Safe QA
+on:
+  push:
+    branches: [release/p70-vc92-mushaf-adhkar-safe-qa]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Prepare Android SDK 36
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare restricted CI source downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - name: Reuse P52 VC74 signed-and-verified safe source from its public release
+        run: |
+          set -euo pipefail
+          mkdir -p baseline src
+          curl --fail -L --retry 3 -sS -o baseline/P52.zip \
+            https://github.com/aboshra67-debug/ab-khatma-build/releases/download/p52-vc74-38554319458/AB_Khatma_P52_VC74_COMPLETE_SAFE_SOURCE.zip
+          echo '578a56b8bd0b14836558392ce7ac8a42423f72b35aabe45d726689f8f7d68867  baseline/P52.zip' | sha256sum -c -
+          unzip -q baseline/P52.zip -d src
+          grep -q 'versionCode = 74' src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build.gradle.kts
+      - name: Download same trusted Firebase public client settings (unchanged)
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/nBo1EY9iX-PP',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('public_config.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '91fb83b2e7c315232e7f670074762fb7e0d22e06cc19da3cbea3b82cf501c411  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Apply P53 to P68 (reading mode, adhkar voice, members)
+        run: |
+          python3 p53/apply_p53.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p54/apply_p54.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p55/apply_p55.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p56/apply_p56.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p57/apply_p57.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p58/apply_p58.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p59/apply_p59.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p60/apply_p60.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p61/apply_p61.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p62/apply_p62.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p63/apply_p63.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p64/apply_p64.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p65/apply_p65.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p66/apply_p66.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p67/apply_p67.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p68/apply_p68.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          grep -q 'versionCode = 92' src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build.gradle.kts
+      - name: Apply inspected VC91 Android UI patch (pinned SHA-256, unchanged Quran images)
+        run: |
+          set -euo pipefail
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/35XQQks_dvcJ',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('vc91_android_ui_patch.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '202d45fa584d97482f56f897f0d8385e6a7bc80fec89ea0f39b081f1960f0161  vc91_android_ui_patch.zip' | sha256sum -c -
+          unzip -t -q vc91_android_ui_patch.zip
+          S=src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          unzip -q -o vc91_android_ui_patch.zip -d "$S"
+          test -s "$S/app/src/main/res/raw/p69_page_turn_real.ogg"
+          grep -q 'Public domain' "$S/app/src/main/assets/p69_page_turn_license.txt"
+          grep -q 'onUndo = ' "$S/app/src/main/java/com/ab/khatma/ui/screens/InteractiveAdhkarScreen.kt"
+          grep -q 'P69PrivateChat' "$S/app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt"
+          grep -q 'membersDirectory' "$S/app/src/main/java/com/ab/khatma/secure/SecureV2Api.kt"
+          grep -q 'p70_colored_verse_focus.json' "$S/app/src/main/java/com/ab/khatma/ui/screens/P41OfflineMushafPage.kt"
+          grep -q 'actualScale' "$S/app/src/main/java/com/ab/khatma/ui/screens/P41OfflineMushafPage.kt"
+          python3 - "$S/app/build.gradle.kts" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1]);s=p.read_text()
+          assert 'versionCode = 90' in s
+          s=s.replace('versionCode = 90','versionCode = 92',1)
+          s=s.replace('0.19.63-p68-reading-mode-adhkar-voice','0.19.65-p70-mushaf-adhkar-safe-qa',1)
+          p.write_text(s)
+          PY
+          grep -q 'versionCode = 91' "$S/app/build.gradle.kts"
+      - name: Plain «أصلي» pages become a verified on-demand download (coloured + verse map stay inside)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          P="$S/app/src/main/assets/quran_pages"
+          Z="$GITHUB_WORKSPACE/quran_plain_pages_v1.zip"
+          URL="https://github.com/aboshra67-debug/ab-khatma-build/releases/download/quran-plain-pages-v1/quran_plain_pages_v1.zip"
+          test "$(find "$P" -maxdepth 1 -name '*.webp' | wc -l)" -ge 604
+          test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -ge 604
+          if gh release view quran-plain-pages-v1 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release download quran-plain-pages-v1 --repo "$GITHUB_REPOSITORY" -p 'quran_plain_pages_v1.zip.sha256' -D plain_meta
+            SHA=$(cut -d' ' -f1 plain_meta/quran_plain_pages_v1.zip.sha256)
+            BYTES=$(gh release view quran-plain-pages-v1 --repo "$GITHUB_REPOSITORY" --json assets \
+              -q '.assets[] | select(.name=="quran_plain_pages_v1.zip") | .size')
+            echo "PLAIN_NEW=false" >> "$GITHUB_ENV"
+          else
+            find "$P" -type f -exec touch -t 202601010000 {} +
+            (cd "$P" && find . -maxdepth 1 -type f -name '*.webp' | LC_ALL=C sort | sed 's#^\./##' | zip -X -0 -q "$Z" -@)
+            test "$(unzip -l "$Z" | grep -c '\.webp$')" -ge 604
+            SHA=$(sha256sum "$Z" | cut -d' ' -f1)
+            BYTES=$(stat -c%s "$Z")
+            echo "$SHA  quran_plain_pages_v1.zip" > "$Z.sha256"
+            echo "PLAIN_NEW=true" >> "$GITHUB_ENV"
+          fi
+          test -n "$SHA" && test -n "$BYTES"
+          printf '{"url":"%s","sha256":"%s","bytes":%s,"pages":604}\n' "$URL" "$SHA" "$BYTES" \
+            > "$S/app/src/main/assets/p55_plain_pages.json"
+          cat "$S/app/src/main/assets/p55_plain_pages.json"
+          mv "$P" "$GITHUB_WORKSPACE/plain_hold"
+      - name: Build unsigned preview APK and Play AAB
+        working-directory: src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+        run: |
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          set +e
+          gradle --no-daemon --stacktrace :app:assembleDebug :app:assembleRelease :app:bundleRelease \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app" 2>&1 | tee gradle.log
+          RC=${PIPESTATUS[0]}
+          if [ "$RC" -ne 0 ]; then
+            grep -E '^e: ' gradle.log | head -25 | sed 's#.*/ui/screens/##; s#.*/quran/##' | while IFS= read -r L; do echo "::error::$L"; done
+            exit "$RC"
+          fi
+      - name: Collect unsigned artifacts for local original signing
+        run: |
+          mkdir -p unsigned_build
+          APK_PATH=$(find src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build/outputs/apk/release -type f -name '*.apk' | head -n 1)
+          AAB_PATH=$(find src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build/outputs/bundle/release -type f -name '*.aab' | head -n 1)
+          test -n "$APK_PATH" && test -n "$AAB_PATH"
+          cp "$APK_PATH" unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk
+          cp "$AAB_PATH" unsigned_build/P70_VC92_UNSIGNED_PLAY.aab
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
+          cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
+          chmod +x unsigned_build/zipalign
+          sha256sum unsigned_build/P69*
+          if unzip -l unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk | grep -q 'assets/quran_pages/'; then echo "plain pages still inside APK"; exit 1; fi
+          test "$(unzip -l unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk | grep -c 'assets/quran_pages_colored/.*\.webp')" -eq 604
+          test "$(unzip -l unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk | grep -c 'assets/quran_verse_hitmaps/.*\.json')" -eq 604
+          unzip -l unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk | grep -q 'assets/p55_plain_pages.json'
+          SIZE=$(stat -c%s unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk); echo "APK bytes: $SIZE"
+          test "$SIZE" -lt 190000000
+          mv "$GITHUB_WORKSPACE/plain_hold" src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/src/main/assets/quran_pages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P70-VC92-UNSIGNED-LOCAL-SIGNING
+          path: unsigned_build/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Sign VC90 with the original P29-P68 key (only when the encrypted repository secrets exist)
+        id: sign
+        env:
+          KS_B64: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KS_B64:-}" ] || [ -z "${KS_PASS:-}" ]; then
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Signing secrets not set - unsigned APK only (local signing kit still works)."
+            exit 0
+          fi
+          KS="$RUNNER_TEMP/ab_khatma_preview_stable.p12"
+          umask 077
+          printf '%s' "$KS_B64" | tr -d ' \r\n\t' | base64 -d > "$KS"
+          KS_PASS="$(printf '%s' "$KS_PASS" | tr -d '\r\n')"; export KS_PASS
+          mkdir -p signed_build
+          BT="$ANDROID_HOME/build-tools/36.0.0"
+          "$BT/zipalign" -c -P 16 4 unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk
+          java -jar "$BT/lib/apksigner.jar" sign --ks "$KS" --ks-key-alias khatma_preview \
+            --ks-pass env:KS_PASS --v2-signing-enabled true --v3-signing-enabled true \
+            --out signed_build/AB_Khatma_P70_VC92_STAGING_SIGNED.apk unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk
+          rm -f "$KS" signed_build/*.idsig
+          OUT=$(java -jar "$BT/lib/apksigner.jar" verify --verbose --print-certs signed_build/AB_Khatma_P70_VC92_STAGING_SIGNED.apk)
+          echo "$OUT" | grep -E "Verified using|Number of signers|SHA-256"
+          echo "$OUT" | grep -q "Verified using v2 scheme (APK Signature Scheme v2): true"
+          echo "$OUT" | grep -q "Verified using v3 scheme (APK Signature Scheme v3): true"
+          echo "$OUT" | grep -q "Number of signers: 1"
+          echo "$OUT" | grep -q "certificate SHA-256 digest: 3248c1ebdd2973a992a453919a4207317cdecfc4cf0c7e8dc28dd7d9a5468b41"
+          BADGING=$("$BT/aapt2" dump badging signed_build/AB_Khatma_P70_VC92_STAGING_SIGNED.apk | head -n 1)
+          echo "$BADGING"
+          echo "$BADGING" | grep -q "name='com.ab.khatma.preview'"
+          echo "$BADGING" | grep -q "versionCode='92'"
+          (cd signed_build && sha256sum AB_Khatma_P70_VC92_STAGING_SIGNED.apk | tee AB_Khatma_P70_VC92_STAGING_SIGNED.apk.sha256)
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: steps.sign.outputs.signed == 'true'
+        with:
+          name: AB-Khatma-P70-VC92-STAGING-SIGNED-APK
+          path: signed_build/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Archive complete P68 safe source with original Quran and adhan
+        run: |
+          cd src
+          zip -q -r -9 ../AB_Khatma_P70_VC92_WORKING_SAFE_SOURCE.zip AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE \
+            -x '*/build/*' '*/.gradle/*' '*.p12' '*.jks' '*.keystore' '*.pyc' '*/__pycache__/*'
+          unzip -t -q ../AB_Khatma_P70_VC92_WORKING_SAFE_SOURCE.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P70-VC92-WORKING-SOURCE
+          path: AB_Khatma_P70_VC92_WORKING_SAFE_SOURCE.zip
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish direct download links (GitHub Release)
+        if: ${{ false }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${PLAIN_NEW:-false}" = "true" ]; then
+            gh release create quran-plain-pages-v1 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "Plain Mushaf pages v1 (on-demand download)" \
+              --notes "604 plain Madani pages, downloaded once by the app and verified by SHA-256." \
+              "$GITHUB_WORKSPACE/quran_plain_pages_v1.zip" "$GITHUB_WORKSPACE/quran_plain_pages_v1.zip.sha256"
+          fi
+          TAG="p68-vc90-${GITHUB_RUN_ID}"
+          cp AB_Khatma_P70_VC92_WORKING_SAFE_SOURCE.zip signed_build/
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "AB Khatma P68 — VC90 (signed)" \
+            --notes "Signed with the original key (SHA-256 3248c1eb…68b41), v2+v3, package com.ab.khatma.preview, versionCode 90. Installs over VC89 without data loss." \
+            signed_build/AB_Khatma_P70_VC92_STAGING_SIGNED.apk \
+            signed_build/AB_Khatma_P70_VC92_STAGING_SIGNED.apk.sha256 \
+            signed_build/AB_Khatma_P70_VC92_WORKING_SAFE_SOURCE.zip
