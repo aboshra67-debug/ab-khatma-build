@@ -86,7 +86,7 @@ jobs:
             const browser=await chromium.launch({headless:true});
             try {
               const page=await browser.newPage({acceptDownloads:true});
-              await page.goto('https://firestorage.ai/ja/f/35XQQks_dvcJ',{waitUntil:'domcontentloaded',timeout:60000});
+              await page.goto('https://firestorage.ai/ja/f/McGQ3P3KIMV5',{waitUntil:'domcontentloaded',timeout:60000});
               const button=page.getByRole('button',{name:'ダウンロード',exact:true});
               await button.waitFor({state:'visible',timeout:60000});
               const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
@@ -94,7 +94,7 @@ jobs:
             } finally {await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
-          echo '202d45fa584d97482f56f897f0d8385e6a7bc80fec89ea0f39b081f1960f0161  vc91_android_ui_patch.zip' | sha256sum -c -
+          echo 'bfda509b996848018f6bcb466d9b69f8b00be3501099ab30e9f21cdebec7e270  vc91_android_ui_patch.zip' | sha256sum -c -
           unzip -t -q vc91_android_ui_patch.zip
           S=src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
           unzip -q -o vc91_android_ui_patch.zip -d "$S"
