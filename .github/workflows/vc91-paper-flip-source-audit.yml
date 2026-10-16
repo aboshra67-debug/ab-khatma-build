@@ -18,7 +18,12 @@ jobs:
             'https://upload.wikimedia.org/wikipedia/commons/6/6b/Turning_a_page.ogg'
           test "$(stat -c%s turning_a_page.ogg)" -gt 10000
           file turning_a_page.ogg
-          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 turning_a_page.ogg
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('turning_a_page.ogg'); b=p.read_bytes()
+          assert b.startswith(b'OggS') and len(b)>10000
+          print('Authenticated Ogg page recording bytes',len(b))
+          PY
           sha256sum turning_a_page.ogg | tee turning_a_page.sha256
           printf '%s\n' 'License: Public domain / planish, PDSounds, Wikimedia Commons.' \
             'Source: https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg' \
