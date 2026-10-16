@@ -76,7 +76,7 @@ jobs:
           python3 p66/apply_p66.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
           python3 p67/apply_p67.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
           python3 p68/apply_p68.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
-          grep -q 'versionCode = 92' src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build.gradle.kts
+          grep -q 'versionCode = 90' src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build.gradle.kts
       - name: Apply inspected VC91 Android UI patch (pinned SHA-256, unchanged Quran images)
         run: |
           set -euo pipefail
@@ -114,7 +114,7 @@ jobs:
           s=s.replace('0.19.63-p68-reading-mode-adhkar-voice','0.19.65-p70-mushaf-adhkar-safe-qa',1)
           p.write_text(s)
           PY
-          grep -q 'versionCode = 91' "$S/app/build.gradle.kts"
+          grep -q 'versionCode = 92' "$S/app/build.gradle.kts"
       - name: Plain «أصلي» pages become a verified on-demand download (coloured + verse map stay inside)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -175,7 +175,7 @@ jobs:
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
           cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
           chmod +x unsigned_build/zipalign
-          sha256sum unsigned_build/P69*
+          sha256sum unsigned_build/P70*
           if unzip -l unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk | grep -q 'assets/quran_pages/'; then echo "plain pages still inside APK"; exit 1; fi
           test "$(unzip -l unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk | grep -c 'assets/quran_pages_colored/.*\.webp')" -eq 604
           test "$(unzip -l unsigned_build/P70_VC92_UNSIGNED_RELEASE.apk | grep -c 'assets/quran_verse_hitmaps/.*\.json')" -eq 604
