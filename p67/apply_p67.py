@@ -101,7 +101,7 @@ patch(c, "modifier = Modifier.weight(1f).height(44.dp),", "modifier = Modifier.w
 p = screens / "P63Reader.kt"
 patch(p, "private val P63Bar = Color(0xFFF6F0DD)", "private val P63Bar = Color(0xFFF3F3F0)")
 patch(p, "import androidx.compose.material.icons.rounded.Settings\n",
-      "import androidx.compose.material.icons.rounded.Settings\nimport androidx.compose.material.icons.rounded.Stop\nimport androidx.compose.material3.IconButton\nimport androidx.compose.foundation.layout.PaddingValues\n")
+      "import androidx.compose.material.icons.rounded.Settings\nimport androidx.compose.material.icons.rounded.PlayArrow\nimport androidx.compose.material.icons.rounded.Stop\nimport androidx.compose.material3.IconButton\nimport androidx.compose.foundation.layout.PaddingValues\n")
 patch(p, "        Icon(icon, label, tint = tint, modifier = Modifier.size(22.dp))\n        Text(label, color = tint, fontSize = 10.sp, maxLines = 1, textAlign = TextAlign.Center)",
       "        Icon(icon, label, tint = tint, modifier = Modifier.size(20.dp))\n        Text(label, color = tint, fontSize = 10.sp, maxLines = 1, textAlign = TextAlign.Center)")
 patch(p, "            .padding(vertical = 4.dp),\n        horizontalAlignment = Alignment.CenterHorizontally,", "            .padding(vertical = 2.dp),\n        horizontalAlignment = Alignment.CenterHorizontally,")
