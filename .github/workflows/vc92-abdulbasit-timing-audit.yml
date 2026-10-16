@@ -50,6 +50,18 @@ jobs:
               pos=raw.find(term)
               print('VERSE',term,pos,unescape(re.sub(r'<[^>]+>',' ',raw[max(0,pos-300):pos+800]))[:900] if pos>=0 else 'NOT PRESENT')
           PY
+      - name: Discover public player segment API route
+        run: |
+          curl -fsSL --max-time 30 -o /tmp/verse.html 'https://qul.tarteel.ai/surah_audio_files/2/segment_builder?chapter_id=73&verse=4'
+          python3 - <<'PY'
+          import re,html
+          raw=open('/tmp/verse.html').read()
+          for t in re.findall(r'data-[\\w-]+\\s*=\\s*["\\x27][^"\\x27]+["\\x27]',raw):
+              if any(k in t.lower() for k in ('url=','verse','audio','segment','endpoint')):
+                  print('ROUTE',html.unescape(t)[:330])
+          for t in re.findall(r'<script[^>]+src=["\\x27]([^"\\x27]+)',raw,re.I):
+              if 'application' in t or 'audio' in t or 'segment' in t:print('SCRIPT',t[:200])
+          PY
       - name: Verify a public ayah audio location without saving copyrighted audio
         run: |
           curl -IL --max-time 20 -sS 'https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/073004.mp3' | grep -Ei 'HTTP/|Content-Type|Content-Length' | tail -6
