@@ -1,0 +1,31 @@
+name: VC92 Abdul Basit verified word-timing audit
+on:
+  push:
+    branches: [tools/vc92-abdulbasit-timing-verification]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect QUL published murattal segment source (no audio redistribution)
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 30 -o /tmp/qul.html 'https://qul.tarteel.ai/resources/recitation/115?ayah=73%3A4'
+          python3 - <<'PY'
+          import re,html
+          raw=open('/tmp/qul.html').read()
+          print('HTML bytes:',len(raw))
+          for m in re.findall(r'<a[^>]*href=["\\x27]([^"\\x27]+)[^>]*>',raw,re.I):
+              u=html.unescape(m)
+              if any(k in u.lower() for k in ('json','download','recitation','segment','ayah')):
+                  print('LINK',u[:250])
+          for key in ('73:4','073004','segments','audio_url','recitation/115'):
+              print('OCCURRENCE',key,len(list(re.finditer(re.escape(key),raw))))
+          PY
+      - name: Verify a public ayah audio location without saving copyrighted audio
+        run: |
+          curl -IL --max-time 20 -sS 'https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/073004.mp3' | grep -Ei 'HTTP/|Content-Type|Content-Length' | tail -6
