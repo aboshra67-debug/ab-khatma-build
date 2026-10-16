@@ -218,7 +218,7 @@ jobs:
           BADGING=$("$BT/aapt2" dump badging signed_build/AB_Khatma_P69_VC91_STAGING_SIGNED.apk | head -n 1)
           echo "$BADGING"
           echo "$BADGING" | grep -q "name='com.ab.khatma.preview'"
-          echo "$BADGING" | grep -q "versionCode='90'"
+          echo "$BADGING" | grep -q "versionCode='91'"
           (cd signed_build && sha256sum AB_Khatma_P69_VC91_STAGING_SIGNED.apk | tee AB_Khatma_P69_VC91_STAGING_SIGNED.apk.sha256)
           echo "signed=true" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
