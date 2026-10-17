@@ -1,0 +1,109 @@
+name: P83 VC107 Session and Audio Safe QA
+on:
+  push:
+    branches: [release/p83-vc107-session-audio-safe]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Prepare Android SDK 36
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare restricted CI source downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P82-VC106-WORKING-SOURCE
+          run-id: 39052325541
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Verify immutable VC106 baseline and apply bounded patch
+        run: |
+          set -euo pipefail
+          echo 'c77223db4e6d08512235270e20995d0284920c90c01b1c59101dddedc17a54b0  baseline/AB_Khatma_P82_VC106_WORKING_SAFE_SOURCE.zip' | sha256sum -c -
+          mkdir src
+          unzip -q baseline/AB_Khatma_P82_VC106_WORKING_SAFE_SOURCE.zip -d src
+          python3 p83/apply_p83.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+      - name: Download same trusted Firebase public client settings (unchanged)
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/nBo1EY9iX-PP',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('public_config.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '91fb83b2e7c315232e7f670074762fb7e0d22e06cc19da3cbea3b82cf501c411  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Preserve existing on-demand plain page pack
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          test "$(find "$S/app/src/main/assets/quran_pages" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+          mv "$S/app/src/main/assets/quran_pages" "$GITHUB_WORKSPACE/plain_hold"
+      - name: Session race tests and unsigned release build
+        working-directory: src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+        run: |
+          set -euo pipefail
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon --stacktrace :app:testDebugUnitTest :app:assembleRelease :app:bundleRelease \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Collect unsigned outputs for local original signing
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          mkdir unsigned_build
+          cp "$S/app/build/outputs/apk/release/app-release-unsigned.apk" unsigned_build/P83_VC107_UNSIGNED_RELEASE.apk
+          cp "$S/app/build/outputs/bundle/release/app-release.aab" unsigned_build/P83_VC107_UNSIGNED_PLAY.aab
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
+          cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
+          cp "$ANDROID_HOME/build-tools/36.0.0/aapt2" unsigned_build/aapt2
+          test "$(unzip -l unsigned_build/P83_VC107_UNSIGNED_RELEASE.apk | grep -c 'assets/quran_pages_colored/.*\.webp')" -eq 604
+          test "$(unzip -l unsigned_build/P83_VC107_UNSIGNED_RELEASE.apk | grep -c 'assets/quran_verse_hitmaps/.*\.json')" -eq 604
+          test "$(stat -c%s unsigned_build/P83_VC107_UNSIGNED_RELEASE.apk)" -lt 190000000
+          mv "$GITHUB_WORKSPACE/plain_hold" "$S/app/src/main/assets/quran_pages"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P83-VC107-UNSIGNED-LOCAL-SIGNING
+          path: unsigned_build/*
+          retention-days: 30
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AB-Khatma-P83-VC107-SESSION-TEST-REPORT
+          path: src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE/app/build/test-results/testDebugUnitTest/*
+          retention-days: 30

@@ -1,0 +1,62 @@
+[
+  {
+    "path": "app/build.gradle.kts",
+    "before": "786f836df4be7d9c241279fc8ab053cec516884be5f23c428091937926ad5fbd",
+    "after": "d3e89b6a7b037c3b9627c7050f1000a892e71e840e783efe23ce2805e34da3fc"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/KhatmaApplication.kt",
+    "before": "06733afb4408f556b6d651a95965735fe5b09e1e34fc754546ff2410456f7c8c",
+    "after": "009aea49d230b557627bc35d13692e935f56fb5f5959ddb601d5c6ce7bc71321"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/KhatmaGoogleSignIn.kt",
+    "before": "3f33dd38d2670b3a0f90e07514b51c71e66a466ad4d6d8152012d29e8e0943c2",
+    "after": "400839e528fc0b061c25669ad260012b2c6a2e73ce52360ccebe9e513dc2bc26"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/P53NotificationsPage.kt",
+    "before": "58ae26c3c7df5cb6b88ffbfb9cd93a93063fae4679b2676cd4e403b8c508b2f2",
+    "after": "43244937c69d3cb91d23fc2e299672548a698787cf8a44a9a458a208d9de7540"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/P79Push.kt",
+    "before": "1cf8fb8ffbddc39c17b7e19e3492631e1c280f4551a51de417ba48e98a2fb42c",
+    "after": "bbf51629da9fa4b1d6df7ce1aa9cbbc562d079c2eaeba8f89140e229042e29ad"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/P83SessionCoordinator.kt",
+    "before": null,
+    "after": "440be78553f0655e7421eda3157046df2fff77272d34a357f725e3d1cb4cbd7e"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/P83Sessions.kt",
+    "before": null,
+    "after": "4d43c260617396332d5a4a49e9521379043dc3afa98eba1efdbb32f3006ae8a4"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/SecureReminderWorker.kt",
+    "before": "796d104112a9871817c89ef8a934b963feb839eb372657dc4535574e12c95592",
+    "after": "7bb5418cd3266879c61da4d5da37f6ee982bf16d3cee2cf3d8619a255c892f07"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/SecureSessionStore.kt",
+    "before": "2ce8d4b81995c2e3bb70742948213be239837c130ea2e96b4a74e680f8e3b671",
+    "after": "5c0b6bf287df3ed262dea283ac1462bfc2c2fe85ececb8112df0ea322243e4f6"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/SecureV2Api.kt",
+    "before": "6e1d4c0039cc69c7e05f80766381b3e6b12d46e1156062d3783bd843f1197289",
+    "after": "9d4ad4b5ff90c90cb7b58fc7dd27abda955549b06d488a6e20097d0b6a5c970c"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt",
+    "before": "374a34fc87cdd66affc7c9e0af0f92f863854cfd0115262920dcea63a02701f5",
+    "after": "94882bcf5d2abc12ea59c66bd06d7dd4224746e4eeb4f4dd58bbce751e593664"
+  },
+  {
+    "path": "app/src/test/java/com/ab/khatma/secure/P83SessionCoordinatorTest.kt",
+    "before": null,
+    "after": "8a0990750cd75b99d7a954e43a2811211e002830b040eebda999bede4bf1a7d1"
+  }
+]
