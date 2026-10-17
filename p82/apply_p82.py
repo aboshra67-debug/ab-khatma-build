@@ -118,7 +118,7 @@ patch(screen,
                                         val sending = chatText.trim()
                                         val sendingReply = replyToId
                                         if (sending.isNotBlank()) runTask {
-                                            val fingerprint = "\${sendingReply ?: 0L}\\u001f$sending"
+                                            val fingerprint = sendingReply.toString() + "|" + sending
                                             val id = if (p82GroupPendingPayload == fingerprint &&
                                                 p82GroupPendingId.isNotBlank()) p82GroupPendingId
                                                 else UUID.randomUUID().toString().also {
