@@ -57,6 +57,29 @@ object P80NoticeCopy {
     fun chat(context: Context, senderName: String): String =
         say(context, "$senderName بعتلك رسالة خاصة على ختمة 💬")
 
+    /** Existing P53 reminder scheduler remains unchanged; only displayed wording varies. */
+    fun localReminder(context: Context, title: String, text: String): Pair<String, String> =
+        when {
+            title == "لم يكتمل ورد اليوم" ->
+                "وردك مستنيك 🌿" to ward(
+                    context,
+                    text.takeUnless { it == "لا تنسَ ورد اليوم من القرآن الكريم." },
+                    text != "لا تنسَ ورد اليوم من القرآن الكريم."
+                )
+            title.startsWith("أذكار الصباح") ->
+                "أذكار الصباح ☀" to say(context, "صباح الخير! يلا نبدأ يومنا بأذكار الصباح.")
+            title.startsWith("أذكار المساء") ->
+                "أذكار المساء 🌙" to say(context, "يلا ناخد دقايق لأذكار المساء.")
+            title.startsWith("اقترب وقت ") ->
+                title.replace("اقترب وقت ", "قرب وقت ") to
+                    say(context, text.replace("باقٍ ", "فاضل ").replace("على أذان", "على أذان"))
+            title == "دعاء اليوم" ->
+                say(context, "دعاء النهارده 🤲") to text // Sacred supplication is unmodified.
+            title.startsWith("يوم الجمعة") ->
+                say(context, "النهارده الجمعة 🌿") to text // Retain original cited text.
+            else -> title to text
+        }
+
     fun publicVersion(context: Context, channel: String, icon: Int): Notification =
         NotificationCompat.Builder(context, channel)
             .setSmallIcon(icon)
