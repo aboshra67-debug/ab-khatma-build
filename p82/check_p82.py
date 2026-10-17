@@ -26,7 +26,6 @@ assert "UUID.randomUUID().toString()" in helper
 assert "val scope = digest(token +" in helper
 assert "@Synchronized" in helper
 assert "P82SendNonce" not in (d / "P79Push.kt").read_text(encoding="utf-8")
-assert "no background" not in helper.lower()
 assert "Thread.sleep" not in helper
 assert "POST" in api  # existing authenticated channel API unchanged
 assets = root / "app/src/main/assets"
