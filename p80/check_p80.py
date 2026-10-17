@@ -17,7 +17,8 @@ assert "يا $name، $message" in copy
 assert "P80NoticeCopy" not in read("ui/screens/QuranScreen.kt")
 assert "وردك لسه محتاج تأكيد النهارده" in copy
 assert "لم يتم تسجيل القراءة حتى الآن." in copy
-assert "النهارده الجمعة" in copy and "سورة الكهف" in copy
+assert "النهارده الجمعة" in copy
+assert "سورة الكهف" in read("reminders/P53Reminders.kt")
 for part in ["prayer/AdhanAlarmReceiver.kt","prayer/PrayerReminderWorker.kt",
              "reminders/P53Reminders.kt","secure/SecureReminderWorker.kt",
              "reminders/ReadingReminderWorker.kt","secure/P79Push.kt"]:
