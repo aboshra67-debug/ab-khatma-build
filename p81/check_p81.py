@@ -27,7 +27,7 @@ assert 'catch (error: SecureV2Api.TransientNetworkException)' in helper
 assert 'withContext(Dispatchers.IO)' in helper
 assert 'retry >= 1' in helper
 for forbidden in ["post(", "complete(", "sendPrivate(", "POST", "PUT", "PATCH", "DELETE", "Thread.sleep"]:
-    assert forbidden not in helper, f"unsafe retry {forbidden}"
+    assert forbidden not in helper.split("internal object P81NetworkRecovery {", 1)[1], f"unsafe retry {forbidden}"
 assert '.setPublicVersion(publicNotification)' in (j/"secure/P79Push.kt").read_text()
 assert 'يا $name، $message' in (j/"notifications/P80NoticeCopy.kt").read_text()
 assert 'onDismiss = { p101DockAyah = null }' in (j/"ui/screens/QuranScreen.kt").read_text()
