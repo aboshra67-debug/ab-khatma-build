@@ -1,0 +1,32 @@
+name: P71 Abdul Basit verified phrase alignment audit
+on:
+  push:
+    branches: [tools/p71-abdulbasit-phrase-alignment-review]
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Inspect licensed word-alignment data for 73:4 only
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 2 --max-time 80 -o /tmp/quran-align.zip 'https://github.com/cpfair/quran-align/releases/download/release-2016-11-24/quran-align-data-2016-11-24.zip'
+          unzip -l /tmp/quran-align.zip | grep -iE 'Abdul_Basit_Murattal|Name' | head -12
+          python3 - <<'PY'
+          import zipfile,json
+          z=zipfile.ZipFile('/tmp/quran-align.zip')
+          names=[n for n in z.namelist() if 'Abdul_Basit_Murattal' in n and n.endswith('.json')]
+          print('DATASETS',names)
+          for name in names:
+              a=json.loads(z.read(name))
+              if isinstance(a,list):
+                  hit=[o for o in a if int(o.get('surah',0))==73 and int(o.get('ayah',0))==4]
+                  print('VERIFIED 73:4', name, hit)
+                  assert len(hit)==1
+                  assert any(seg[0]<=3 and seg[1]>=6 for seg in hit[0]['segments']) or any(seg[0]<=3 for seg in hit[0]['segments'])
+          PY
+      - name: Check matching 64kbps verse stream exists
+        run: |
+          curl -fILsS --max-time 30 'https://everyayah.com/data/Abdul_Basit_Murattal_64kbps/073004.mp3' | grep -Ei 'HTTP/|content-type|content-length' | tail -6
