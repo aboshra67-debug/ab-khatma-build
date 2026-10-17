@@ -1,0 +1,40 @@
+name: VC98 member directory staging live smoke
+on:
+  push:
+    branches: [tools/vc98-members-railway-live-smoke]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-endpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check Railway API, and unauthorized member-directory path (no user tokens)
+        shell: bash
+        run: |
+          set -euo pipefail
+          HOST='https://khatma-v2-api-staging.up.railway.app'
+          python3 - <<'PY'
+          import json,urllib.request,urllib.error,time
+          host='https://khatma-v2-api-staging.up.railway.app'
+          def get(path):
+              req=urllib.request.Request(host+path,headers={'User-Agent':'AB-Khatma-VC98-no-credentials-check'})
+              try:
+                  with urllib.request.urlopen(req,timeout=18) as r:
+                      return r.status,r.read(3000)
+              except urllib.error.HTTPError as e:
+                  return e.code,e.read(3000)
+          for i in range(10):
+              code,body=get('/health')
+              if code==200: break
+              time.sleep(2)
+          assert code==200,f'/health returned {code}'
+          assert json.loads(body).get('status')=='ok'
+          code,body=get('/v2/groups/987654321/members-directory')
+          assert code==401,f'Expected active secured route HTTP401, got {code}'
+          assert json.loads(body).get('detail')
+          code,_=get('/v2/groups/987654321/status')
+          assert code==401,f'Leader-only status should require authentication, got {code}'
+          print('LIVE VC98 PASS: API healthy, new route exists, unauthenticated request 401, leader status protected.')
+          PY
