@@ -18,7 +18,8 @@ assert api.count("P82SendNonce.begin(") == 2
 assert api.count("P82SendNonce.confirmed(") == 2
 assert api.index('P82SendNonce.begin(token, scope, body)') < api.index('request("/groups/$groupId/private/$peerId"')
 assert api.index('request("/groups/$groupId/private/$peerId"') < api.index('P82SendNonce.confirmed(token, scope, requestId)')
-assert api.index('P82SendNonce.begin(token, scope, (replyTo?.toString()') < api.index('request("/groups/$groupId/chat"')
+group_send = api.split("    fun sendMessage(", 1)[1]
+assert group_send.index('P82SendNonce.begin(token, scope, (replyTo?.toString()') < group_send.index('request("/groups/$groupId/chat", token, "POST"')
 assert 'P81NetworkRecovery.readOnly { SecureV2Api.today(current.token) }' in screen
 assert 'SecureV2Api.sendPrivate(token, groupId, peer.id, text)' in private
 assert screen.count("SecureV2Api.sendMessage(") >= 2
