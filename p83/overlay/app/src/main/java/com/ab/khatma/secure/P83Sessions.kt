@@ -3,10 +3,8 @@ package com.ab.khatma.secure
 import android.content.Context
 import android.app.NotificationManager
 import androidx.work.*
-import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
@@ -58,12 +56,9 @@ class P83LogoutWorker(appContext: Context, params: WorkerParameters) : Coroutine
         try {
             val queue = store.pendingLogouts()
             if (queue.isEmpty()) return@withContext Result.success()
-            val deviceToken = runCatching { FirebaseMessaging.getInstance().token.await() }.getOrNull()
             for (session in queue) {
-                if (session.refreshExpiresAt > System.currentTimeMillis() / 1000L) {
-                    try { SecureV2Api.revokeSession(session, deviceToken) }
-                    catch (_: SecureV2Api.SessionExpiredException) { /* Account/session already unavailable. */ }
-                }
+                try { SecureV2Api.revokeSession(session) }
+                catch (_: SecureV2Api.SessionExpiredException) { /* Account/session already unavailable. */ }
                 store.removePendingLogout(session.localId)
             }
             Result.success()

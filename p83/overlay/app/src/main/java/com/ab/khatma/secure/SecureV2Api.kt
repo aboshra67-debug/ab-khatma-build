@@ -120,9 +120,8 @@ object SecureV2Api {
     internal fun renewLegacyGoogle(userId: Long, firebaseToken: String) = authResponse(
         rawRequest("/auth/google/renew", method = "POST", credential401 = true, data = JSONObject()
             .put("firebase_id_token", firebaseToken).put("expected_user_id", userId)))
-    internal fun revokeSession(session: SecureSessionStore.Session, deviceToken: String?) {
+    internal fun revokeSession(session: SecureSessionStore.Session) {
         val data = JSONObject().put("session_id", session.sessionId).put("revoke_token", session.revokeToken)
-        deviceToken?.takeIf { it.length >= 30 }?.let { data.put("device_token", it) }
         rawRequest("/auth/session/logout", method = "POST", data = data, credential401 = true)
     }
     fun myDisplayName(token: String): String =

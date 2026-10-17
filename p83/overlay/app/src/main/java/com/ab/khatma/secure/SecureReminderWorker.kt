@@ -63,8 +63,8 @@ class SecureReminderWorker(appContext: Context, params: WorkerParameters) : Coro
             }
             Result.success()
         } catch (_: SecureV2Api.SessionExpiredException) {
-            SecureSessionStore(applicationContext).clearIfCurrent(session.localId)
-            cancel(applicationContext)
+            if (SecureSessionStore(applicationContext).clearIfCurrent(session.localId))
+                cancel(applicationContext)
             Result.success()
         } catch (_: Exception) {
             Result.retry()
