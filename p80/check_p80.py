@@ -24,7 +24,7 @@ for part in ["prayer/AdhanAlarmReceiver.kt","prayer/PrayerReminderWorker.kt",
     s = read(part)
     assert "P80NoticeCopy" in s, part
     assert "VISIBILITY_PRIVATE" in s, part
-    assert "publicVersion(" in s or "setPublicVersion(P80NoticeCopy.publicVersion(" in s, part
+    assert "setPublicVersion(" in s, part
 alarm = read("prayer/AdhanAlarmReceiver.kt")
 assert "AdhanPlaybackService.ACTION_STOP" in alarm
 assert "AdhanAlarmScheduler.schedule(context)" in alarm
