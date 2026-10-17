@@ -1,0 +1,46 @@
+name: VC99 private text chat deployed route smoke
+on:
+  push:
+    branches: [tools/vc98-members-railway-live-smoke]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify live chat routes require authentication and group isolation
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,urllib.error,time
+          host="https://khatma-v2-api-staging.up.railway.app"
+          def request(path,method="GET",body=None):
+              req=urllib.request.Request(host+path,
+                  data=json.dumps(body).encode() if body is not None else None,
+                  method=method,
+                  headers={"User-Agent":"AB-Khatma-VC99-Route-Test",
+                           "Content-Type":"application/json"})
+              try:
+                  with urllib.request.urlopen(req,timeout=20) as r:
+                      return r.status
+              except urllib.error.HTTPError as e:
+                  return e.code
+          for _ in range(8):
+              code=request("/health")
+              if code==200: break
+              time.sleep(3)
+          assert code==200,"Railway API health failed"
+          paths=[
+              ("/v2/groups/987654321/private/987654321","GET",None,401),
+              ("/v2/groups/987654321/private/987654321","POST",{"text":"dry-run"},401),
+              ("/v2/groups/987654321/private/987654321/block","POST",None,401),
+              ("/v2/groups/987654321/private/987654321/block","DELETE",None,401),
+              ("/v2/groups/987654321/private/987654321/report","POST",{"reason":"dry-run"},401),
+              ("/v2/groups/987654321/members-directory","GET",None,401),
+          ]
+          for path,method,body,expect in paths:
+              got=request(path,method,body)
+              assert got==expect,f"{method} {path} returned {got}; expected {expect}"
+          print("VC99 LIVE ROUTE PASS: health, private GET/POST, block/unblock/report and member directory all protected (401).")
+          PY
