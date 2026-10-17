@@ -196,7 +196,7 @@ jobs:
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
           cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
           chmod +x unsigned_build/zipalign
-          sha256sum unsigned_build/P70*
+          sha256sum unsigned_build/P71*
           if unzip -l unsigned_build/P71_VC93_UNSIGNED_RELEASE.apk | grep -q 'assets/quran_pages/'; then echo "plain pages still inside APK"; exit 1; fi
           test "$(unzip -l unsigned_build/P71_VC93_UNSIGNED_RELEASE.apk | grep -c 'assets/quran_pages_colored/.*\.webp')" -eq 604
           test "$(unzip -l unsigned_build/P71_VC93_UNSIGNED_RELEASE.apk | grep -c 'assets/quran_verse_hitmaps/.*\.json')" -eq 604
