@@ -23,9 +23,10 @@ jobs:
           const {chromium}=require('/tmp/inspect/node_modules/playwright');
           (async()=>{
           const sources=[
-          'https://misrquran.gov.eg/audio-details/525068d3-d74e-45a9-88ae-e69165a15abf',
-          'https://misrquran.gov.eg/audio-details/04ddfe19-a6ea-4611-9b29-5227bc6c8077',
           'https://audio.islamweb.net/audio/index.php?audioid=122665&page=audioinfo',
+          'https://audio.islamweb.net/audio/downloadmp3.php?audioid=122665',
+          'https://archive.org/download/Tobar1/tobar%20%289%29.mp3',
+          'https://archive.org/download/07._20210119/03.%D8%AD%D9%8A%D9%86%20%D9%8A%D9%87%D8%AF%D9%8A%20%D8%A7%D9%84%D8%B5%D8%A8%D8%AD%20%D8%A7%D8%B4%D8%B1%D8%A7%D9%82%20%D8%B3%D9%86%D8%A7%D9%87.mp3',
           'https://cdn.mp3quran.net/audio/muhammad-refaat/r1/001.mp3',
           'https://cdn.mp3quran.net/audio/muhammad-refaat/r1/055.mp3'];
           const browser=await chromium.launch({headless:true});
@@ -34,8 +35,8 @@ jobs:
             for(const source of sources){
               console.log('SOURCE',source);
               try{
-                if(source.endsWith('.mp3')){
-                  let res=await page.request.get(source,{headers:{Range:'bytes=0-511'},timeout:20000});
+                if(source.endsWith('.mp3')||source.includes('downloadmp3.php')){
+                  let res=await page.request.head(source,{timeout:20000});
                   console.log('AUDIO_PROBE',res.status(),res.headers()['content-type'],res.headers()['content-length'],res.headers()['content-range']||'',res.url());
                   continue;
                 }
