@@ -4,7 +4,7 @@ on:
     branches: [release/p87-vc111-audio-catalog-verse-ink-safe]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   actions: read
 jobs:
   build:
@@ -12,6 +12,18 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Record P87 run ID
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const path='p87/LAST_RUN.json';
+            let sha;
+            try {
+              const existing=await github.rest.repos.getContent({...context.repo,path,ref:context.ref});
+              sha=existing.data.sha;
+            } catch(e) {if(e.status!==404) throw e;}
+            const body=JSON.stringify({run_id:context.runId,sha:context.sha,attempt:process.env.GITHUB_RUN_ATTEMPT},null,2)+'\\n';
+            await github.rest.repos.createOrUpdateFileContents({...context.repo,path,branch:'release/p87-vc111-audio-catalog-verse-ink-safe',message:'Record P87 CI run [skip ci]',content:Buffer.from(body).toString('base64'),...(sha?{sha}:{})});
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
