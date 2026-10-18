@@ -72,6 +72,22 @@ jobs:
               assert all(m.isfile() and m.size < 100000 for m in z.getmembers())
               z.extractall('src/AB_Khatma_P87_VC111_SAFE_SOURCE',filter='data')
           PY
+          # Two precisely scoped Kotlin compile corrections in new P88 UI only:
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/AB_Khatma_P87_VC111_SAFE_SOURCE/app/src/main/java/com/ab/khatma/ui/screens/P85IbtehalScreen.kt')
+          s=p.read_text(encoding='utf-8')
+          old='OutlinedButton(onClick={navigateBack})'
+          assert s.count(old)==1
+          s=s.replace(old,'OutlinedButton(onClick={ navigateBack() })')
+          old='                val attached=remember(track.id,refresh){!prefs.getString(track.id,null).isNullOrBlank()}\n'
+          assert s.count(old)==1
+          s=s.replace(old,'')
+          insertion='                item {\n                    Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(20.dp))'
+          assert s.count(insertion)==1
+          s=s.replace(insertion,'                item {\n                    val attached=remember(track.id,refresh){!prefs.getString(track.id,null).isNullOrBlank()}\n                    Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(20.dp))')
+          p.write_text(s,encoding='utf-8')
+          PY
           sed -i 's/versionCode = 111/versionCode = 112/' "$S/app/build.gradle.kts"
           sed -i 's/0.19.82-p87-audio-catalog-verse-ink-safe/0.19.83-p88-ibtehal-adhkar-safe/' "$S/app/build.gradle.kts"
           grep -q 'versionCode = 112' "$S/app/build.gradle.kts"
