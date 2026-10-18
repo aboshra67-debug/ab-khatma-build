@@ -1,7 +1,7 @@
 name: P88 VC112 Official Audio Archive and Folio QA
 on:
   push:
-    branches: [release/p88-vc111-audio-catalog-verse-ink-safe]
+    branches: [release/p88-vc112-official-archive-folio-safe]
   workflow_dispatch:
 permissions:
   contents: write
@@ -23,7 +23,7 @@ jobs:
               sha=existing.data.sha;
             } catch(e) {if(e.status!==404) throw e;}
             const body=JSON.stringify({run_id:context.runId,sha:context.sha,attempt:process.env.GITHUB_RUN_ATTEMPT},null,2)+'\\n';
-            await github.rest.repos.createOrUpdateFileContents({...context.repo,path,branch:'release/p88-vc111-audio-catalog-verse-ink-safe',message:'Record P88 CI run [skip ci]',content:Buffer.from(body).toString('base64'),...(sha?{sha}:{})});
+            await github.rest.repos.createOrUpdateFileContents({...context.repo,path,branch:'release/p88-vc112-official-archive-folio-safe',message:'Record P88 CI run [skip ci]',content:Buffer.from(body).toString('base64'),...(sha?{sha}:{})});
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -48,7 +48,7 @@ jobs:
           run-id: 39165257490
           github-token: ${{ github.token }}
           path: baseline
-      - name: Verify immutable P86 baseline and apply SHA-pinned P88 patch
+      - name: Verify immutable P87 baseline and apply SHA-pinned P88 patch
         run: |
           set -euo pipefail
           echo '2711367bfdc14bcd7de5c4a2b07ec728295fa4a8a787fe95a46dee38f722bdbd  baseline/AB_Khatma_P87_VC111_SAFE_SOURCE.zip' | sha256sum -c -
