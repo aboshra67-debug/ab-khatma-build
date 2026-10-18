@@ -61,7 +61,11 @@ jobs:
           after='''compose.onNodeWithText("هو الله رب الوجود").performClick()
                   repeat(3) {compose.onNodeWithText("التالي").performClick()}'''
           assert s.count(before)==1
-          p.write_text(s.replace(before,after))
+          s=s.replace(before,after)
+          old='compose.onNodeWithText("سورة الرحمن").assertExists()'
+          assert s.count(old)==1
+          s=s.replace(old,'compose.onNodeWithText("31 سورة مسجلة",substring=true).assertExists()')
+          p.write_text(s)
           p=root/'app/src/androidTest/java/com/ab/khatma/guide/P88IbtehalDeviceTest.kt'
           s=p.read_text()
           start=s.index('    @Test fun categoryDetailsNextPreviousAndPlayerOpenWithoutCrash() {')
