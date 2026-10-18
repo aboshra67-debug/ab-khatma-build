@@ -1,0 +1,17 @@
+[
+  {
+    "path": "app/build.gradle.kts",
+    "before": "d3e89b6a7b037c3b9627c7050f1000a892e71e840e783efe23ce2805e34da3fc",
+    "after": "6584f41ecf548cd670060978cca1a7a8f6aac0b54ab2d452b21b87fb46d9b7c2"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/P53ProfilePage.kt",
+    "before": "613d5df97b69a244a24c30e05c35f3c4bd3322efa2748fa1b8f728c7956666f5",
+    "after": "beaa6f815ab1e2c83da413e49ef5a73b1b2614dcdcfcb1b5e955f15d5c30e0a3"
+  },
+  {
+    "path": "app/src/main/java/com/ab/khatma/secure/P84PrivacyPage.kt",
+    "before": null,
+    "after": "25730cee3f1d4e9b199aa539186e4bbe47e13155e10fad6b9eba46ec0aa76b0c"
+  }
+]
