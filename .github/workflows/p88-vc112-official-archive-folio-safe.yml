@@ -58,6 +58,9 @@ jobs:
           cat p88/p88_safe.patch.xz.b64 | base64 -d | xz -dc > p88.patch
           echo '7fdc8d41d48c9ff53b9b9747e059905d3e4feb3083c83afa45fa1a15001a8e5e  p88.patch' | sha256sum -c -
           (cd "$S" && patch --dry-run -p0 --batch < "$GITHUB_WORKSPACE/p88.patch" && patch --batch -p0 < "$GITHUB_WORKSPACE/p88.patch")
+          python3 p88/adhkar_layout_patch.py "$S"
+          mkdir -p "$S/app/src/androidTest/java/com/ab/khatma/guide"
+          cp p88/P88IbtehalUiTest.kt "$S/app/src/androidTest/java/com/ab/khatma/guide/P88IbtehalUiTest.kt"
           grep -q 'versionCode = 112' "$S/app/build.gradle.kts"
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
           test "$(find "$S/app/src/main/assets/quran_verse_hitmaps" -maxdepth 1 -name '*.json' | wc -l)" -eq 604
@@ -184,12 +187,12 @@ jobs:
             adb install -r ci_tests/p88-ci-app.apk
             adb install -r ci_tests/p88-ci-test.apk
             adb shell pm grant com.ab.khatma.preview android.permission.POST_NOTIFICATIONS
-            adb shell am instrument -w -r -e class com.ab.khatma.guide.P85GuideUiTest,com.ab.khatma.guide.P85ReaderDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p85-device-result.txt
+            adb shell am instrument -w -r -e class com.ab.khatma.guide.P85GuideUiTest,com.ab.khatma.guide.P85ReaderDeviceTest,com.ab.khatma.guide.P88IbtehalUiTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p85-device-result.txt
             cat p85-device-result.txt
             ! grep -E 'FAILURES|INSTRUMENTATION_FAILED|Process crashed' p85-device-result.txt
             grep -E '^OK \([0-9]+ tests?\)' p85-device-result.txt
             mkdir -p screenshots
-            for file in p85-guide-first.png p85-guide-next.png p85-reader-187.png p85-reader-187-reading.png p85-reader-604.png; do adb exec-out run-as com.ab.khatma.preview cat files/$file > screenshots/$file; done
+            for file in p85-guide-first.png p85-guide-next.png p85-reader-187.png p85-reader-187-reading.png p85-reader-604.png p88-ibtehal-categories.png p88-ibtehal-tobar.png; do adb exec-out run-as com.ab.khatma.preview cat files/$file > screenshots/$file; done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
