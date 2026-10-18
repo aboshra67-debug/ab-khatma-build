@@ -21,6 +21,7 @@ jobs:
         run: |
           node <<'JS'
           const {chromium}=require('/tmp/inspect/node_modules/playwright');
+          (async()=>{
           const sources=[
           'https://misrquran.gov.eg/audio-details/525068d3-d74e-45a9-88ae-e69165a15abf',
           'https://misrquran.gov.eg/audio-details/04ddfe19-a6ea-4611-9b29-5227bc6c8077',
@@ -54,4 +55,5 @@ jobs:
               }catch(e){console.log('PROBE_FAIL',String(e).slice(0,350))}
             }
           }finally{await browser.close()}
+          })().catch(e=>{console.error(String(e));process.exit(1)});
           JS
