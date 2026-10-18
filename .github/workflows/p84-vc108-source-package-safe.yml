@@ -1,0 +1,67 @@
+name: Package VC108 reviewed Safe Source
+on:
+  push:
+    branches: [release/p84-vc108-source-package-safe]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b7a5f663caee46343098b2132fe790a9d22290c0
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P82-VC106-WORKING-SOURCE
+          run-id: 39052325541
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Verify and reconstruct exact reviewed Android source
+        run: |
+          set -euo pipefail
+          echo 'c77223db4e6d08512235270e20995d0284920c90c01b1c59101dddedc17a54b0  baseline/AB_Khatma_P82_VC106_WORKING_SAFE_SOURCE.zip' | sha256sum -c -
+          mkdir src
+          unzip -q baseline/AB_Khatma_P82_VC106_WORKING_SAFE_SOURCE.zip -d src
+          python3 p83/apply_p83.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          python3 p84/apply_p84.py src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE
+          mv src/AB_Khatma_P43_VC64_ZOOM_COLOR_SAFE_SOURCE src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE
+          mkdir -p src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE/BUILD_REPRODUCIBILITY
+          cp -R p83 p84 src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE/BUILD_REPRODUCIBILITY/
+          cp .github/workflows/p84-vc108-privacy-apk-review-safe.yml src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE/BUILD_REPRODUCIBILITY/
+          cp p84/REVIEW_SCOPE.md src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE/P84_REVIEW_NOTES.md
+      - uses: actions/checkout@v4
+        with:
+          repository: aboshra67-debug/AB-Khatma-Server
+          ref: b1a416fdbafc057e1f226ff269943ce52187e8de
+          path: src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE/server_current_fix3
+      - name: Package no secrets and no generated AAB
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import zipfile, pathlib, hashlib, json
+          root=pathlib.Path('src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE')
+          output=pathlib.Path('AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE.zip')
+          paths=[]
+          for p in root.rglob('*'):
+              if not p.is_file() or '.git' in p.parts: continue
+              if p.suffix.lower() in {'.p12','.jks','.keystore','.pem','.apk','.aab'} or p.name in {'.env','google-services.json','GITHUB_ACTIONS_SECRETS_PRIVATE.txt'}:
+                  raise SystemExit('Unexpected secret or binary artifact in source')
+              paths.append(p)
+          record={'android_commit':'b7a5f663caee46343098b2132fe790a9d22290c0','apk_build_run':39134507280,'retained_junit_tests':8,'server_commit':'b1a416fdbafc057e1f226ff269943ce52187e8de','original_certificate_sha256':'3248c1ebdd2973a992a453919a4207317cdecfc4cf0c7e8dc28dd7d9a5468b41','aab_generated':False,'phone_review_pending':True}
+          (root/'P84_BUILD_PROVENANCE.json').write_text(json.dumps(record,indent=2))
+          paths.append(root/'P84_BUILD_PROVENANCE.json')
+          with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
+              for p in sorted(paths):z.write(p,p.relative_to(root.parent))
+          with zipfile.ZipFile(output) as z:assert z.testzip() is None
+          print('SOURCE SHA256',hashlib.sha256(output.read_bytes()).hexdigest())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P84-VC108-COMPLETE-SAFE-SOURCE
+          path: AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE.zip
+          if-no-files-found: error
+          retention-days: 30
