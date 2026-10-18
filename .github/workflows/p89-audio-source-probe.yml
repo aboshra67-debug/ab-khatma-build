@@ -58,3 +58,12 @@ jobs:
           }finally{await browser.close()}
           })().catch(e=>{console.error(String(e));process.exit(1)});
           JS
+      - name: Inspect genuine Refaat Adhan downloaded audio safely for hash and duration
+        run: |
+          set -euo pipefail
+          curl -fL --retry 2 --max-time 25 'https://audio.islamweb.net/audio/downloadmp3.php?audioid=122665' -o /tmp/refaat-audio-sample
+          test "$(stat -c%s /tmp/refaat-audio-sample)" -ge 30000
+          file /tmp/refaat-audio-sample
+          sha256sum /tmp/refaat-audio-sample
+          ffprobe -v error -show_entries format=duration,format_name,size -of default=nw=1 /tmp/refaat-audio-sample
+          rm -f /tmp/refaat-audio-sample
