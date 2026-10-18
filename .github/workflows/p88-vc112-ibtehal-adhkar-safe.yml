@@ -88,6 +88,17 @@ jobs:
           s=s.replace(insertion,'                item {\n                    val attached=remember(track.id,refresh){!prefs.getString(track.id,null).isNullOrBlank()}\n                    Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(20.dp))')
           p.write_text(s,encoding='utf-8')
           PY
+          # P88 device test only: the currently selected recording name appears in header and card.
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/AB_Khatma_P87_VC111_SAFE_SOURCE/app/src/androidTest/java/com/ab/khatma/guide/P88IbtehalDeviceTest.kt')
+          s=p.read_text(encoding='utf-8')
+          for title in ('يا إله العالمين','هو الله رب الوجود'):
+              old=f'compose.onNodeWithText("{title}").assertIsDisplayed()'
+              assert s.count(old)==1
+              s=s.replace(old,f'compose.onAllNodesWithText("{title}").onFirst().assertIsDisplayed()')
+          p.write_text(s,encoding='utf-8')
+          PY
           sed -i 's/versionCode = 111/versionCode = 112/' "$S/app/build.gradle.kts"
           sed -i 's/0.19.82-p87-audio-catalog-verse-ink-safe/0.19.83-p88-ibtehal-adhkar-safe/' "$S/app/build.gradle.kts"
           grep -q 'versionCode = 112' "$S/app/build.gradle.kts"
