@@ -1,0 +1,27 @@
+name: P90 Inspect Available Archive Audio (read only)
+on:
+  workflow_dispatch:
+  push:
+    branches: [release/p90-vc114-ibtehal-playback-repair]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enumerate archive media titles, metadata and HTTP range support
+        run: |
+          python3 - <<'PY'
+          import urllib.request,urllib.parse,json
+          for item in ('07._20210119','Tobar1'):
+              try:
+                  u='https://archive.org/metadata/'+item
+                  req=urllib.request.Request(u,headers={'User-Agent':'AB-Khatma-Audio-QA/1.0'})
+                  with urllib.request.urlopen(req,timeout=20) as r:data=json.load(r)
+                  tracks=[f.get('name') for f in data.get('files',[]) if f.get('name','').lower().endswith(('.mp3','.ogg','.m4a'))]
+                  print('ITEM',item,'TRACKS',len(tracks))
+                  print(json.dumps(tracks[:150],ensure_ascii=False))
+              except Exception as e: print('FAIL',item,str(e))
+          PY
