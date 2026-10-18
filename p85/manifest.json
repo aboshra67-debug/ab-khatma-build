@@ -16,7 +16,7 @@
     {
       "path": "app/src/androidTest/java/com/ab/khatma/guide/P85ReaderDeviceTest.kt",
       "before": null,
-      "after": "fefbe2d5173e1ae3347098ca0610fc9cc50d1fe81449cbb60a622c6d69b4b424"
+      "after": "7b9e1eb7a3302d20e80ecf9eef0145144bc0ac8640fe7a08caf84559fddb333b"
     },
     {
       "path": "app/src/androidTest/java/com/ab/khatma/guide/P85AudioDeviceTest.kt",
@@ -86,7 +86,7 @@
     {
       "path": "app/src/main/java/com/ab/khatma/ui/screens/P41OfflineMushafPage.kt",
       "before": "3470c569e6bd102035160f194fd939c72585f460d76b81fedf08686ee9c9879b",
-      "after": "2180ce091fbae41ae3f547191407a4c5bc6240d31f73d7a1981ac383e57f5039"
+      "after": "9df48b5b1cdaf181b20e9c2f11f8f6c35ffe16273ebfa856b2db80fa52fececb"
     },
     {
       "path": "app/src/main/java/com/ab/khatma/ui/screens/PrayerPremiumScreen.kt",

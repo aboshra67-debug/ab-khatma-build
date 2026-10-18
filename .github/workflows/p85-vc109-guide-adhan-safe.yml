@@ -171,7 +171,7 @@ jobs:
             adb install -r ci_tests/p85-ci-app.apk
             adb install -r ci_tests/p85-ci-test.apk
             adb shell pm grant com.ab.khatma.preview android.permission.POST_NOTIFICATIONS
-            adb shell am instrument -w -r com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p85-device-result.txt
+            adb shell am instrument -w -r -e class com.ab.khatma.guide.P85GuideUiTest,com.ab.khatma.guide.P85ReaderDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p85-device-result.txt
             cat p85-device-result.txt
             ! grep -E 'FAILURES|INSTRUMENTATION_FAILED|Process crashed' p85-device-result.txt
             grep -E '^OK \([0-9]+ tests?\)' p85-device-result.txt

@@ -37,7 +37,7 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 private data class P41Focus(val scale: Float, val centerX: Float, val centerY: Float)
-private data class P41PagePayload(val image: ImageBitmap, val decorated: Boolean, val focus: P41Focus)
+private data class P41PagePayload(val pageNumber: Int, val image: ImageBitmap, val decorated: Boolean, val focus: P41Focus, val frames: List<P85TitleFrame>)
 
 /** VC96: read-only, pixel-measured 15-line presentation. No text is generated or retyped.
  * The original immutable bitmap is sampled line-by-line; special pages fall back to
@@ -334,21 +334,23 @@ internal fun P41OfflineMushafPage(
                 }
                 bitmap?.let { decoded ->
                     val decorated = colored || plainFile == null
-                    P41PagePayload(decoded.asImageBitmap(), decorated,
-                        P41Geometry.forPage(context.applicationContext, pageNumber, decorated))
+                    P41PagePayload(pageNumber, decoded.asImageBitmap(), decorated,
+                        P41Geometry.forPage(context.applicationContext, pageNumber, decorated),
+                        if (decorated) P85TitleFrames.page(context.applicationContext, pageNumber) else emptyList())
                 }
             }.getOrNull()
         }
     }
-    val titleFrames by produceState<List<P85TitleFrame>>(emptyList(), pageNumber, colored) {
-        value = withContext(Dispatchers.IO) { P85TitleFrames.page(context.applicationContext, pageNumber) }
-    }
-    val page = loadedPage?.image
-    val decorated = loadedPage?.decorated == true
+    // Publish artwork and its measured decoration atomically. produceState keeps its
+    // previous value while a new key loads, so never label/decorate a stale page.
+    val visiblePayload=loadedPage?.takeIf { it.pageNumber==pageNumber }
+    val titleFrames=visiblePayload?.frames.orEmpty()
+    val page=visiblePayload?.image
+    val decorated=visiblePayload?.decorated==true
     val readingLines = remember(pageNumber, decorated, readingMode) {
         if (readingMode && decorated) P76ReadingGeometry.forPage(context.applicationContext, pageNumber) else null
     }
-    val focus = loadedPage?.focus ?: P41Focus(1f, 0.5f, 0.5f)
+    val focus = visiblePayload?.focus ?: P41Focus(1f, 0.5f, 0.5f)
     var x by remember(pageNumber) { mutableFloatStateOf(0f) }
     var zoomHintVisible by remember(pageNumber) { mutableStateOf(false) }
     LaunchedEffect(zoom) {
