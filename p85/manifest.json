@@ -1,0 +1,132 @@
+{
+  "baseline_commit": "b7a5f663caee46343098b2132fe790a9d22290c0",
+  "baseline_source_sha256": "9df0a62c0ca49c1b5934d5cf8332f8d56cef90cdc2c1cfbfe18d20ae9b9e19ea",
+  "unchanged_files": 3306,
+  "files": [
+    {
+      "path": "app/build.gradle.kts",
+      "before": "6584f41ecf548cd670060978cca1a7a8f6aac0b54ab2d452b21b87fb46d9b7c2",
+      "after": "3043e97c1a0e72d2c3bfaacd3886af77af35ac62ee0c78c83529a39c4316e62b"
+    },
+    {
+      "path": "tools/P85RulesCheck.java",
+      "before": null,
+      "after": "3ac37a010278db5d179a6e28b0059d4606e30a2faa71839b1e5417360e45c46e"
+    },
+    {
+      "path": "app/src/androidTest/java/com/ab/khatma/guide/P85ReaderDeviceTest.kt",
+      "before": null,
+      "after": "fefbe2d5173e1ae3347098ca0610fc9cc50d1fe81449cbb60a622c6d69b4b424"
+    },
+    {
+      "path": "app/src/androidTest/java/com/ab/khatma/guide/P85AudioDeviceTest.kt",
+      "before": null,
+      "after": "ad08b2f1587c008f214c2d19470274b46c7bcd7f1dce360b332e350f79d6d75e"
+    },
+    {
+      "path": "app/src/androidTest/java/com/ab/khatma/guide/P85GuideUiTest.kt",
+      "before": null,
+      "after": "8173ab9b6f43c6273ed1b0a7bafd6a5147f81185841f6756c1ba9a866df91047"
+    },
+    {
+      "path": "app/src/main/assets/p85_surah_title_frames.json",
+      "before": null,
+      "after": "7f4e57865e21e085d215fc8a8742083c311c4c77a145bf533bc6781b97b37eaf"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/secure/P53ProfilePage.kt",
+      "before": "beaa6f815ab1e2c83da413e49ef5a73b1b2614dcdcfcb1b5e955f15d5c30e0a3",
+      "after": "04b7d55406f81c3dba756e87045642ff84bc96638cd9931357c03e78c774cb7f"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/secure/P84PrivacyPage.kt",
+      "before": "6806918d8e215b63da3331ed511ad38a2d69be27e6b587ce4a35da096a6ef009",
+      "after": "e907001d7579922c8c3de370c79cc51370adb1d36a8f63e7a7a90338a469a2ba"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/secure/KhatmaVisualHome.kt",
+      "before": "4ab39ac243d0e5b8ee19e0014017ad3f9b35806fc1661681ea89fac11dde056a",
+      "after": "9e6569428d0559d34de6ee9cc42c2257ec6478bac658a33bd09f602a4e4ecf96"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt",
+      "before": "94882bcf5d2abc12ea59c66bd06d7dd4224746e4eeb4f4dd58bbce751e593664",
+      "after": "b5f43e25fda31f9c7848cfda64e68c3bafd75df4c669b09617e6eb0983189578"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/prayer/AdhanPreferences.kt",
+      "before": "7b98b31e2f872ff1ce3906a3201b784ebfa3273fcc9f0941e0b01930cb29a8c6",
+      "after": "03b1e02131119cb84441781fdfe3ffbaff130ff1cdfc960f1fb3c6477aa64e3a"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/prayer/AdhanPlaybackService.kt",
+      "before": "5278fb230537e33cb5b38ba1c68e630e667cf162ce741bd83f59558a090cefd8",
+      "after": "b0252c7dd7d7c370f47220475706d710175a4ecc32c9746e811ed7b218ec42fa"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/prayer/AdhanAlarmReceiver.kt",
+      "before": "d3b02773285a80d48a662e064b22f58ac0ac8e157ee84972d7d2c297a399686a",
+      "after": "b588ae5d23550dbf78ec2ae16c3cb420adaa452762a9b736666af9dc16924495"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/prayer/P85NamedAdhan.kt",
+      "before": null,
+      "after": "6ed7c3eab11a3b488ce90c416fb3cafb690cac189518b3aa27fbf5771eb55c25"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/guide/P85Guide.kt",
+      "before": null,
+      "after": "78689852dd486e4664c6db52e86a655800e3d2dd18a47025ba34700178e269a7"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/guide/P85Rules.java",
+      "before": null,
+      "after": "cf676aee5ae2d266f20276527aa38bbfce3409ac7b172f0db7199c1c399b00bc"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/ui/screens/P41OfflineMushafPage.kt",
+      "before": "3470c569e6bd102035160f194fd939c72585f460d76b81fedf08686ee9c9879b",
+      "after": "2180ce091fbae41ae3f547191407a4c5bc6240d31f73d7a1981ac383e57f5039"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/ui/screens/PrayerPremiumScreen.kt",
+      "before": "7501dbecc03010796a630ebe52ab8e42fe946d2f5104ab43f1685edac66c8cf2",
+      "after": "f2894efb43260e42872089a7d7f6ae787781e4dac589344c3eba4b808a8d7449"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/ui/screens/P85IbtehalScreen.kt",
+      "before": null,
+      "after": "743226a184ad094e1a9d21abdaff1917f05571a9f104a63dfe5de14e6c9549be"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/ui/screens/InteractiveAdhkarScreen.kt",
+      "before": "fe251f3e006079effab2b8e403f0dd3185c9de94b06c7ffcf7a03fff7954962e",
+      "after": "e66a6e3394fb248f3cb7c6c7b23cefdd298e5bdd100d851ae9351143180768df"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/ui/screens/P63Reader.kt",
+      "before": "b04792b2d4a1ed4a6924a1ec309d5d54c9a3f11cb8b897ecb67b07a7f14ae5ad",
+      "after": "7cf9a152bceba46c5784c8baec479219b43e95f179c0b2166e8c48300a63b706"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/ui/screens/P85TitleFrames.kt",
+      "before": null,
+      "after": "8038ffe2ad0373973cd2efeeaf38a1e2f1198e05b08df0ddab42c57926137824"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/ui/screens/QuranScreen.kt",
+      "before": "7f6599d8df6ebcd45154b9635a2683132e4099283c7914b9f5e786f9616d8cfe",
+      "after": "e15fc21f8b1325a77091c802566efb3281f33f59b7c0d14ab26f9f024ff33164"
+    },
+    {
+      "path": "app/src/main/java/com/ab/khatma/ui/screens/P62Reader.kt",
+      "before": "404da47d4b89dde019e7f0330f75ff44a4b32144949f69d22fd92578b4653906",
+      "after": "eaf4876226538fd88c48afaf338f1305cdd343af8d450a6a5a3086b90c260e78"
+    },
+    {
+      "path": "app/src/test/java/com/ab/khatma/guide/P85RulesTest.kt",
+      "before": null,
+      "after": "0fc3ce135514891d008aee92378de8ee1e39b1d473a60cfb1ddc82fefc9c3152"
+    }
+  ]
+}
