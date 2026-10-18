@@ -46,7 +46,7 @@
     {
       "path": "app/src/main/java/com/ab/khatma/secure/KhatmaVisualHome.kt",
       "before": "4ab39ac243d0e5b8ee19e0014017ad3f9b35806fc1661681ea89fac11dde056a",
-      "after": "9e6569428d0559d34de6ee9cc42c2257ec6478bac658a33bd09f602a4e4ecf96"
+      "after": "b3108a6a6b1938be016ac866a62f8b554644649d2e2be6a041cb80376a175cb7"
     },
     {
       "path": "app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt",
@@ -61,7 +61,7 @@
     {
       "path": "app/src/main/java/com/ab/khatma/prayer/AdhanPlaybackService.kt",
       "before": "5278fb230537e33cb5b38ba1c68e630e667cf162ce741bd83f59558a090cefd8",
-      "after": "b0252c7dd7d7c370f47220475706d710175a4ecc32c9746e811ed7b218ec42fa"
+      "after": "605f34708278157f0c942bc746d9c16e31dcdac477e94c49b9abaea9d0b12f0e"
     },
     {
       "path": "app/src/main/java/com/ab/khatma/prayer/AdhanAlarmReceiver.kt",
@@ -76,7 +76,7 @@
     {
       "path": "app/src/main/java/com/ab/khatma/guide/P85Guide.kt",
       "before": null,
-      "after": "78689852dd486e4664c6db52e86a655800e3d2dd18a47025ba34700178e269a7"
+      "after": "3a4a61c4280f6b9ca1700af1da50cc75421f0a502a7c28e7aba55d6dad710c8b"
     },
     {
       "path": "app/src/main/java/com/ab/khatma/guide/P85Rules.java",

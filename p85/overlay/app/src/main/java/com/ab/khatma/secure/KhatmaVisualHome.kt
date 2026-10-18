@@ -226,7 +226,7 @@ fun KhatmaVisualHome(userName:String,groupCount:Int,groupsLoaded:Boolean, groups
             VisualButton("حسابي","الاسم والإعدادات",4,cardHeight,
                 onClick=onOpenProfile,modifier=Modifier.weight(1f).target("home.profile"))
         }
-        OutlinedButton(onClick=onOpenIbtehal,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(16.dp)) { Text("♫ الابتهالات والتواشيح",color=dark) }
+        OutlinedButton(onClick=onOpenIbtehal,modifier=Modifier.fillMaxWidth().target("home.ibtehal"),shape=RoundedCornerShape(16.dp)) { Text("♫ الابتهالات والتواشيح",color=dark) }
         com.ab.khatma.guide.P85Guide.HelpButton(modifier=Modifier.fillMaxWidth())
     }
     }

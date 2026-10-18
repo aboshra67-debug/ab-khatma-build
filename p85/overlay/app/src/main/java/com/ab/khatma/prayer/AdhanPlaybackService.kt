@@ -65,7 +65,7 @@ class AdhanPlaybackService : Service() {
                     resumeOnFocus = true; p.pause(); AdhanPlaybackStatus.text = "الأذان متوقف مؤقتًا أثناء استخدام الصوت"
                 }
             }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> p?.runCatching { setVolume(.15f, .15f) }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> p?.runCatching { val v=minOf(AdhanPreferences(this@AdhanPlaybackService).volume,.15f);setVolume(v,v) }
             AudioManager.AUDIOFOCUS_GAIN -> {
                 focusAvailable=true
                 val v = AdhanPreferences(this).volume
