@@ -33,11 +33,6 @@ jobs:
           cp -R p83 p84 src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE/BUILD_REPRODUCIBILITY/
           cp .github/workflows/p84-vc108-privacy-apk-review-safe.yml src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE/BUILD_REPRODUCIBILITY/
           cp p84/REVIEW_SCOPE.md src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE/P84_REVIEW_NOTES.md
-      - uses: actions/checkout@v4
-        with:
-          repository: aboshra67-debug/AB-Khatma-Server
-          ref: b1a416fdbafc057e1f226ff269943ce52187e8de
-          path: src/AB_Khatma_P84_VC108_PRIVACY_REVIEW_SAFE_SOURCE/server_current_fix3
       - name: Package no secrets and no generated AAB
         run: |
           set -euo pipefail
