@@ -35,4 +35,25 @@ out.mkdir(exist_ok=True)
 print("P97 API INVENTORY",json.dumps(report["counts"],ensure_ascii=False))
 for kind,matches in found.items():
     for item in matches[:75]:print("API_REFER",kind,json.dumps(item,ensure_ascii=False))
+print("=== ACTIVE ENTRYPOINT & UPDATE CLIENT USAGE ===")
+for rel in [
+    "app/src/main/java/com/ab/khatma/MainActivity.kt",
+    "app/src/main/java/com/ab/khatma/updates/UpdateClient.kt",
+    "app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt",
+]:
+    p=root/rel
+    if not p.exists(): continue
+    rows=p.read_text(encoding="utf-8",errors="replace").splitlines()
+    print("ENTRYPOINT_FILE",rel,"total_lines",len(rows))
+    if rel.endswith("UpdateClient.kt"):
+        positions=range(min(len(rows),125))
+    else:
+        keys=("AppViewModel","AppRoot","SecureV2","setContent","Home","Screen","MainActivity","API_BASE_URL","TEST_HOST")
+        positions=set()
+        for idx,row in enumerate(rows):
+            if any(key in row for key in keys):
+                positions.update(range(max(0,idx-1),min(len(rows),idx+2)))
+        positions=sorted(positions)[:110]
+    for i in positions:
+        print("ENTRY_LINE",rel,str(i+1),rows[i][:220])
 print("P97 INVENTORY COMPLETE WITHOUT CHANGING SOURCE")
