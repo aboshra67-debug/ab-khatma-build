@@ -1,0 +1,35 @@
+name: P97 export original Android signing tools - no secrets
+on:
+  push:
+    branches:
+      - tools/p97-offline-signing-kit
+    paths:
+      - .github/workflows/p97-export-buildtools-for-local-signing.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export_public_tools:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Android SDK Build Tools 36.0.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "build-tools;36.0.0"
+      - name: Verify and bundle tools without any app binaries or secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "${ANDROID_HOME}/build-tools/36.0.0/lib/apksigner.jar"
+          test -x "${ANDROID_HOME}/build-tools/36.0.0/zipalign"
+          tar -C "${ANDROID_HOME}/build-tools" -czf /tmp/AB-Khatma-Android-BuildTools-36.0.0-Linux.tar.gz 36.0.0
+          sha256sum /tmp/AB-Khatma-Android-BuildTools-36.0.0-Linux.tar.gz > /tmp/TOOLS_SHA256.txt
+      - name: Export signing tools only
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-Android-BuildTools-36.0.0-Linux
+          path: |
+            /tmp/AB-Khatma-Android-BuildTools-36.0.0-Linux.tar.gz
+            /tmp/TOOLS_SHA256.txt
+          retention-days: 1
