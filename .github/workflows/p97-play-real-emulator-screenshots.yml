@@ -56,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: AB-Khatma-P97-VC121-AUTHENTIC-EMULATOR-SCREENSHOTS
+          name: AB-Khatma-P97-VC121-PLAY-9X16-EMULATOR-SCREENSHOTS
           path: |
             screen_images/*.png
             screen_tests.txt
