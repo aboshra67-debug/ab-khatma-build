@@ -51,3 +51,59 @@ jobs:
           path: reports/*
           if-no-files-found: warn
           retention-days: 30
+
+  small-screen-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download P95 already-tested CI-signed test APKs (not user release APK)
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P95-VC119-CI-TEST-APKS
+          run-id: 39270578361
+          github-token: ${{ github.token }}
+          path: test-apks
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: |
+            set -euo pipefail
+            adb install -r test-apks/p94-ci-app.apk
+            adb install -r test-apks/p94-ci-test.apk
+            adb shell pm grant com.ab.khatma.preview android.permission.POST_NOTIFICATIONS
+            adb shell wm size 720x1280
+            adb shell wm density 320
+            adb shell settings put system font_scale 1.4
+            adb shell wm size
+            adb shell settings get system font_scale
+            adb shell am instrument -w -r -e class com.ab.khatma.guide.P94LayoutNavigationDeviceTest,com.ab.khatma.guide.P85GuideUiTest,com.ab.khatma.guide.P88IbtehalDeviceTest,com.ab.khatma.guide.P85ReaderDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > small-screen-results.txt
+            cat small-screen-results.txt
+            grep -E '^OK \\([0-9]+ tests?\\)' small-screen-results.txt
+            ! grep -E 'FAILURES|INSTRUMENTATION_FAILED|Process crashed' small-screen-results.txt
+            mkdir -p small-screenshots
+            for f in p88-ibtehal-categories.png p88-ibtehal-tracks.png p88-ibtehal-detail.png p85-guide-first.png p85-guide-next.png p85-reader-187.png; do
+              adb exec-out run-as com.ab.khatma.preview cat files/$f > small-screenshots/$f || rm -f small-screenshots/$f
+            done
+      - name: Save compact-screen and enlarged Arabic-font evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P95-STAGE2-SMALL-SCREEN-UI
+          path: |
+            small-screen-results.txt
+            small-screenshots/*
+          retention-days: 30
+          if-no-files-found: warn
