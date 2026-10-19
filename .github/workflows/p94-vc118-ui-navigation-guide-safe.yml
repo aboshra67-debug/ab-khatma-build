@@ -75,7 +75,10 @@ jobs:
           s=p.read_text()
           old='"شرح الشاشة"'
           assert s.count(old)>=2, "P91 UI labels have changed unexpectedly"
-          p.write_text(s.replace(old, '"؟ مساعدة"'))
+          s=s.replace(old, '"؟ مساعدة"')
+          assert s.count('"التسجيلات المحفوظة"')>=1, "Retained saved-audio test changed unexpectedly"
+          s=s.replace('"التسجيلات المحفوظة"', '"المحفوظة للاستماع"')
+          p.write_text(s)
           PY
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
           test "$(find "$S/app/src/main/assets/quran_verse_hitmaps" -maxdepth 1 -name '*.json' | wc -l)" -eq 604
