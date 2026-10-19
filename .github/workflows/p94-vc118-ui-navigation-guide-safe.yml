@@ -68,6 +68,15 @@ jobs:
           grep -q 'versionCode = 118' "$S/app/build.gradle.kts"
           grep -q '0.19.89-p94-ui-navigation-guide-safe' "$S/app/build.gradle.kts"
           test -f "$S/app/src/androidTest/java/com/ab/khatma/guide/P94LayoutNavigationDeviceTest.kt"
+          # Retained P91 tests must assert the renamed accessible label, not obsolete UI copy.
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("src/AB_Khatma_P93_VC117_SAFE_SOURCE/app/src/androidTest/java/com/ab/khatma/guide/P91OfflineDeviceTest.kt")
+          s=p.read_text()
+          old='"شرح الشاشة"'
+          assert s.count(old)>=2, "P91 UI labels have changed unexpectedly"
+          p.write_text(s.replace(old, '"؟ مساعدة"'))
+          PY
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
           test "$(find "$S/app/src/main/assets/quran_verse_hitmaps" -maxdepth 1 -name '*.json' | wc -l)" -eq 604
           test "$(find "$S/app/src/main/assets/quran_pages" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
