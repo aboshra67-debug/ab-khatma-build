@@ -189,18 +189,7 @@ jobs:
             adb shell cmd connectivity airplane-mode enable
             adb shell svc wifi disable
             adb shell svc data disable
-            adb shell settings get global airplane_mode_on | grep '^1            for file in p88-ibtehal-categories.png p88-ibtehal-tracks.png p88-ibtehal-detail.png p85-guide-first.png p85-guide-next.png p85-reader-187.png p85-reader-187-reading.png p85-reader-604.png; do adb exec-out run-as com.ab.khatma.preview cat files/$file > screenshots/$file; done
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: AB-Khatma-P92-VC116-NATIVE-DEVICE-RESULTS
-          path: |
-            p85-device-result.txt
-            p92-online-result.txt
-            p92-offline-result.txt
-            screenshots/*
-          retention-days: 30
-
+            adb shell settings get global airplane_mode_on | grep -Fx 1
             sleep 3
             adb shell am instrument -w -r -e class com.ab.khatma.guide.P92OfflineReplayDeviceTest#filesSurviveProcessRestartAndReplayInAirplaneMode com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p92-offline-result.txt
             cat p92-offline-result.txt
@@ -215,5 +204,7 @@ jobs:
           name: AB-Khatma-P92-VC116-NATIVE-DEVICE-RESULTS
           path: |
             p85-device-result.txt
+            p92-online-result.txt
+            p92-offline-result.txt
             screenshots/*
           retention-days: 30
