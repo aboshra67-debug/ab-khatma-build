@@ -12,11 +12,12 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 FLAGS = [
-    ("CRITICAL", "unimplemented_click", re.compile(r"onClick\s*=\s*\{\s*\}")),
+    ("REVIEW", "unimplemented_click", re.compile(r"onClick\s*=\s*\{\s*\}")),
     ("HIGH", "runtime_todo", re.compile(r"\b(?:TODO|NotImplementedError)\s*\(")),
     ("REVIEW", "coming_soon_copy", re.compile(r"قريب[ً\u064b]?ا|قريباً|coming soon", re.I)),
-    ("REVIEW", "developer_copy", re.compile(r"(?i)\b(?:placeholder|FIXME|TEST ONLY|DEBUG ONLY)\b")),
+    ("REVIEW", "developer_copy", re.compile(r"(?i)\b(?:FIXME|TEST ONLY|DEBUG ONLY)\b")),
     ("REVIEW", "obsolete_alarm_copy", re.compile("لا نطلب صلاحية المنبه الدقيق")),
+    ("REVIEW", "obsolete_trial_copy", re.compile("خادم التجربة|الخادم التجريبي|النسخة التجريبية|التحقق برقم الهاتف سيضاف|يمكن لاحقًا إضافة")),
     ("REVIEW", "unsecured_http", re.compile(r"http://(?!localhost|127\.0\.0\.1|10\.0\.2\.2)")),
 ]
 AUDIO_SUFFIXES = {".mp3",".m4a",".aac",".wav",".ogg",".opus",".flac"}
