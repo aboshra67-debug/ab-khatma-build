@@ -5,13 +5,23 @@ on:
     paths: [.github/workflows/p97-play-real-emulator-screenshots.yml]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   actions: read
 jobs:
   capture:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
+      - name: Record screenshot workflow run ID
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/P97_SCREENSHOT_CAPTURE_RUN_ID.txt" \
+            -f message="ci(play): record screenshot workflow run ID" \
+            -f content="$(printf '%s' "${GITHUB_RUN_ID}" | base64 -w0)" \
+            -f branch="${GITHUB_REF_NAME}"
       - name: Prepare Android Java runtime
         uses: actions/setup-java@v4
         with:
