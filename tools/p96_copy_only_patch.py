@@ -58,7 +58,9 @@ def main() -> None:
                               and before == "الخدمة غير متاحة على خادم التجربة" else 1)
             if body.count(before) != expected_count:
                 raise SystemExit(f"FAIL CLOSED: baseline drift at {rel}: {before[:55]!r} (count {body.count(before)}, expected {expected_count})")
-            if body.count(after) != 0:
+            # Shorter replacement may be a substring of the old UI sentence.
+            # In that case its presence before replacement is expected.
+            if after not in before and body.count(after) != 0:
                 raise SystemExit(f"FAIL CLOSED: replacement unexpectedly present in {rel}")
             body=body.replace(before,after,expected_count)
         plans[path]=(original,body.encode("utf-8"),rel)
