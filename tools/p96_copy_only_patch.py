@@ -52,11 +52,15 @@ def main() -> None:
         original=path.read_bytes()
         body=original.decode("utf-8")
         for before,after in changes:
-            if body.count(before) != 1:
-                raise SystemExit(f"FAIL CLOSED: baseline drift at {rel}: {before[:55]!r} (count {body.count(before)})")
+            # P95 SecureV2Api uses the same error copy in both the response
+            # mapping and its retry classification. Replace BOTH together.
+            expected_count = (2 if rel.endswith("/SecureV2Api.kt")
+                              and before == "الخدمة غير متاحة على خادم التجربة" else 1)
+            if body.count(before) != expected_count:
+                raise SystemExit(f"FAIL CLOSED: baseline drift at {rel}: {before[:55]!r} (count {body.count(before)}, expected {expected_count})")
             if body.count(after) != 0:
                 raise SystemExit(f"FAIL CLOSED: replacement unexpectedly present in {rel}")
-            body=body.replace(before,after,1)
+            body=body.replace(before,after,expected_count)
         plans[path]=(original,body.encode("utf-8"),rel)
     # Only mutate the vetted files after every guard passes.
     ledger=[]
