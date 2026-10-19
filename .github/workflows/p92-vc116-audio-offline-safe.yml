@@ -172,7 +172,8 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           script: |
-            set -euo pipefail
+            set -eu
+            adb wait-for-device
             adb install -r ci_tests/p92-ci-app.apk
             adb install -r ci_tests/p92-ci-test.apk
             adb shell pm grant com.ab.khatma.preview android.permission.POST_NOTIFICATIONS
