@@ -139,3 +139,31 @@ class P92OfflineAfterDisconnectDeviceTest {
 }
 """, encoding="utf-8")
 print("P92 safe changes applied; no media catalogs, account state, assets, or backend modified")
+
+
+live = root / "app/src/androidTest/java/com/ab/khatma/guide/P92LiveAudioDeviceTest.kt"
+if live.exists():
+    raise RuntimeError("P92 live test unexpectedly exists in P91 baseline")
+live.write_text((Path(__file__).parent / "p92_live_audio_test.kt").read_text(encoding="utf-8"), encoding="utf-8")
+
+offline_path = "app/src/androidTest/java/com/ab/khatma/guide/P92OfflineAfterDisconnectDeviceTest.kt"
+edit(offline_path,
+    '    private val url = "https://cdn.mp3quran.net/audio/muhammad-refaat/r1/001.mp3"',
+    '    private val url = "https://cdn.mp3quran.net/audio/muhammad-refaat/r1/001.mp3"\\n    private val archiveUrl = "https://archive.org/download/07._20210119/03.%D8%AD%D9%8A%D9%86%20%D9%8A%D9%87%D8%AF%D9%8A%20%D8%A7%D9%84%D8%B5%D8%A8%D8%AD%20%D8%A7%D8%B4%D8%B1%D8%A7%D9%82%20%D8%B3%D9%86%D8%A7%D9%87.mp3"'.replace('\\n', '\n'))
+edit(offline_path,
+    "    @Test fun secureArchiveMirrorRedirectsAndRejectsOtherHosts() {",
+    """    @Test fun archiveIbtehalAndAdhanRemainAvailableOffline() {
+        val ctx = ApplicationProvider.getApplicationContext<Context>()
+        val ibtehal = P91OfflineAudio.saved(ctx, archiveUrl)
+        assertNotNull("Online archive test must save ibtehal before disconnect", ibtehal)
+        assertEquals(ibtehal!!.absolutePath, runBlocking {
+            withTimeout(1_500L) { P91OfflineAudio.acquire(ctx, archiveUrl) }
+        }.absolutePath)
+        val adhan = com.ab.khatma.prayer.P85NamedAdhan.file(ctx, "refaat_radio")
+        assertNotNull("Online adhan test must save adhan before disconnect", adhan)
+    }
+
+    @Test fun secureArchiveMirrorRedirectsAndRejectsOtherHosts() {""")
+
+with (root / "P92_SAFE_PATCH_NOTES_AR.txt").open("a", encoding="utf-8") as file:
+    file.write("- Live archive.org ibtehal and IslamWeb Refaat adhan download/decode gates; offline cached replay checks.\\n")
