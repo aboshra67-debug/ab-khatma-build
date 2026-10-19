@@ -99,5 +99,10 @@ dst=root/"app/src/main/java/com/ab/khatma/secure/P93FirstRunSettings.kt"
 if dst.exists(): raise RuntimeError("P93 wizard already exists; refusing to overwrite")
 dst.parent.mkdir(parents=True,exist_ok=True)
 shutil.copyfile(source,dst)
+test_source=here/"overlay/app/src/androidTest/java/com/ab/khatma/guide/P93FirstRunDeviceTest.kt"
+test_target=root/"app/src/androidTest/java/com/ab/khatma/guide/P93FirstRunDeviceTest.kt"
+assert test_source.is_file() and not test_target.exists()
+test_target.parent.mkdir(parents=True,exist_ok=True)
+shutil.copyfile(test_source,test_target)
 assert "versionCode = 117" in (root/g).read_text()
 print("P93 safe patch applied without removing existing settings or modifying Firebase/server.")
