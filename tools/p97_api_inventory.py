@@ -38,6 +38,7 @@ for kind,matches in found.items():
 print("=== ACTIVE ENTRYPOINT & UPDATE CLIENT USAGE ===")
 for rel in [
     "app/src/main/java/com/ab/khatma/MainActivity.kt",
+    "app/src/main/java/com/ab/khatma/AppViewModel.kt",
     "app/src/main/java/com/ab/khatma/ui/screens/AppRoot.kt",
     "app/src/main/java/com/ab/khatma/updates/UpdateClient.kt",
     "app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt",
@@ -46,8 +47,8 @@ for rel in [
     if not p.exists(): continue
     rows=p.read_text(encoding="utf-8",errors="replace").splitlines()
     print("ENTRYPOINT_FILE",rel,"total_lines",len(rows))
-    if rel.endswith("UpdateClient.kt") or rel.endswith("AppRoot.kt") or rel.endswith("MainActivity.kt"):
-        positions=range(min(len(rows),240))
+    if rel.endswith("UpdateClient.kt") or rel.endswith("AppRoot.kt") or rel.endswith("MainActivity.kt") or rel.endswith("AppViewModel.kt"):
+        positions=range(min(len(rows),210))
     else:
         keys=("AppViewModel","AppRoot","SecureV2","setContent","Home","Screen","MainActivity","API_BASE_URL","TEST_HOST")
         positions=set()
