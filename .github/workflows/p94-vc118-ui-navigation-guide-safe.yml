@@ -44,12 +44,12 @@ jobs:
           unzip -q baseline/AB_Khatma_P93_VC117_SAFE_SOURCE.zip -d src
           S=src/AB_Khatma_P93_VC117_SAFE_SOURCE
           # Verify the original P93 bytes for every file that P94 touches.
-          echo 'e595df2fd38e63a3107d11f1662798a25fd079076968930091ce9b69b05c6053  "$S/app/src/main/java/com/ab/khatma/MainActivity.kt"' | sed 's/"//g' | sha256sum -c -
-          echo '1abdaeadc5f23ba911c6da47b4dabcad04cf3b10802384bb8fb7a484462a8512  "$S/app/src/main/java/com/ab/khatma/guide/P85Guide.kt"' | sed 's/"//g' | sha256sum -c -
-          echo '6d76950642acfe218f3f9178aa385d854c223f659d892ab88cb1696247e0dafd  "$S/app/src/main/java/com/ab/khatma/ui/screens/PrayerPremiumScreen.kt"' | sed 's/"//g' | sha256sum -c -
-          echo 'cd09fba2eaad6fa7a1940929fac1e6734ef723c6c687ab3370ed26ce5d409859  "$S/app/src/main/java/com/ab/khatma/ui/screens/P85IbtehalScreen.kt"' | sed 's/"//g' | sha256sum -c -
-          echo '91c336dd743366713edcdfe9b09e7af3c8187d6b07dcd1ff83f7f246d348a542  "$S/app/src/main/java/com/ab/khatma/ui/screens/P53Common.kt"' | sed 's/"//g' | sha256sum -c -
-          echo '8e7cbfa1124e4da609371e1c6781159390b1fb8bd976cedeebf2e67060fc424b  "$S/app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt"' | sed 's/"//g' | sha256sum -c -
+          printf '%s  %s\n' 'e595df2fd38e63a3107d11f1662798a25fd079076968930091ce9b69b05c6053' "$S/app/src/main/java/com/ab/khatma/MainActivity.kt" | sha256sum -c -
+          printf '%s  %s\n' '1abdaeadc5f23ba911c6da47b4dabcad04cf3b10802384bb8fb7a484462a8512' "$S/app/src/main/java/com/ab/khatma/guide/P85Guide.kt" | sha256sum -c -
+          printf '%s  %s\n' '6d76950642acfe218f3f9178aa385d854c223f659d892ab88cb1696247e0dafd' "$S/app/src/main/java/com/ab/khatma/ui/screens/PrayerPremiumScreen.kt" | sha256sum -c -
+          printf '%s  %s\n' 'cd09fba2eaad6fa7a1940929fac1e6734ef723c6c687ab3370ed26ce5d409859' "$S/app/src/main/java/com/ab/khatma/ui/screens/P85IbtehalScreen.kt" | sha256sum -c -
+          printf '%s  %s\n' '91c336dd743366713edcdfe9b09e7af3c8187d6b07dcd1ff83f7f246d348a542' "$S/app/src/main/java/com/ab/khatma/ui/screens/P53Common.kt" | sha256sum -c -
+          printf '%s  %s\n' '8e7cbfa1124e4da609371e1c6781159390b1fb8bd976cedeebf2e67060fc424b' "$S/app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt" | sha256sum -c -
           base64 -d p94/patch.b64 | xz -dc > /tmp/p94.patch
           echo '9276d25f5c25f2fbb74af57c0f357ee713de2e66a19d13c22db58dbe6a8890e0  /tmp/p94.patch' | sha256sum -c -
           (cd "$S" && patch --dry-run --batch -p0 -i /tmp/p94.patch && patch --batch -p0 -i /tmp/p94.patch)
