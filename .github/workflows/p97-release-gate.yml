@@ -1,0 +1,81 @@
+name: P97 Play artifact and Railway read-only release gate
+on:
+  push:
+    branches: [release/p97-play-artifact-verification-safe]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  release_gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact successful P97 release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P97-VC121-UNSIGNED-REVIEW
+          run-id: 39290967444
+          github-token: ${{ github.token }}
+          path: review
+      - name: Inspect release binaries and preserve SHA-256 evidence
+        run: |
+          set -euo pipefail
+          ls -lh review
+          python3 -m py_compile tools/p97_verify_release_artifacts.py
+          python3 tools/p97_verify_release_artifacts.py review/P97_VC121_UNSIGNED_REVIEW.apk review/P97_VC121_UNSIGNED_AAB_REVIEW.aab release-report
+      - name: Validate Play package, VC121, target API 36
+        run: |
+          set -euo pipefail
+          AAPT="$ANDROID_HOME/build-tools/36.0.0/aapt"
+          if [ ! -x "$AAPT" ]; then
+            TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+            "$TOOL" "build-tools;36.0.0"
+          fi
+          "$AAPT" dump badging review/P97_VC121_UNSIGNED_REVIEW.apk | tee release-report/p97_badging.txt
+          grep -Eq "^package: name='com\.ab\.khatma\.preview' versionCode='121'" release-report/p97_badging.txt
+          grep -q "targetSdkVersion:'36'" release-report/p97_badging.txt
+      - name: Server status (non-mutating HTTP GET only)
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError,URLError
+          import json
+          from pathlib import Path
+          base="https://khatma-v2-api-staging.up.railway.app"
+          checks={
+            "/health":200,
+            "/account-deletion":200,
+            "/v2/client-config":200,
+            "/v2/auth/me":401,
+            "/users":410,
+            "/groups":410,
+            "/assignments":410,
+          }
+          report={}
+          for p,expected in checks.items():
+              req=Request(base+p,headers={"User-Agent":"AB-Khatma-P97-PrePlay-GET-Only"})
+              try:
+                  with urlopen(req,timeout=18) as response:
+                      got=response.status
+                      payload=response.read(25000)
+              except HTTPError as e:
+                  got=e.code
+                  payload=e.read(25000)
+              except (URLError,TimeoutError) as e:
+                  got=0;payload=b""
+              report[p]={"expected":expected,"actual":got,"pass":got==expected}
+              print("GET",p,"expected",expected,"got",got)
+          Path("release-report/p97_public_api_get_gate.json").write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          if not all(x["pass"] for x in report.values()):
+              raise SystemExit("SERVER PREFLIGHT FAILED")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AB-Khatma-P97-VC121-PLAY-PREFLIGHT-EVIDENCE
+          path: release-report/*
+          retention-days: 30
+          if-no-files-found: warn
