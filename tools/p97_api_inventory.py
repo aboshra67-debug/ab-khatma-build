@@ -35,6 +35,11 @@ out.mkdir(exist_ok=True)
 print("P97 API INVENTORY",json.dumps(report["counts"],ensure_ascii=False))
 for kind,matches in found.items():
     for item in matches[:75]:print("API_REFER",kind,json.dumps(item,ensure_ascii=False))
+print("=== GRADLE RUNTIME FLAGS ===")
+gradle=(root/"app/build.gradle.kts").read_text(encoding="utf-8")
+for i,row in enumerate(gradle.splitlines(),1):
+    if any(t in row for t in ["V2_PREVIEW_ENABLED","versionCode","versionName","API_BASE_URL","targetSdk","applicationId"]):
+        print("GRADLE_LINE",i,row)
 print("=== ACTIVE ENTRYPOINT & UPDATE CLIENT USAGE ===")
 for rel in [
     "app/src/main/java/com/ab/khatma/MainActivity.kt",
