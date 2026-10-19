@@ -47,6 +47,7 @@ jobs:
           S=src/AB_Khatma_P91_VC115_SAFE_SOURCE
           mkdir -p "$S/tools"
           cp tools/p92_apply_safe.py "$S/tools/p92_apply_safe.py"
+          cp tools/p92_live_audio_test.kt "$S/tools/p92_live_audio_test.kt"
           python3 "$S/tools/p92_apply_safe.py"
           grep -q 'versionCode = 116' "$S/app/build.gradle.kts"
           grep -q '0.19.87-p92-audio-redirect-safe' "$S/app/build.gradle.kts"
@@ -175,7 +176,7 @@ jobs:
             adb install -r ci_tests/p92-ci-app.apk
             adb install -r ci_tests/p92-ci-test.apk
             adb shell pm grant com.ab.khatma.preview android.permission.POST_NOTIFICATIONS
-            adb shell am instrument -w -r -e class com.ab.khatma.guide.P91OfflineDeviceTest,com.ab.khatma.guide.P89DirectMediaDeviceTest,com.ab.khatma.guide.P88IbtehalDeviceTest,com.ab.khatma.guide.P85GuideUiTest,com.ab.khatma.guide.P85ReaderDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p92-online-result.txt
+            adb shell am instrument -w -r -e class com.ab.khatma.guide.P91OfflineDeviceTest,com.ab.khatma.guide.P92LiveAudioDeviceTest,com.ab.khatma.guide.P89DirectMediaDeviceTest,com.ab.khatma.guide.P88IbtehalDeviceTest,com.ab.khatma.guide.P85GuideUiTest,com.ab.khatma.guide.P85ReaderDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p92-online-result.txt
             cat p92-online-result.txt
             ! grep -E 'FAILURES|INSTRUMENTATION_FAILED|Process crashed' p92-online-result.txt
             grep -E '^OK \([0-9]+ tests?\)' p92-online-result.txt
