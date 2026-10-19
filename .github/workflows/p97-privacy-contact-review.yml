@@ -1,0 +1,25 @@
+name: Verify existing P97 app support address
+on:
+  push:
+    branches: [release/p97-privacy-contact-review-safe]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P97-VC121-COMPLETE-SAFE-SOURCE
+          run-id: 39290967444
+          github-token: ${{ github.token }}
+          path: source
+      - name: Inspect only public contact statements (read only)
+        run: |
+          set -euo pipefail
+          test -f source/AB_Khatma_P97_VC121_SAFE_SOURCE.zip
+          unzip -tq source/AB_Khatma_P97_VC121_SAFE_SOURCE.zip
+          unzip -p source/AB_Khatma_P97_VC121_SAFE_SOURCE.zip             AB_Khatma_P97_VC121_SAFE_SOURCE/app/src/main/java/com/ab/khatma/secure/P84PrivacyPage.kt             | grep -inE 'mailto:|@|support|تواصل' || true
