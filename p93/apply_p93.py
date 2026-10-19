@@ -21,7 +21,7 @@ def rep(s, before, after, path):
     return s.replace(before, after, 1)
 
 g="app/build.gradle.kts"
-p,s=load(g,"f4d00b5b5036ac05880671c5a10de3a5409386919b55d4f57f654e018b1b2b21")
+p,s=load(g,"95e47026bb8550ada83570f9d338d0ed665405fe1f933d813a86411f536b5019")
 s=rep(s,"versionCode = 116","versionCode = 117",g)
 s=rep(s,'versionName = "0.19.87-p92-offline-replay-integrity-safe"', 'versionName = "0.19.88-p93-first-run-settings-safe"',g)
 p.write_text(s,encoding="utf-8")
