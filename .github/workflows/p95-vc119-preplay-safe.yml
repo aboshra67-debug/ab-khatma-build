@@ -1,0 +1,257 @@
+name: P95 VC119 PrePlay Safe Wording Regression QA
+on:
+  push:
+    branches: [release/p95-vc119-preplay-hardening-safe]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Prepare Android SDK 36
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare restricted CI source downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P93-VC117-COMPLETE-SAFE-SOURCE
+          run-id: 39227567234
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Verify P93/P94 chain and apply P95 isolated text-only patch
+        run: |
+          set -euo pipefail
+          echo '6a14990178ebc9af98c048104d3e3ce08466c8078ae446fa35a344f829e10474  baseline/AB_Khatma_P93_VC117_SAFE_SOURCE.zip' | sha256sum -c -
+          mkdir src
+          unzip -q baseline/AB_Khatma_P93_VC117_SAFE_SOURCE.zip -d src
+          S=src/AB_Khatma_P93_VC117_SAFE_SOURCE
+          # Verify the original P93 bytes for every file that P94 touches.
+          printf '%s  %s\n' 'e595df2fd38e63a3107d11f1662798a25fd079076968930091ce9b69b05c6053' "$S/app/src/main/java/com/ab/khatma/MainActivity.kt" | sha256sum -c -
+          printf '%s  %s\n' '1abdaeadc5f23ba911c6da47b4dabcad04cf3b10802384bb8fb7a484462a8512' "$S/app/src/main/java/com/ab/khatma/guide/P85Guide.kt" | sha256sum -c -
+          printf '%s  %s\n' '6d76950642acfe218f3f9178aa385d854c223f659d892ab88cb1696247e0dafd' "$S/app/src/main/java/com/ab/khatma/ui/screens/PrayerPremiumScreen.kt" | sha256sum -c -
+          printf '%s  %s\n' 'cd09fba2eaad6fa7a1940929fac1e6734ef723c6c687ab3370ed26ce5d409859' "$S/app/src/main/java/com/ab/khatma/ui/screens/P85IbtehalScreen.kt" | sha256sum -c -
+          printf '%s  %s\n' '91c336dd743366713edcdfe9b09e7af3c8187d6b07dcd1ff83f7f246d348a542' "$S/app/src/main/java/com/ab/khatma/ui/screens/P53Common.kt" | sha256sum -c -
+          printf '%s  %s\n' '8e7cbfa1124e4da609371e1c6781159390b1fb8bd976cedeebf2e67060fc424b' "$S/app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt" | sha256sum -c -
+          base64 -d p94/patch.b64 | xz -dc > /tmp/p94.patch
+          echo '9276d25f5c25f2fbb74af57c0f357ee713de2e66a19d13c22db58dbe6a8890e0  /tmp/p94.patch' | sha256sum -c -
+          (cd "$S" && patch --dry-run --batch -p0 -i /tmp/p94.patch && patch --batch -p0 -i /tmp/p94.patch)
+
+          # P95: correct only demonstrably obsolete permission guidance.
+          # Never alter manifest permissions, notification triggers or stored data.
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("src/AB_Khatma_P93_VC117_SAFE_SOURCE/app/src/main/java/com/ab/khatma/ui/screens/PrayerSettingsScreen.kt")
+          src=p.read_text(encoding="utf-8")
+          old="لا نطلب صلاحية المنبه الدقيق في هذه النسخة"
+          new="قد تتطلب تنبيهات الصلاة السماح بالإشعارات والمنبّه الدقيق حسب إصدار أندرويد وإعدادات هاتفك"
+          assert src.count(old)==1, f"P95 wording target must appear once; got {src.count(old)}"
+          assert "SCHEDULE_EXACT_ALARM" in Path("src/AB_Khatma_P93_VC117_SAFE_SOURCE/app/src/main/AndroidManifest.xml").read_text()
+          p.write_text(src.replace(old,new,1),encoding="utf-8")
+          print("P95 text-only permission description corrected")
+          PY
+          python3 - <<'PY'
+          import pathlib
+          p=pathlib.Path("src/AB_Khatma_P93_VC117_SAFE_SOURCE/app/build.gradle.kts")
+          s=p.read_text()
+          for old,new in [
+              ('versionCode = 117','versionCode = 119'),
+              ('versionName = "0.19.88-p93-first-run-settings-safe"','versionName = "0.19.90-p95-preplay-safe"'),
+          ]:
+              assert s.count(old)==1, old
+              s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          grep -q 'versionCode = 119' "$S/app/build.gradle.kts"
+          grep -q '0.19.90-p95-preplay-safe' "$S/app/build.gradle.kts"
+          test -f "$S/app/src/androidTest/java/com/ab/khatma/guide/P94LayoutNavigationDeviceTest.kt"
+          # Retained P91 tests must assert the renamed accessible label, not obsolete UI copy.
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("src/AB_Khatma_P93_VC117_SAFE_SOURCE/app/src/androidTest/java/com/ab/khatma/guide/P91OfflineDeviceTest.kt")
+          s=p.read_text()
+          old='"شرح الشاشة"'
+          assert s.count(old)>=2, "P91 UI labels have changed unexpectedly"
+          s=s.replace(old, '"؟ مساعدة"')
+          assert s.count('"التسجيلات المحفوظة"')>=1, "Retained saved-audio test changed unexpectedly"
+          s=s.replace('"التسجيلات المحفوظة"', '"المحفوظة للاستماع"')
+          p.write_text(s)
+          PY
+          test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+          test "$(find "$S/app/src/main/assets/quran_verse_hitmaps" -maxdepth 1 -name '*.json' | wc -l)" -eq 604
+          test "$(find "$S/app/src/main/assets/quran_pages" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+      - name: Download same trusted Firebase public client settings (unchanged)
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/nBo1EY9iX-PP',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('public_config.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '91fb83b2e7c315232e7f670074762fb7e0d22e06cc19da3cbea3b82cf501c411  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Preserve existing on-demand plain page pack
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P93_VC117_SAFE_SOURCE
+          test "$(find "$S/app/src/main/assets/quran_pages" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+          mv "$S/app/src/main/assets/quran_pages" "$GITHUB_WORKSPACE/plain_hold"
+      - name: Session race tests and unsigned release build
+        working-directory: src/AB_Khatma_P93_VC117_SAFE_SOURCE
+        run: |
+          set -euo pipefail
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon --stacktrace :app:testDebugUnitTest :app:assembleRelease :app:assembleDebug :app:assembleDebugAndroidTest \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Collect unsigned outputs for local original signing
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P93_VC117_SAFE_SOURCE
+          mkdir unsigned_build
+          cp "$S/app/build/outputs/apk/release/app-release-unsigned.apk" unsigned_build/P95_VC119_UNSIGNED_REVIEW.apk
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
+          cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
+          cp "$ANDROID_HOME/build-tools/36.0.0/aapt2" unsigned_build/aapt2
+          test "$(unzip -l unsigned_build/P95_VC119_UNSIGNED_REVIEW.apk | grep -c 'assets/quran_pages_colored/.*\.webp')" -eq 604
+          test "$(unzip -l unsigned_build/P95_VC119_UNSIGNED_REVIEW.apk | grep -c 'assets/quran_verse_hitmaps/.*\.json')" -eq 604
+          test "$(stat -c%s unsigned_build/P95_VC119_UNSIGNED_REVIEW.apk)" -lt 190000000
+          mv "$GITHUB_WORKSPACE/plain_hold" "$S/app/src/main/assets/quran_pages"
+          mkdir ci_tests
+          keytool -genkeypair -keystore /tmp/p85-ci-test.jks -alias ci -storepass android -keypass android -dname "CN=Ephemeral Android CI Tests" -keyalg RSA -validity 2
+          java -jar "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" sign --ks /tmp/p85-ci-test.jks --ks-key-alias ci --ks-pass pass:android --key-pass pass:android --v4-signing-enabled false --out ci_tests/p94-ci-app.apk "$(find "$S/app/build/outputs/apk/debug" -maxdepth 1 -name '*.apk' -print -quit)"
+          java -jar "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" sign --ks /tmp/p85-ci-test.jks --ks-key-alias ci --ks-pass pass:android --key-pass pass:android --v4-signing-enabled false --out ci_tests/p94-ci-test.apk "$(find "$S/app/build/outputs/apk/androidTest/debug" -maxdepth 1 -name '*.apk' -print -quit)"
+          rm /tmp/p85-ci-test.jks
+          mkdir -p "$S/BUILD_REPRODUCIBILITY/p94"
+          cp p94/patch.b64 "$S/BUILD_REPRODUCIBILITY/p94/patch.b64"
+          python3 - <<'PY'
+          import pathlib,zipfile
+          source=pathlib.Path('src/AB_Khatma_P93_VC117_SAFE_SOURCE')
+          dest=pathlib.Path('safe_source');dest.mkdir()
+          with zipfile.ZipFile(dest/'AB_Khatma_P95_VC119_SAFE_SOURCE.zip','w',zipfile.ZIP_DEFLATED,compresslevel=5) as z:
+              for p in sorted(source.rglob('*')):
+                  if not p.is_file():continue
+                  relative=p.relative_to(source)
+                  if any(t in ('build','.gradle','.git') for t in relative.parts) or p.name=='local.properties':continue
+                  assert p.suffix.lower() not in ('.p12','.jks','.keystore','.apk','.aab','.pem'),relative
+                  z.write(p,'AB_Khatma_P95_VC119_SAFE_SOURCE/'+relative.as_posix())
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P95-VC119-UNSIGNED-APK-REVIEW
+          path: unsigned_build/*
+          retention-days: 30
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AB-Khatma-P95-VC119-UNIT-TEST-REPORT
+          path: src/AB_Khatma_P93_VC117_SAFE_SOURCE/app/build/test-results/testDebugUnitTest/*
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P95-VC119-CI-TEST-APKS
+          path: ci_tests/*
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P95-VC119-COMPLETE-SAFE-SOURCE
+          path: safe_source/*
+          retention-days: 30
+          if-no-files-found: error
+  android-ui:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P95-VC119-CI-TEST-APKS
+          path: ci_tests
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: |
+            adb install -r ci_tests/p94-ci-app.apk
+            adb install -r ci_tests/p94-ci-test.apk
+            adb shell pm grant com.ab.khatma.preview android.permission.POST_NOTIFICATIONS
+            adb shell am instrument -w -r -e class com.ab.khatma.guide.P94LayoutNavigationDeviceTest,com.ab.khatma.guide.P93FirstRunDeviceTest,com.ab.khatma.guide.P91OfflineDeviceTest,com.ab.khatma.guide.P89DirectMediaDeviceTest,com.ab.khatma.guide.P88IbtehalDeviceTest,com.ab.khatma.guide.P85GuideUiTest,com.ab.khatma.guide.P85ReaderDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p85-device-result.txt
+            cat p85-device-result.txt
+            ! grep -E 'FAILURES|INSTRUMENTATION_FAILED|Process crashed' p85-device-result.txt
+            grep -E '^OK \([0-9]+ tests?\)' p85-device-result.txt
+            # Phase A: real HTTP downloads, decoder checks and corrupt-file regression.
+            adb shell am instrument -w -r -e class com.ab.khatma.guide.P92OfflineReplayDeviceTest#downloadQuranIbtehalAndAdhanOnline,com.ab.khatma.guide.P92OfflineReplayDeviceTest#invalidHeaderIsNeverAdvertisedAsSaved com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p92-online-result.txt
+            cat p92-online-result.txt
+            grep -E '^OK \([0-9]+ tests?\)' p92-online-result.txt
+            ! grep -E 'FAILURES|INSTRUMENTATION_FAILED|Process crashed' p92-online-result.txt
+            # Phase B: force-stop between test invocations and disable mobile/Wi-Fi network.
+            adb shell am force-stop com.ab.khatma.preview
+            trap 'adb shell cmd connectivity airplane-mode disable || true' EXIT
+            adb shell cmd connectivity airplane-mode enable
+            adb shell svc wifi disable
+            adb shell svc data disable
+            adb shell settings get global airplane_mode_on | grep -Fx 1
+            sleep 3
+            adb shell am instrument -w -r -e class com.ab.khatma.guide.P92OfflineReplayDeviceTest#filesSurviveProcessRestartAndReplayInAirplaneMode com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p92-offline-result.txt
+            cat p92-offline-result.txt
+            grep -E '^OK \([0-9]+ tests?\)' p92-offline-result.txt
+            ! grep -E 'FAILURES|INSTRUMENTATION_FAILED|Process crashed' p92-offline-result.txt
+            adb shell cmd connectivity airplane-mode disable
+            mkdir -p screenshots
+            for file in p88-ibtehal-categories.png p88-ibtehal-tracks.png p88-ibtehal-detail.png p85-guide-first.png p85-guide-next.png p85-reader-187.png p85-reader-187-reading.png p85-reader-604.png; do adb exec-out run-as com.ab.khatma.preview cat files/$file > screenshots/$file; done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AB-Khatma-P95-VC119-NATIVE-DEVICE-RESULTS
+          path: |
+            p85-device-result.txt
+            p92-online-result.txt
+            p92-offline-result.txt
+            screenshots/*
+          retention-days: 30
