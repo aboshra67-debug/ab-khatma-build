@@ -65,6 +65,7 @@ f="app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt"
 p,s=load(f,"e0c45fa5928cda1fd14bfe2b4ed7907d2048f335101927a7c5ade0ef187ec84f")
 s=rep(s,'    var section by remember { mutableStateOf("home") }\n',
 """    var section by remember { mutableStateOf("home") }
+    var p93ReturnFromPrayerToSettings by remember { mutableStateOf(false) }
     // Resume an interrupted setup; existing users are never enrolled automatically.
     LaunchedEffect(session?.userId) {
         val current = session
@@ -89,8 +90,13 @@ s=rep(s,'''                                com.ab.khatma.guide.P85Guide.signedIn
                                 message = if (createAccount)''',f)
 s=rep(s,'                            onOpenNotifications = { section = "notifications"; message = "" },\n',
 '''                            onOpenNotifications = { section = "notifications"; message = "" },
-                            onOpenPrayerSettings = { section = "prayer"; message = "" },
+                            onOpenPrayerSettings = { p93ReturnFromPrayerToSettings = true; section = "prayer"; message = "" },
 ''',f)
+s=rep(s,'        PrayerPremiumScreen(onBack = { section = "home" }, onOpenIbtehal = { section = "ibtehal" })',
+'''        PrayerPremiumScreen(onBack = {
+            section = if (p93ReturnFromPrayerToSettings) "profile" else "home"
+            p93ReturnFromPrayerToSettings = false
+        }, onOpenIbtehal = { section = "ibtehal" })''',f)
 p.write_text(s,encoding="utf-8")
 
 source=here/"overlay/app/src/main/java/com/ab/khatma/secure/P93FirstRunSettings.kt"
