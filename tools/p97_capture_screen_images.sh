@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 mkdir -p screen_images
+adb shell wm size 1080x1920
+adb shell settings put system font_scale 1.0
 adb install -r ci_tests/p97-ci-app.apk
 adb install -r ci_tests/p97-ci-test.apk
 adb shell am instrument -w -r -e class com.ab.khatma.guide.P85ReaderDeviceTest,com.ab.khatma.guide.P88IbtehalDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > screen_tests.txt
@@ -15,6 +17,8 @@ for name in p85-reader-187.png p85-reader-187-reading.png p85-reader-604.png p88
     fi
 done
 adb shell am force-stop com.ab.khatma.preview || true
+adb shell pm clear com.ab.khatma.preview || true
+adb shell pm grant com.ab.khatma.preview android.permission.POST_NOTIFICATIONS || true
 adb shell monkey -p com.ab.khatma.preview 1 || true
 sleep 10
 adb exec-out screencap -p > screen_images/app-entry-emulator.png
