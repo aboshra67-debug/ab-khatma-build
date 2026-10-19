@@ -84,10 +84,10 @@ class P92OfflineReplayDeviceTest {
     }
 
     @Test fun filesSurviveProcessRestartAndReplayInAirplaneMode() {
-        val manager = ctx.getSystemService(android.net.ConnectivityManager::class.java)
-        val connected = manager.activeNetwork?.let { manager.getNetworkCapabilities(it) }
-        assertFalse("CI must disable network before offline replay",
-            connected?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true)
+        // AIRPLANE_MODE_ON is readable without ACCESS_NETWORK_STATE (the app does not request it).
+        assertEquals("CI must enable airplane mode before offline replay", 1,
+            android.provider.Settings.Global.getInt(ctx.contentResolver,
+                android.provider.Settings.Global.AIRPLANE_MODE_ON, 0))
         for ((id, url) in listOf("quran" to quran, "ibtehal" to ibtehal)) {
             val before = prefs.getString(id, null)
             assertNotNull("Online phase must run first for $id", before)
