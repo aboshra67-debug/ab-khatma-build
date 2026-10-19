@@ -1,0 +1,40 @@
+name: P97 Official Single Server Android API Preflight
+on:
+  push:
+    branches: [release/p97-single-server-play-preflight]
+  workflow_dispatch:
+concurrency:
+  group: p97-single-server-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch verified P95 original Android source
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P95-VC119-COMPLETE-SAFE-SOURCE
+          run-id: 39270578361
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Exact inspection without any source change
+        run: |
+          set -euo pipefail
+          test -f baseline/AB_Khatma_P95_VC119_SAFE_SOURCE.zip
+          unzip -tq baseline/AB_Khatma_P95_VC119_SAFE_SOURCE.zip
+          mkdir -p inspect
+          unzip -q baseline/AB_Khatma_P95_VC119_SAFE_SOURCE.zip -d inspect
+          python3 tools/p97_api_inventory.py inspect/AB_Khatma_P95_VC119_SAFE_SOURCE
+      - name: Preserve audit and path-level evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P97-SINGLE-SERVER-API-TRACE
+          path: release-preflight/*
+          retention-days: 30
+          if-no-files-found: warn
