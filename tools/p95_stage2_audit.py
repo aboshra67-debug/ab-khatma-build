@@ -80,6 +80,34 @@ def main():
         sig=sound_signature(p)
         if sig is False:audio_invalid.append(p.relative_to(source).as_posix())
         elif sig is None:audio_unverified.append(p.relative_to(source).as_posix())
+    # Per-track evidence index: file presence or a nearby license marker never
+    # establishes redistribution rights; it only tells a reviewer where to look.
+    with (out/"stage2_audio_rights_inventory.csv").open("w",encoding="utf-8",newline="") as fh:
+        writer=csv.writer(fh)
+        writer.writerow(["file","bytes","sha256","signature","nearby_license_file","rights_verified"])
+        for p in audio:
+            h=hashlib.sha256()
+            with p.open("rb") as audio_fh:
+                while True:
+                    block=audio_fh.read(1024*1024)
+                    if not block:break
+                    h.update(block)
+            lic=[]
+            for d in [p.parent,p.parent.parent]:
+                for pat in ("LICENSE*","LICENCE*","CREDITS*","ATTRIBUTION*","RIGHTS*"):
+                    lic.extend(d.glob(pat))
+            writer.writerow([p.relative_to(source).as_posix(),p.stat().st_size,
+                             h.hexdigest(),sound_signature(p),"; ".join(sorted(set(x.name for x in lic))),
+                             "NOT_VERIFIED"])
+    with (out/"stage2_ui_screen_inventory.csv").open("w",encoding="utf-8",newline="") as fh:
+        writer=csv.writer(fh)
+        writer.writerow(["source_file","composable_annotations","onClick_bindings","text_calls","line_count","flagged_positions"])
+        fcount=collections.Counter(x["file"] for x in findings)
+        for path in screens:
+            body=(source/path).read_text(encoding="utf-8",errors="replace")
+            writer.writerow([path,len(re.findall(r"@Composable\b",body)),
+                            len(re.findall(r"onClick\s*=",body)),
+                            len(re.findall(r"\bText\s*\(",body)),body.count("\n")+1,fcount[path]])
     screenshot_list=[]
     if args.screenshots and Path(args.screenshots).exists():
         for p in Path(args.screenshots).rglob("*.png"):
