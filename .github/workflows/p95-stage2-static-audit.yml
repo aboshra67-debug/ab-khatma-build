@@ -3,6 +3,9 @@ on:
   push:
     branches: [release/p95-stage2-ui-audio-audit-safe]
   workflow_dispatch:
+concurrency:
+  group: p95-stage2-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
   actions: read
