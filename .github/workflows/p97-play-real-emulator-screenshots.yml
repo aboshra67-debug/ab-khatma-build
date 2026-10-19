@@ -12,14 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
+      - uses: actions/checkout@v4
       - name: Record screenshot workflow run ID
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          existing_sha="$(gh api "repos/${GITHUB_REPOSITORY}/contents/P97_SCREENSHOT_CAPTURE_RUN_ID.txt?ref=${GITHUB_REF_NAME}" --jq '.sha')"
           gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/P97_SCREENSHOT_CAPTURE_RUN_ID.txt" \
             -f message="ci(play): record screenshot workflow run ID" \
+            -f sha="${existing_sha}" \
             -f content="$(printf '%s' "${GITHUB_RUN_ID}" | base64 -w0)" \
             -f branch="${GITHUB_REF_NAME}"
       - name: Prepare Android Java runtime
@@ -48,28 +51,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
-          script: |
-            set -eu
-            mkdir -p screen_images
-            adb install -r ci_tests/p97-ci-app.apk
-            adb install -r ci_tests/p97-ci-test.apk
-            adb shell am instrument -w -r -e class com.ab.khatma.guide.P85ReaderDeviceTest,com.ab.khatma.guide.P88IbtehalDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > screen_tests.txt
-            cat screen_tests.txt
-            grep -E '^OK \([0-9]+ tests?\)' screen_tests.txt
-            for name in p85-reader-187.png p85-reader-187-reading.png p85-reader-604.png p88-ibtehal-categories.png p88-ibtehal-tracks.png p88-ibtehal-detail.png; do
-              adb exec-out run-as com.ab.khatma.preview cat files/"$name" > screen_images/"$name" || true
-              if test -s screen_images/"$name"; then
-                file screen_images/"$name"
-              else
-                rm -f screen_images/"$name"
-                echo "WARNING: not exported: $name"
-              fi
-            done
-            adb shell am force-stop com.ab.khatma.preview || true
-            adb shell monkey -p com.ab.khatma.preview 1 || true
-            sleep 10
-            adb exec-out screencap -p > screen_images/app-entry-emulator.png
-            file screen_images/app-entry-emulator.png
+          script: bash tools/p97_capture_screen_images.sh
       - name: Upload screenshot evidence and test results
         uses: actions/upload-artifact@v4
         if: always()
