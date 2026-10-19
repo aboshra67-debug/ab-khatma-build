@@ -32,7 +32,7 @@ jobs:
           /tmp/browser/node_modules/.bin/playwright install chromium
       - uses: actions/download-artifact@v4
         with:
-          name: AB-Khatma-P92-VC116-COMPLETE-SAFE-SOURCE
+          name: AB-Khatma-P91-VC115-COMPLETE-SAFE-SOURCE
           run-id: 39208341181
           github-token: ${{ github.token }}
           path: baseline
