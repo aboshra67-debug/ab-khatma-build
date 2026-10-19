@@ -7,7 +7,7 @@ on:
       - .github/workflows/p97-export-buildtools-for-local-signing.yml
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   export_public_tools:
     runs-on: ubuntu-latest
@@ -33,3 +33,13 @@ jobs:
             /tmp/AB-Khatma-Android-BuildTools-36.0.0-Linux.tar.gz
             /tmp/TOOLS_SHA256.txt
           retention-days: 1
+      - name: Record exact export run ID for retrieval
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/P97_TOOL_EXPORT_RUN_ID.txt" \
+            -f message="ci(tools): record export workflow ID (no secrets)" \
+            -f content="$(printf '%s\\n' "${GITHUB_RUN_ID}" | base64 -w0)" \
+            -f branch="${GITHUB_REF_NAME}"
