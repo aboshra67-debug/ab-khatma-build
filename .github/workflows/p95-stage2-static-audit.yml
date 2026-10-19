@@ -1,0 +1,53 @@
+name: P95 Stage 2 Android UI Audio Quran Audit (read only)
+on:
+  push:
+    branches: [release/p95-stage2-ui-audio-audit-safe]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exactly P95 VC119 successful Safe Source
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P95-VC119-COMPLETE-SAFE-SOURCE
+          run-id: 39270578361
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Download proven P95 physical-emulator snapshots
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P95-VC119-NATIVE-DEVICE-RESULTS
+          run-id: 39270578361
+          github-token: ${{ github.token }}
+          path: native
+      - name: Verify source ZIP and unpack in isolated runner
+        run: |
+          set -euo pipefail
+          test -f baseline/AB_Khatma_P95_VC119_SAFE_SOURCE.zip
+          unzip -tq baseline/AB_Khatma_P95_VC119_SAFE_SOURCE.zip | tail -n 1
+          mkdir -p extracted
+          unzip -q baseline/AB_Khatma_P95_VC119_SAFE_SOURCE.zip -d extracted
+          test -f extracted/AB_Khatma_P95_VC119_SAFE_SOURCE/app/build.gradle.kts
+      - name: Audit all Kotlin/UI text, image pages, sounds and manifest without changing source
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/p95_stage2_audit.py
+          python3 tools/p95_stage2_audit.py \
+            --source extracted/AB_Khatma_P95_VC119_SAFE_SOURCE \
+            --screenshots native \
+            --output reports
+      - name: Upload comprehensive evidence including detailed line references
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P95-STAGE2-UI-AUDIO-AUDIT
+          path: reports/*
+          if-no-files-found: warn
+          retention-days: 30
