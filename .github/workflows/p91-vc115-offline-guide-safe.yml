@@ -1,0 +1,205 @@
+name: P91 VC115 Permanent Audio + Interactive Guide Safe QA
+on:
+  push:
+    branches: [release/p91-vc115-offline-interactive-guide-safe]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Prepare Android SDK 36
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          test -n "$TOOL"
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare restricted CI source downloader
+        run: |
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P90-VC114-COMPLETE-SAFE-SOURCE
+          run-id: 39177367415
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Verify pinned P90 source and apply SHA-256 checked P91 safe patch
+        run: |
+          set -euo pipefail
+          echo '4d2517008f0b0b59ce782c8c5c8e3c0c57da4e34f2a7665b807ace76de415d00  baseline/AB_Khatma_P90_VC114_SAFE_SOURCE.zip' | sha256sum -c -
+          mkdir src
+          unzip -q baseline/AB_Khatma_P90_VC114_SAFE_SOURCE.zip -d src
+          S=src/AB_Khatma_P90_VC114_SAFE_SOURCE
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try{
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/B6ljz2LoMEoS',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('p91.patch.b64');
+            }finally{await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          base64 -d p91.patch.b64 | xz -dc > /tmp/p91.patch
+          echo 'c345425030d1c82c5c03d9119db78f1c21199e8715119a4d9a6191dcf1332312  /tmp/p91.patch' | sha256sum -c -
+          (cd "$S" && patch --dry-run --batch -p0 -i /tmp/p91.patch && patch --batch -p0 -i /tmp/p91.patch)
+          grep -q 'versionCode = 115' "$S/app/build.gradle.kts"
+          grep -q '0.19.86-p91-offline-guide-safe' "$S/app/build.gradle.kts"
+          test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+          test "$(find "$S/app/src/main/assets/quran_verse_hitmaps" -maxdepth 1 -name '*.json' | wc -l)" -eq 604
+          test "$(find "$S/app/src/main/assets/quran_pages" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+          test -f "$S/app/src/main/java/com/ab/khatma/media/P91OfflineAudio.kt"
+      - name: Download same trusted Firebase public client settings (unchanged)
+        run: |
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/nBo1EY9iX-PP',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('public_config.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '91fb83b2e7c315232e7f670074762fb7e0d22e06cc19da3cbea3b82cf501c411  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Preserve existing on-demand plain page pack
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P90_VC114_SAFE_SOURCE
+          test "$(find "$S/app/src/main/assets/quran_pages" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+          mv "$S/app/src/main/assets/quran_pages" "$GITHUB_WORKSPACE/plain_hold"
+      - name: Session race tests and unsigned release build
+        working-directory: src/AB_Khatma_P90_VC114_SAFE_SOURCE
+        run: |
+          set -euo pipefail
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon --stacktrace :app:testDebugUnitTest :app:assembleRelease :app:assembleDebug :app:assembleDebugAndroidTest \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://balanced-creativity-production-f316.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Collect unsigned outputs for local original signing
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P90_VC114_SAFE_SOURCE
+          mkdir unsigned_build
+          cp "$S/app/build/outputs/apk/release/app-release-unsigned.apk" unsigned_build/P91_VC115_UNSIGNED_REVIEW.apk
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" unsigned_build/apksigner.jar
+          cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" unsigned_build/zipalign
+          cp "$ANDROID_HOME/build-tools/36.0.0/aapt2" unsigned_build/aapt2
+          test "$(unzip -l unsigned_build/P91_VC115_UNSIGNED_REVIEW.apk | grep -c 'assets/quran_pages_colored/.*\.webp')" -eq 604
+          test "$(unzip -l unsigned_build/P91_VC115_UNSIGNED_REVIEW.apk | grep -c 'assets/quran_verse_hitmaps/.*\.json')" -eq 604
+          test "$(stat -c%s unsigned_build/P91_VC115_UNSIGNED_REVIEW.apk)" -lt 190000000
+          mv "$GITHUB_WORKSPACE/plain_hold" "$S/app/src/main/assets/quran_pages"
+          mkdir ci_tests
+          keytool -genkeypair -keystore /tmp/p85-ci-test.jks -alias ci -storepass android -keypass android -dname "CN=Ephemeral Android CI Tests" -keyalg RSA -validity 2
+          java -jar "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" sign --ks /tmp/p85-ci-test.jks --ks-key-alias ci --ks-pass pass:android --key-pass pass:android --v4-signing-enabled false --out ci_tests/p91-ci-app.apk "$(find "$S/app/build/outputs/apk/debug" -maxdepth 1 -name '*.apk' -print -quit)"
+          java -jar "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" sign --ks /tmp/p85-ci-test.jks --ks-key-alias ci --ks-pass pass:android --key-pass pass:android --v4-signing-enabled false --out ci_tests/p91-ci-test.apk "$(find "$S/app/build/outputs/apk/androidTest/debug" -maxdepth 1 -name '*.apk' -print -quit)"
+          rm /tmp/p85-ci-test.jks
+          mkdir -p "$S/BUILD_REPRODUCIBILITY/p91"; cp p91.patch.b64 "$S/BUILD_REPRODUCIBILITY/p91/patch.b64"
+          python3 - <<'PY'
+          import pathlib,zipfile
+          source=pathlib.Path('src/AB_Khatma_P90_VC114_SAFE_SOURCE')
+          dest=pathlib.Path('safe_source');dest.mkdir()
+          with zipfile.ZipFile(dest/'AB_Khatma_P91_VC115_SAFE_SOURCE.zip','w',zipfile.ZIP_DEFLATED,compresslevel=5) as z:
+              for p in sorted(source.rglob('*')):
+                  if not p.is_file():continue
+                  relative=p.relative_to(source)
+                  if any(t in ('build','.gradle','.git') for t in relative.parts) or p.name=='local.properties':continue
+                  assert p.suffix.lower() not in ('.p12','.jks','.keystore','.apk','.aab','.pem'),relative
+                  z.write(p,'AB_Khatma_P91_VC115_SAFE_SOURCE/'+relative.as_posix())
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P91-VC115-UNSIGNED-APK-REVIEW
+          path: unsigned_build/*
+          retention-days: 30
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AB-Khatma-P91-VC115-UNIT-TEST-REPORT
+          path: src/AB_Khatma_P90_VC114_SAFE_SOURCE/app/build/test-results/testDebugUnitTest/*
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P91-VC115-CI-TEST-APKS
+          path: ci_tests/*
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P91-VC115-COMPLETE-SAFE-SOURCE
+          path: safe_source/*
+          retention-days: 30
+          if-no-files-found: error
+  android-ui:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P91-VC115-CI-TEST-APKS
+          path: ci_tests
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: |
+            adb install -r ci_tests/p91-ci-app.apk
+            adb install -r ci_tests/p91-ci-test.apk
+            adb shell pm grant com.ab.khatma.preview android.permission.POST_NOTIFICATIONS
+            adb shell am instrument -w -r -e class com.ab.khatma.guide.P90DirectMediaDeviceTest,com.ab.khatma.guide.P88IbtehalDeviceTest,com.ab.khatma.guide.P85GuideUiTest,com.ab.khatma.guide.P85ReaderDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p85-device-result.txt
+            cat p85-device-result.txt
+            ! grep -E 'FAILURES|INSTRUMENTATION_FAILED|Process crashed' p85-device-result.txt
+            grep -E '^OK \([0-9]+ tests?\)' p85-device-result.txt
+            mkdir -p screenshots
+            for file in p88-ibtehal-categories.png p88-ibtehal-tracks.png p88-ibtehal-detail.png p85-guide-first.png p85-guide-next.png p85-reader-187.png p85-reader-187-reading.png p85-reader-604.png; do adb exec-out run-as com.ab.khatma.preview cat files/$file > screenshots/$file; done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AB-Khatma-P91-VC115-NATIVE-DEVICE-RESULTS
+          path: |
+            p85-device-result.txt
+            screenshots/*
+          retention-days: 30
