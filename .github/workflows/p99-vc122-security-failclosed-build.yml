@@ -7,13 +7,26 @@ concurrency:
   group: p99-failclosed-${{ github.ref }}
   cancel-in-progress: true
 permissions:
-  contents: read
+  contents: write
   actions: read
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 50
     steps:
+      - name: Record current build run ID for audit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          FILE="P99_SECURITY_BUILD_RUN_ID.txt"
+          SHA="$(gh api "repos/${GITHUB_REPOSITORY}/contents/${FILE}?ref=${GITHUB_REF_NAME}" --jq '.sha' 2>/dev/null || true)"
+          if [ -n "$SHA" ]; then
+            gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/${FILE}" -f branch="${GITHUB_REF_NAME}" -f sha="$SHA" -f message="ci: record P99 security build id" -f content="$(printf '%s' "${GITHUB_RUN_ID}" | base64 -w0)"
+          else
+            gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/${FILE}" -f branch="${GITHUB_REF_NAME}" -f message="ci: record P99 security build id" -f content="$(printf '%s' "${GITHUB_RUN_ID}" | base64 -w0)"
+          fi
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
