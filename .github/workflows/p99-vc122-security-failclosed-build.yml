@@ -28,10 +28,10 @@ jobs:
           echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
           yes | "$TOOL" --licenses >/dev/null || true
           "$TOOL" "platforms;android-36" "build-tools;36.0.0"
-      - name: Download verified P99 VC122 Safe Source as immutable baseline
+      - name: Download verified P97 VC121 Safe Source as immutable baseline
         uses: actions/download-artifact@v4
         with:
-          name: AB-Khatma-P99-VC122-COMPLETE-SAFE-SOURCE
+          name: AB-Khatma-P97-VC121-COMPLETE-SAFE-SOURCE
           run-id: 39290967444
           github-token: ${{ github.token }}
           path: baseline
