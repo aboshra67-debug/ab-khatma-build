@@ -65,7 +65,7 @@ jobs:
           cp tools/p99_failclosed_build_patch.py "$S/BUILD_REPRODUCIBILITY/p100/p99_failclosed_build_patch.py"
           cp tools/p100_name_only_safe_patch.py "$S/BUILD_REPRODUCIBILITY/p100/p100_name_only_safe_patch.py"
           grep -q 'versionCode = 123' "$S/app/build.gradle.kts"
-          grep -q '0.19.93-p100-security-failclosed-safe' "$S/app/build.gradle.kts"
+          grep -q '0.19.94-p100-name-only-safe' "$S/app/build.gradle.kts"
           ! grep -q '?: "https://balanced-creativity-production-f316.up.railway.app"' "$S/app/build.gradle.kts"
           test "$(find "$S/app/src/main/assets/quran_pages" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
       - name: Retrieve same pinned Firebase public client settings as P95
