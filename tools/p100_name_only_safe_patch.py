@@ -12,7 +12,11 @@ for rel, before_sha, after_sha, replacements in entries:
         assert value.count(old) == 1, f"BAD UNIQUE MATCH: {rel}: {old[:60]}"
         value = value.replace(old, new, 1)
     updated = value.encode("utf-8")
-    assert hashlib.sha256(updated).hexdigest() == after_sha, f"FINAL SHA256 MISMATCH: {rel}"
+    if hashlib.sha256(updated).hexdigest() != after_sha:
+        import difflib
+        print("EXPECTED", after_sha, "GOT", hashlib.sha256(updated).hexdigest(), "FILE", rel)
+        print("\n".join(difflib.unified_diff(original.decode("utf-8").splitlines(), value.splitlines(), lineterm=""))[:3000])
+        raise AssertionError(f"FINAL SHA256 MISMATCH: {rel}")
     path.write_bytes(updated)
     print("PASS", rel)
 assert (root / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8").count('android:label="يلا نختم – AB"') == 1
