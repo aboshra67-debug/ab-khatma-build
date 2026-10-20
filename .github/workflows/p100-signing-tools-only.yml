@@ -1,0 +1,27 @@
+name: P100 Offline Signing Public Tools
+on:
+  push:
+    branches: [release/p100-signing-tools-only]
+permissions:
+  contents: read
+jobs:
+  public-tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Package Android public signing tools (no private keys)
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          MANAGER=$(find "$SDK/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          "$MANAGER" "build-tools;36.0.0"
+          mkdir -p tools
+          cp "$SDK/build-tools/36.0.0/lib/apksigner.jar" tools/
+          cp "$SDK/build-tools/36.0.0/zipalign" tools/
+          ls -lh tools/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P100-PUBLIC-ANDROID-SIGNING-TOOLS
+          path: tools/*
+          if-no-files-found: error
+          retention-days: 3
