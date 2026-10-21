@@ -18,13 +18,17 @@ fun P102ManagementPanel(
     val scope = rememberCoroutineScope()
     var working by remember(groupId) { mutableLongStateOf(-1L) }
     var result by remember(groupId) { mutableStateOf("") }
+    var expanded by remember(groupId) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("إدارة القيادة والتوزيع", style = MaterialTheme.typography.titleMedium)
         Text("تعيين النائب من صلاحيات القائد. قبول العضو لا يوزّع جزءًا تلقائيًا.",
             style = MaterialTheme.typography.bodySmall)
         if (result.isNotBlank()) Text(result, style = MaterialTheme.typography.bodySmall)
-        members.forEach { member ->
+        OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
+            Text(if (expanded) "إخفاء أدوات الإدارة" else "فتح أدوات إدارة القيادة والتوزيع")
+        }
+        if (expanded) members.forEach { member ->
             var juz by remember(groupId, member.id) { mutableStateOf("") }
             fun act(command: () -> Unit) {
                 if (working != -1L) return
