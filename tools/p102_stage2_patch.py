@@ -63,4 +63,84 @@ v = v.replace("versionCode = 124", "versionCode = 125", 1)
 v = v.replace('versionName = "0.19.95-p101-stage1-test"',
               'versionName = "0.19.96-p102-stage2-qa-only"', 1)
 gradle.write_text(v, encoding="utf-8")
-print("P102 stage2 guarded client methods applied; no data/signing changes; UI remains gated")
+
+# P102: expose roles and awaiting-distribution from both authenticated member models.
+s = base.read_text(encoding="utf-8")
+role_model = '                          val awaitingDistribution: Boolean = false)'
+assert s.count(role_model) == 1, "P102 member model anchor mismatch"
+s = s.replace(role_model, '                          val awaitingDistribution: Boolean = false,\\n                          val role: String = "member")', 1)
+parser = 'm.optBoolean("awaiting_distribution", false))'
+assert s.count(parser) == 2, "P102 directory role-parser anchor mismatch"
+s = s.replace(parser, 'm.optBoolean("awaiting_distribution", false), m.optString("role", "member"))')
+base.write_text(s, encoding="utf-8")
+
+screen = root / "app/src/main/java/com/ab/khatma/secure/SecureV2Screen.kt"
+u = screen.read_text(encoding="utf-8")
+changes = [
+    ('it.groupId == selectedGroupId && it.role == "leader" && it.status == "active"',
+     'it.groupId == selectedGroupId && it.role in listOf("leader", "assistant") && it.status == "active"', 1),
+    ('chosen != null && chosen.status == "active" && chosen.role != "leader"',
+     'chosen != null && chosen.status == "active" && chosen.role !in listOf("leader", "assistant")', 1),
+    ('groupTab = if (item.role == "leader") "leader" else "read"',
+     'groupTab = if (item.role in listOf("leader", "assistant")) "leader" else "read"', 1),
+    ('if (item.role == "leader") SecureV2Api.groupStatus(active.token, item.groupId)',
+     'if (item.role in listOf("leader", "assistant")) SecureV2Api.groupStatus(active.token, item.groupId)', 2),
+    ('if (item.role == "leader") {\\n                                        pending =',
+     'if (item.role in listOf("leader", "assistant")) {\\n                                        pending =', 1),
+    ('if (item.role == "leader" && groupTab == "leader" && item.status == "active")',
+     'if (item.role in listOf("leader", "assistant") && groupTab == "leader" && item.status == "active")', 1),
+    ('if (item.role == "leader" && item.status == "active") {',
+     'if (item.role in listOf("leader", "assistant") && item.status == "active") {', 1),
+    ('P29GroupFrame(leader = item.role == "leader")',
+     'P29GroupFrame(leader = item.role in listOf("leader", "assistant"))', 1),
+    ('if (chosen.role == "leader") {\\n                                P28LeaderHero(',
+     'if (chosen.role in listOf("leader", "assistant")) {\\n                                P28LeaderHero(', 1),
+    ('isLeader = chosen.role == "leader"',
+     'isLeader = chosen.role in listOf("leader", "assistant")', 1),
+    ('leader = selectedGroup.role == "leader"',
+     'leader = selectedGroup.role in listOf("leader", "assistant")', 1),
+]
+for old, new, expected in changes:
+    assert u.count(old) == expected, "Unsafe P102 UI anchor: " + old[:70]
+    u = u.replace(old, new)
+old_case = '''                                    "leader_members" -> P28LeaderMembers(
+                                        liveGroup, pending, busy,
+                                        token = active.token, groupId = item.groupId,
+                                        onApprove = respond,
+                                        onEdit = { section = "plans"; chatGroupId = null },
+                                        onInvite = {
+                                            liveGroup?.let { shareCode(item.groupName, it.inviteCode) }
+                                        }
+                                    )'''
+new_case = '''                                    "leader_members" -> {
+                                        P28LeaderMembers(
+                                            liveGroup, pending, busy,
+                                            token = active.token, groupId = item.groupId,
+                                            onApprove = respond,
+                                            onEdit = { section = "plans"; chatGroupId = null },
+                                            onInvite = {
+                                                liveGroup?.let { shareCode(item.groupName, it.inviteCode) }
+                                            }
+                                        )
+                                        P102ManagementPanel(
+                                            token = active.token,
+                                            groupId = item.groupId,
+                                            members = liveGroup?.members.orEmpty(),
+                                            leader = item.role == "leader",
+                                            onChanged = {
+                                                runTask {
+                                                    groupInfo = withContext(Dispatchers.IO) {
+                                                        SecureV2Api.groupStatus(active.token, item.groupId)
+                                                    }
+                                                    pending = withContext(Dispatchers.IO) {
+                                                        SecureV2Api.pending(active.token, item.groupId)
+                                                    }
+                                                }
+                                            }
+                                        )
+                                    }'''
+assert u.count(old_case) == 1, "P102 leader-members screen anchor mismatch"
+u = u.replace(old_case, new_case, 1)
+screen.write_text(u, encoding="utf-8")
+
+print("P102 stage2 guarded UI and client patch applied; production release remains blocked")
