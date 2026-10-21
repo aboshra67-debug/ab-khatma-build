@@ -1,0 +1,191 @@
+name: P102 VC125 Stage 2 Safe Android CI
+on:
+  push:
+    branches: [fix/p102-phase2-android-safe-20261021]
+  workflow_dispatch:
+concurrency:
+  group: p102-phase2-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Android SDK 36
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Download verified P100 VC123 Safe Source as immutable baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P100-VC123-COMPLETE-SAFE-SOURCE
+          run-id: 39411495537
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Apply P101 baseline then P102 guarded stage2 API patch
+        run: |
+          set -euo pipefail
+          test -f baseline/AB_Khatma_P100_VC123_SAFE_SOURCE.zip
+          unzip -tq baseline/AB_Khatma_P100_VC123_SAFE_SOURCE.zip
+          mkdir -p src
+          unzip -q baseline/AB_Khatma_P100_VC123_SAFE_SOURCE.zip -d src
+          S=src/AB_Khatma_P100_VC123_SAFE_SOURCE
+          test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+          test "$(find "$S/app/src/main/assets/quran_verse_hitmaps" -maxdepth 1 -name '*.json' | wc -l)" -eq 604
+          python3 -m py_compile tools/p101_stage1_patch.py
+          python3 tools/p101_stage1_patch.py "$S"
+          python3 -m py_compile tools/p102_stage2_patch.py
+          python3 tools/p102_stage2_patch.py "$S"
+          mkdir -p "$S/BUILD_REPRODUCIBILITY/p101"
+          cp tools/p101_stage1_patch.py "$S/BUILD_REPRODUCIBILITY/p101/p101_stage1_patch.py"
+          mkdir -p "$S/BUILD_REPRODUCIBILITY/p102"
+          cp tools/p102_stage2_patch.py "$S/BUILD_REPRODUCIBILITY/p102/p102_stage2_patch.py"
+          grep -q 'versionCode = 125' "$S/app/build.gradle.kts"
+          grep -q '0.19.96-p102-stage2-qa-only' "$S/app/build.gradle.kts"
+          test "$(find "$S/app/src/main/assets/quran_pages" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+      - name: Retrieve same pinned Firebase public client settings as P95
+        run: |
+          set -euo pipefail
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/nBo1EY9iX-PP',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('public_config.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '91fb83b2e7c315232e7f670074762fb7e0d22e06cc19da3cbea3b82cf501c411  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Hold plain on-demand Quran pages outside release binary
+        run: |
+          S=src/AB_Khatma_P100_VC123_SAFE_SOURCE
+          mv "$S/app/src/main/assets/quran_pages" "$GITHUB_WORKSPACE/plain_hold"
+      - name: Unit tests plus unsigned APK/AAB and device-test builds
+        working-directory: src/AB_Khatma_P100_VC123_SAFE_SOURCE
+        run: |
+          set -euo pipefail
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon --stacktrace :app:testDebugUnitTest :app:assembleRelease :app:assembleDebug :app:assembleDebugAndroidTest :app:bundleRelease \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Safe source and unsigned review artifacts (never original signing key)
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P100_VC123_SAFE_SOURCE
+          mkdir -p safe_source unsigned ci_tests
+          cp "$S/app/build/outputs/apk/release/app-release-unsigned.apk" unsigned/P102_VC125_UNSIGNED_REVIEW.apk
+          AAB=$(find "$S/app/build/outputs/bundle/release" -maxdepth 1 -name '*.aab' -print -quit)
+          test -n "$AAB"
+          cp "$AAB" unsigned/P102_VC125_UNSIGNED_AAB_REVIEW.aab
+          test "$(unzip -l unsigned/P102_VC125_UNSIGNED_REVIEW.apk | grep -c 'assets/quran_pages_colored/.*\.webp')" -eq 604
+          mv "$GITHUB_WORKSPACE/plain_hold" "$S/app/src/main/assets/quran_pages"
+          keytool -genkeypair -keystore /tmp/p102-ci.jks -alias ci -storepass android -keypass android -dname "CN=Disposable Android CI" -keyalg RSA -validity 2
+          java -jar "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" sign --ks /tmp/p102-ci.jks --ks-key-alias ci --ks-pass pass:android --key-pass pass:android --v4-signing-enabled false --out ci_tests/p102-ci-app.apk "$(find "$S/app/build/outputs/apk/debug" -maxdepth 1 -name '*.apk' -print -quit)"
+          java -jar "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" sign --ks /tmp/p102-ci.jks --ks-key-alias ci --ks-pass pass:android --key-pass pass:android --v4-signing-enabled false --out ci_tests/p102-ci-test.apk "$(find "$S/app/build/outputs/apk/androidTest/debug" -maxdepth 1 -name '*.apk' -print -quit)"
+          rm -f /tmp/p102-ci.jks
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          root=Path("src/AB_Khatma_P100_VC123_SAFE_SOURCE")
+          with ZipFile("safe_source/AB_Khatma_P100_VC123_SAFE_SOURCE.zip","w",ZIP_DEFLATED,compresslevel=5) as z:
+              for p in sorted(root.rglob("*")):
+                  if not p.is_file():continue
+                  rel=p.relative_to(root)
+                  if any(part in ("build",".gradle",".git") for part in rel.parts) or p.name=="local.properties":continue
+                  assert p.suffix.lower() not in (".jks",".p12",".keystore",".apk",".aab",".pem"),rel
+                  z.write(p,"AB_Khatma_P100_VC123_SAFE_SOURCE/"+rel.as_posix())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P102-VC125-STAGE2-UNSIGNED-REVIEW
+          path: unsigned/*
+          retention-days: 30
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P102-VC125-STAGE2-COMPLETE-SAFE-SOURCE
+          path: safe_source/*
+          retention-days: 30
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P102-VC125-STAGE2-CI-TEST-APKS
+          path: ci_tests/*
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AB-Khatma-P102-VC125-STAGE2-UNIT-TEST-REPORT
+          path: src/AB_Khatma_P100_VC123_SAFE_SOURCE/app/build/test-results/testDebugUnitTest/*
+          retention-days: 30
+
+  android-regression:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P102-VC125-STAGE2-CI-TEST-APKS
+          path: ci_tests
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: |
+            set -eu
+            adb install -r ci_tests/p102-ci-app.apk
+            adb install -r ci_tests/p102-ci-test.apk
+            adb shell pm grant com.ab.khatma.preview android.permission.POST_NOTIFICATIONS
+            adb shell am instrument -w -r -e class com.ab.khatma.guide.P94LayoutNavigationDeviceTest,com.ab.khatma.guide.P93FirstRunDeviceTest,com.ab.khatma.guide.P91OfflineDeviceTest,com.ab.khatma.guide.P89DirectMediaDeviceTest,com.ab.khatma.guide.P88IbtehalDeviceTest,com.ab.khatma.guide.P85GuideUiTest,com.ab.khatma.guide.P85ReaderDeviceTest com.ab.khatma.preview.test/androidx.test.runner.AndroidJUnitRunner > p102-main-results.txt
+            cat p102-main-results.txt
+            grep -E '^OK \([0-9]+ tests?\)' p102-main-results.txt
+            ! grep -E 'FAILURES|INSTRUMENTATION_FAILED|Process crashed' p102-main-results.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AB-Khatma-P102-VC125-STAGE2-ANDROID-TEST-RESULTS
+          path: p102-main-results.txt
+          retention-days: 30
+          if-no-files-found: warn
