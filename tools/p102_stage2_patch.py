@@ -68,7 +68,7 @@ gradle.write_text(v, encoding="utf-8")
 s = base.read_text(encoding="utf-8")
 role_model = '                          val awaitingDistribution: Boolean = false)'
 assert s.count(role_model) == 1, "P102 member model anchor mismatch"
-s = s.replace(role_model, '                          val awaitingDistribution: Boolean = false,\\n                          val role: String = "member")', 1)
+s = s.replace(role_model, '                          val awaitingDistribution: Boolean = false,\n                          val role: String = "member")', 1)
 parser = 'm.optBoolean("awaiting_distribution", false))'
 assert s.count(parser) == 2, "P102 directory role-parser anchor mismatch"
 s = s.replace(parser, 'm.optBoolean("awaiting_distribution", false), m.optString("role", "member"))')
@@ -85,16 +85,16 @@ changes = [
      'groupTab = if (item.role in listOf("leader", "assistant")) "leader" else "read"', 1),
     ('if (item.role == "leader") SecureV2Api.groupStatus(active.token, item.groupId)',
      'if (item.role in listOf("leader", "assistant")) SecureV2Api.groupStatus(active.token, item.groupId)', 2),
-    ('if (item.role == "leader") {\\n                                        pending =',
-     'if (item.role in listOf("leader", "assistant")) {\\n                                        pending =', 1),
+    ('if (item.role == "leader") {\n                                        pending =',
+     'if (item.role in listOf("leader", "assistant")) {\n                                        pending =', 1),
     ('if (item.role == "leader" && groupTab == "leader" && item.status == "active")',
      'if (item.role in listOf("leader", "assistant") && groupTab == "leader" && item.status == "active")', 1),
     ('if (item.role == "leader" && item.status == "active") {',
      'if (item.role in listOf("leader", "assistant") && item.status == "active") {', 1),
     ('P29GroupFrame(leader = item.role == "leader")',
      'P29GroupFrame(leader = item.role in listOf("leader", "assistant"))', 1),
-    ('if (chosen.role == "leader") {\\n                                P28LeaderHero(',
-     'if (chosen.role in listOf("leader", "assistant")) {\\n                                P28LeaderHero(', 1),
+    ('if (chosen.role == "leader") {\n                                P28LeaderHero(',
+     'if (chosen.role in listOf("leader", "assistant")) {\n                                P28LeaderHero(', 1),
     ('isLeader = chosen.role == "leader"',
      'isLeader = chosen.role in listOf("leader", "assistant")', 1),
     ('leader = selectedGroup.role == "leader"',
