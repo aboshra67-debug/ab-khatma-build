@@ -49,6 +49,8 @@ jobs:
           python3 tools/p101_stage1_patch.py "$S"
           python3 -m py_compile tools/p102_stage2_patch.py
           python3 tools/p102_stage2_patch.py "$S"
+          test -f android_p102/P102ManagementPanel.kt
+          cp android_p102/P102ManagementPanel.kt "$S/app/src/main/java/com/ab/khatma/secure/P102ManagementPanel.kt"
           mkdir -p "$S/BUILD_REPRODUCIBILITY/p101"
           cp tools/p101_stage1_patch.py "$S/BUILD_REPRODUCIBILITY/p101/p101_stage1_patch.py"
           mkdir -p "$S/BUILD_REPRODUCIBILITY/p102"
