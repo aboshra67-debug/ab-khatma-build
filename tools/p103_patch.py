@@ -143,6 +143,16 @@ edit(p48, "           if(!isLeader&&r.canComplete)Row(", '''           if(!isLea
            if(!isLeader&&r.canComplete)Row(''')
 edit(p48, "   Text(groupName,color=p48Green)\n", "   Text(groupName,color=p48Green)\n   P103GroupScheduleCard(token,groupId)\n")
 
+
+# 5b. Sayyid al-Naqshbandi direct streams from the same Archive.org host used for Tobar ----------
+ibt = j / "ui/screens/P85IbtehalScreen.kt"
+NQ = [("004", "تسجيل 1 (6 دقائق)"), ("017", "تسجيل 2 (29 دقيقة)"), ("020", "تسجيل 3 (13 دقيقة)"),
+      ("035", "تسجيل 4 (22 دقيقة)"), ("039", "تسجيل 5 (11 دقيقة)")]
+STREAMS = ",\n".join('    "nq_a%s" to "https://archive.org/download/sayyid-al-naqshbandi/%s.mp3"' % (n, n) for n, _ in NQ)
+TRACKS = ",\n".join('    P87Track("nq_a%s","%s","سيد النقشبندي","https://archive.org/details/sayyid-al-naqshbandi")' % (n, t) for n, t in NQ)
+edit(ibt, '.mp3"\n)\nprivate val p89NewDirectTracks', '.mp3",\n' + STREAMS + '\n)\nprivate val p89NewDirectTracks')
+edit(ibt, 'nasr-eldin-tobar-mp3.html")\n)\nprivate val p88Tracks', 'nasr-eldin-tobar-mp3.html"),\n' + TRACKS + '\n)\nprivate val p88Tracks')
+
 # 6. Late readers in the leader panel -------------------------------------------------------
 panel = j / "secure/P102ManagementPanel.kt"
 edit(panel, "        if (result.isNotBlank()) Text(result, style = MaterialTheme.typography.bodySmall)\n",
