@@ -1,5 +1,8 @@
 name: P103 VC126 Side-by-side Test APK (throwaway key)
 on:
+  push:
+    branches: [feat/p103-android-20261022]
+    paths: ['.github/workflows/p103-side-by-side-test.yml']
   workflow_dispatch:
 concurrency:
   group: p103-sbs-${{ github.ref }}
