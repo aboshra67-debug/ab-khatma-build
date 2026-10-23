@@ -171,6 +171,7 @@ for f in meta.get("files", []):
 names.sort(key=lambda x: x[1])
 names = names[:90]
 assert len(names) >= 10, "too few Naqshbandi tracks found: %d" % len(names)
+Path("/tmp/naq_tracks.txt").write_text("Naqshbandi tracks (%d):\n" % len(names) + "\n".join("- " + t for _, t in names), encoding="utf-8")
 print("NAQSHBANDI TRACKS (%d):" % len(names))
 for _, t in names:
     print("  ", t)
