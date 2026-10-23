@@ -116,3 +116,4 @@ jobs:
           gh release create p103-test-apk AB-Khatma-P103-TEST-side-by-side.apk --prerelease \
             --title "P103 test APK (side-by-side, throwaway key)" \
             --notes "Test only. Installs next to the existing app (separate id). Not for Google Play."
+# rebuild 1792764602

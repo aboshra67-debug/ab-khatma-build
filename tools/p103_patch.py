@@ -144,12 +144,40 @@ edit(p48, "           if(!isLeader&&r.canComplete)Row(", '''           if(!isLea
 edit(p48, "   Text(groupName,color=p48Green)\n", "   Text(groupName,color=p48Green)\n   P103GroupScheduleCard(token,groupId)\n")
 
 
-# 5b. Sayyid al-Naqshbandi direct streams from the same Archive.org host used for Tobar ----------
+# 5b. Sayyid al-Naqshbandi ibtihalat: exact file names read from the Archive.org item at build time ---
+import hashlib
+import json
+import urllib.parse
+import urllib.request
+
 ibt = j / "ui/screens/P85IbtehalScreen.kt"
-NQ = [("004", "تسجيل 1 (6 دقائق)"), ("017", "تسجيل 2 (29 دقيقة)"), ("020", "تسجيل 3 (13 دقيقة)"),
-      ("035", "تسجيل 4 (22 دقيقة)"), ("039", "تسجيل 5 (11 دقيقة)")]
-STREAMS = ",\n".join('    "nq_a%s" to "https://archive.org/download/sayyid-al-naqshbandi/%s.mp3"' % (n, n) for n, _ in NQ)
-TRACKS = ",\n".join('    P87Track("nq_a%s","%s","سيد النقشبندي","https://archive.org/details/sayyid-al-naqshbandi")' % (n, t) for n, t in NQ)
+ITEM = "Naqshabandee"
+with urllib.request.urlopen("https://archive.org/metadata/" + ITEM, timeout=60) as resp:
+    meta = json.load(resp)
+SKIP = ("سورة", "سوره", "تلاوة", "ترتيل", "القرآن", "القران", "آية", "اية ")
+names = []
+for f in meta.get("files", []):
+    n = f.get("name", "")
+    if not n.lower().endswith(".mp3") or "/" in n:
+        continue
+    size = int(f.get("size", 0) or 0)
+    title = n[:-4].strip()
+    if not 300_000 <= size <= 40_000_000 or any(w in title for w in SKIP):
+        continue
+    title = title.replace('"', "").replace("$", "").replace("\\", "")
+    if len(title) < 2 or title in [t for _, t in names]:
+        continue
+    names.append((n, title))
+names.sort(key=lambda x: x[1])
+names = names[:90]
+assert len(names) >= 10, "too few Naqshbandi tracks found: %d" % len(names)
+print("NAQSHBANDI TRACKS (%d):" % len(names))
+for _, t in names:
+    print("  ", t)
+STREAMS = ",\n".join('    "nq_%s" to "https://archive.org/download/%s/%s"' % (
+    hashlib.sha1(n.encode("utf-8")).hexdigest()[:8], ITEM, urllib.parse.quote(n)) for n, _ in names)
+TRACKS = ",\n".join('    P87Track("nq_%s","%s","سيد النقشبندي","https://archive.org/details/%s")' % (
+    hashlib.sha1(n.encode("utf-8")).hexdigest()[:8], t, ITEM) for n, t in names)
 edit(ibt, '.mp3"\n)\nprivate val p89NewDirectTracks', '.mp3",\n' + STREAMS + '\n)\nprivate val p89NewDirectTracks')
 edit(ibt, 'nasr-eldin-tobar-mp3.html")\n)\nprivate val p88Tracks', 'nasr-eldin-tobar-mp3.html"),\n' + TRACKS + '\n)\nprivate val p88Tracks')
 
