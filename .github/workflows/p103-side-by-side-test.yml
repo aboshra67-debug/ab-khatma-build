@@ -1,0 +1,115 @@
+name: P103 VC126 Side-by-side Test APK (throwaway key)
+on:
+  workflow_dispatch:
+concurrency:
+  group: p103-sbs-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Android SDK 36
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          echo "$(dirname "$TOOL")" >> "$GITHUB_PATH"
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Download verified P102 VC125 Safe Source as immutable baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P102-VC125-STAGE2-COMPLETE-SAFE-SOURCE
+          run-id: 39686029404
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Apply guarded P103 patch
+        run: |
+          set -euo pipefail
+          test -f baseline/AB_Khatma_P100_VC123_SAFE_SOURCE.zip
+          unzip -tq baseline/AB_Khatma_P100_VC123_SAFE_SOURCE.zip
+          mkdir -p src
+          unzip -q baseline/AB_Khatma_P100_VC123_SAFE_SOURCE.zip -d src
+          S=src/AB_Khatma_P100_VC123_SAFE_SOURCE
+          test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+          grep -q 'versionCode = 125' "$S/app/build.gradle.kts"
+          python3 -m py_compile tools/p103_patch.py
+          python3 tools/p103_patch.py "$S" android_p103
+          mkdir -p "$S/BUILD_REPRODUCIBILITY/p103"
+          cp tools/p103_patch.py "$S/BUILD_REPRODUCIBILITY/p103/p103_patch.py"
+          grep -q 'versionCode = 126' "$S/app/build.gradle.kts"
+          test "$(find "$S/app/src/main/assets/quran_pages" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+      - name: Retrieve same pinned Firebase public client settings as P95
+        run: |
+          set -euo pipefail
+          npm install --prefix /tmp/browser playwright
+          /tmp/browser/node_modules/.bin/playwright install chromium
+          node <<'JS'
+          const {chromium}=require('/tmp/browser/node_modules/playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({acceptDownloads:true});
+              await page.goto('https://firestorage.ai/ja/f/nBo1EY9iX-PP',{waitUntil:'domcontentloaded',timeout:60000});
+              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
+              await button.waitFor({state:'visible',timeout:60000});
+              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
+              await download.saveAs('public_config.zip');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          echo '91fb83b2e7c315232e7f670074762fb7e0d22e06cc19da3cbea3b82cf501c411  public_config.zip' | sha256sum -c -
+          mkdir -p configs
+          unzip -q public_config.zip -d configs
+      - name: Hold plain on-demand Quran pages outside release binary
+        run: |
+          S=src/AB_Khatma_P100_VC123_SAFE_SOURCE
+          mv "$S/app/src/main/assets/quran_pages" "$GITHUB_WORKSPACE/plain_hold"
+      - name: Side-by-side application id (does not replace the installed app)
+        working-directory: src/AB_Khatma_P100_VC123_SAFE_SOURCE
+        run: |
+          set -euo pipefail
+          test "$(grep -c 'applicationIdSuffix = ".preview"' app/build.gradle.kts)" -eq 2
+          sed -i 's/applicationIdSuffix = ".preview"/applicationIdSuffix = ".preview.t103"/' app/build.gradle.kts
+      - name: Build release APK
+        working-directory: src/AB_Khatma_P100_VC123_SAFE_SOURCE
+        run: |
+          set -euo pipefail
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon --stacktrace :app:assembleRelease \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Align and sign with a disposable key (never the original key)
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P100_VC123_SAFE_SOURCE
+          BT="$ANDROID_HOME/build-tools/36.0.0"
+          "$BT/zipalign" -f -p 4 "$S/app/build/outputs/apk/release/app-release-unsigned.apk" aligned.apk
+          keytool -genkeypair -keystore /tmp/t103.jks -alias t -storepass t103throwaway -keypass t103throwaway -dname "CN=AB Khatma disposable test" -keyalg RSA -keysize 2048 -validity 30
+          java -jar "$BT/lib/apksigner.jar" sign --ks /tmp/t103.jks --ks-key-alias t --ks-pass pass:t103throwaway --key-pass pass:t103throwaway --out AB-Khatma-P103-TEST-side-by-side.apk aligned.apk
+          java -jar "$BT/lib/apksigner.jar" verify --print-certs AB-Khatma-P103-TEST-side-by-side.apk | head -5
+          rm -f /tmp/t103.jks
+          ls -lh AB-Khatma-P103-TEST-side-by-side.apk
+      - name: Publish test release (downloadable from a phone browser)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete p103-test-apk -y --cleanup-tag 2>/dev/null || true
+          gh release create p103-test-apk AB-Khatma-P103-TEST-side-by-side.apk --prerelease \
+            --title "P103 test APK (side-by-side, throwaway key)" \
+            --notes "Test only. Installs next to the existing app (separate id). Not for Google Play."
