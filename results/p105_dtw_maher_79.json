@@ -1,0 +1,322 @@
+{
+ "id": "maher",
+ "surah_ms": 195056,
+ "concat_ms": 182883,
+ "bounds": [
+  {
+   "after_verse": 1,
+   "dtw_ms": 7320,
+   "snap_ms": 7078,
+   "snap_rms": 2408,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 2,
+   "dtw_ms": 10540,
+   "snap_ms": 10839,
+   "snap_rms": 2050,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 3,
+   "dtw_ms": 13300,
+   "snap_ms": 13395,
+   "snap_rms": 633,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 4,
+   "dtw_ms": 16200,
+   "snap_ms": 16254,
+   "snap_rms": 833,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 5,
+   "dtw_ms": 18960,
+   "snap_ms": 19050,
+   "snap_rms": 989,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 6,
+   "dtw_ms": 21500,
+   "snap_ms": 21463,
+   "snap_rms": 1309,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 7,
+   "dtw_ms": 23740,
+   "snap_ms": 23836,
+   "snap_rms": 653,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 8,
+   "dtw_ms": 27220,
+   "snap_ms": 26927,
+   "snap_rms": 1511,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 9,
+   "dtw_ms": 29760,
+   "snap_ms": 29737,
+   "snap_rms": 897,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 10,
+   "dtw_ms": 34760,
+   "snap_ms": 34709,
+   "snap_rms": 676,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 11,
+   "dtw_ms": 38620,
+   "snap_ms": 38693,
+   "snap_rms": 1233,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 12,
+   "dtw_ms": 43000,
+   "snap_ms": 43122,
+   "snap_rms": 1296,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 13,
+   "dtw_ms": 48400,
+   "snap_ms": 48408,
+   "snap_rms": 1477,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 14,
+   "dtw_ms": 51360,
+   "snap_ms": 51442,
+   "snap_rms": 632,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 15,
+   "dtw_ms": 54620,
+   "snap_ms": 54631,
+   "snap_rms": 799,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 16,
+   "dtw_ms": 59400,
+   "snap_ms": 59523,
+   "snap_rms": 674,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 17,
+   "dtw_ms": 64160,
+   "snap_ms": 64331,
+   "snap_rms": 747,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 18,
+   "dtw_ms": 70180,
+   "snap_ms": 70122,
+   "snap_rms": 801,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 19,
+   "dtw_ms": 73940,
+   "snap_ms": 73914,
+   "snap_rms": 649,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 20,
+   "dtw_ms": 76580,
+   "snap_ms": 76758,
+   "snap_rms": 1559,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 21,
+   "dtw_ms": 78760,
+   "snap_ms": 78709,
+   "snap_rms": 973,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 22,
+   "dtw_ms": 81960,
+   "snap_ms": 82028,
+   "snap_rms": 742,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 23,
+   "dtw_ms": 83640,
+   "snap_ms": 83816,
+   "snap_rms": 1896,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 24,
+   "dtw_ms": 86880,
+   "snap_ms": 86981,
+   "snap_rms": 914,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 25,
+   "dtw_ms": 91660,
+   "snap_ms": 91845,
+   "snap_rms": 690,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 26,
+   "dtw_ms": 97980,
+   "snap_ms": 97948,
+   "snap_rms": 671,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 27,
+   "dtw_ms": 105780,
+   "snap_ms": 105773,
+   "snap_rms": 920,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 28,
+   "dtw_ms": 108740,
+   "snap_ms": 108866,
+   "snap_rms": 958,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 29,
+   "dtw_ms": 112860,
+   "snap_ms": 112829,
+   "snap_rms": 997,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 30,
+   "dtw_ms": 115840,
+   "snap_ms": 115936,
+   "snap_rms": 897,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 31,
+   "dtw_ms": 121160,
+   "snap_ms": 121290,
+   "snap_rms": 863,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 32,
+   "dtw_ms": 123380,
+   "snap_ms": 123540,
+   "snap_rms": 1654,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 33,
+   "dtw_ms": 126880,
+   "snap_ms": 126813,
+   "snap_rms": 651,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 34,
+   "dtw_ms": 134380,
+   "snap_ms": 134574,
+   "snap_rms": 991,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 35,
+   "dtw_ms": 139280,
+   "snap_ms": 139386,
+   "snap_rms": 796,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 36,
+   "dtw_ms": 143060,
+   "snap_ms": 143226,
+   "snap_rms": 760,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 37,
+   "dtw_ms": 146060,
+   "snap_ms": 145762,
+   "snap_rms": 3121,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 38,
+   "dtw_ms": 149080,
+   "snap_ms": 149234,
+   "snap_rms": 823,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 39,
+   "dtw_ms": 152820,
+   "snap_ms": 152921,
+   "snap_rms": 659,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 40,
+   "dtw_ms": 160100,
+   "snap_ms": 160046,
+   "snap_rms": 862,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 41,
+   "dtw_ms": 164320,
+   "snap_ms": 164499,
+   "snap_rms": 755,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 42,
+   "dtw_ms": 169080,
+   "snap_ms": 169270,
+   "snap_rms": 651,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 43,
+   "dtw_ms": 172880,
+   "snap_ms": 173002,
+   "snap_rms": 802,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 44,
+   "dtw_ms": 176320,
+   "snap_ms": 176373,
+   "snap_rms": 970,
+   "typ_rms": 5049
+  },
+  {
+   "after_verse": 45,
+   "dtw_ms": 183160,
+   "snap_ms": 183281,
+   "snap_rms": 574,
+   "typ_rms": 5049
+  }
+ ]
+}
