@@ -1,0 +1,86 @@
+name: P105 VC132 Sign with owner key (secrets only)
+on:
+  push:
+    branches: [feat/p105-audio-20261025]
+    paths: ['.github/workflows/p105-sign-release.yml']
+  workflow_dispatch:
+concurrency:
+  group: p105-sign-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+  actions: read
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android build tools
+        run: |
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "build-tools;36.0.0"
+      - name: Download the reviewed unsigned build (run 40137048533)
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P102-VC132-P104-UNSIGNED-REVIEW
+          run-id: 40137048533
+          github-token: ${{ github.token }}
+          path: unsigned
+      - name: Sign AAB and APK with the original key and verify the fingerprint
+        env:
+          KS_B64: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "${KS_B64:-}" && test -n "${KS_PASS:-}" || { echo "::error::Signing secrets are missing in this repository"; exit 1; }
+          KS="$RUNNER_TEMP/owner.p12"
+          umask 077
+          printf '%s' "$KS_B64" | tr -d ' \r\n\t' | base64 -d > "$KS"
+          KS_PASS="$(printf '%s' "$KS_PASS" | tr -d '\r\n')"; export KS_PASS
+          BT="$ANDROID_HOME/build-tools/36.0.0"
+          WANT="3248c1ebdd2973a992a453919a4207317cdecfc4cf0c7e8dc28dd7d9a5468b41"
+          mkdir -p signed
+          # APK: align, then v2/v3 signature
+          "$BT/zipalign" -f -P 16 4 unsigned/P104_VC132_UNSIGNED_REVIEW.apk aligned.apk
+          java -jar "$BT/lib/apksigner.jar" sign --ks "$KS" --ks-key-alias khatma_preview \
+            --ks-pass env:KS_PASS --v2-signing-enabled true --v3-signing-enabled true \
+            --out signed/AB_Khatma_P104_VC132_SIGNED.apk aligned.apk
+          OUT=$(java -jar "$BT/lib/apksigner.jar" verify --verbose --print-certs signed/AB_Khatma_P104_VC132_SIGNED.apk)
+          echo "$OUT" | grep -E "Verified using|Number of signers|SHA-256"
+          echo "$OUT" | grep -q "certificate SHA-256 digest: $WANT"
+          echo "$OUT" | grep -q "Number of signers: 1"
+          BADGING=$("$BT/aapt2" dump badging signed/AB_Khatma_P104_VC132_SIGNED.apk | head -n 1)
+          echo "$BADGING"
+          echo "$BADGING" | grep -q "name='com.ab.khatma.preview'"
+          echo "$BADGING" | grep -q "versionCode='132'"
+          # AAB: jarsigner (the format Google Play expects)
+          cp unsigned/P104_VC132_UNSIGNED_AAB_REVIEW.aab signed/AB_Khatma_P104_VC132_SIGNED.aab
+          jarsigner -keystore "$KS" -storetype PKCS12 -storepass:env KS_PASS \
+            -sigalg SHA256withRSA -digestalg SHA-256 signed/AB_Khatma_P104_VC132_SIGNED.aab khatma_preview
+          jarsigner -verify signed/AB_Khatma_P104_VC132_SIGNED.aab | grep -q "jar verified"
+          FP=$(keytool -printcert -jarfile signed/AB_Khatma_P104_VC132_SIGNED.aab | grep "SHA256:" | head -n 1 | sed 's/.*SHA256: //' | tr -d ':' | tr 'A-F' 'a-f')
+          echo "AAB signer SHA-256: $FP"
+          test "$FP" = "$WANT"
+          rm -f "$KS"
+          (cd signed && sha256sum * | tee SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P104-VC132-SIGNED
+          path: signed/*
+          if-no-files-found: error
+          retention-days: 3
+      - name: Private draft release so the files download as plain files (not a zip)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "p105-vc132-signed-${GITHUB_RUN_ID}" --draft \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "P104 VC132 SIGNED (private draft, delete after testing)" \
+            --notes "Signed with the owner key. Draft: visible to repository collaborators only." \
+            signed/AB_Khatma_P104_VC132_SIGNED.apk signed/AB_Khatma_P104_VC132_SIGNED.aab signed/SHA256SUMS.txt
