@@ -1,1 +1,377 @@
-{"id": "banna", "error": "FileNotFoundError(2, 'No such file or directory')"}
+{
+ "id": "banna",
+ "surah": 79,
+ "surah_ms": 284040,
+ "verses": [
+  {
+   "v": 1,
+   "start_ms": 39220,
+   "end_ms": 47527,
+   "len_ms": 8307,
+   "cum_ms": 0,
+   "score": 0.069
+  },
+  {
+   "v": 2,
+   "start_ms": 101561,
+   "end_ms": 105950,
+   "len_ms": 4388,
+   "cum_ms": 8307,
+   "score": 0.131
+  },
+  {
+   "v": 3,
+   "start_ms": 13416,
+   "end_ms": 17283,
+   "len_ms": 3866,
+   "cum_ms": 12695,
+   "score": 0.122
+  },
+  {
+   "v": 4,
+   "start_ms": 13364,
+   "end_ms": 17178,
+   "len_ms": 3813,
+   "cum_ms": 16561,
+   "score": 0.118
+  },
+  {
+   "v": 5,
+   "start_ms": 17327,
+   "end_ms": 21376,
+   "len_ms": 4049,
+   "cum_ms": 20375,
+   "score": 0.163
+  },
+  {
+   "v": 6,
+   "start_ms": 21863,
+   "end_ms": 25624,
+   "len_ms": 3761,
+   "cum_ms": 24424,
+   "score": 0.138
+  },
+  {
+   "v": 7,
+   "start_ms": 25843,
+   "end_ms": 29108,
+   "len_ms": 3265,
+   "cum_ms": 28186,
+   "score": 0.124
+  },
+  {
+   "v": 8,
+   "start_ms": 29464,
+   "end_ms": 34819,
+   "len_ms": 5355,
+   "cum_ms": 31451,
+   "score": 0.151
+  },
+  {
+   "v": 9,
+   "start_ms": 35051,
+   "end_ms": 38943,
+   "len_ms": 3892,
+   "cum_ms": 36806,
+   "score": 0.116
+  },
+  {
+   "v": 10,
+   "start_ms": 39493,
+   "end_ms": 47042,
+   "len_ms": 7549,
+   "cum_ms": 40699,
+   "score": 0.109
+  },
+  {
+   "v": 11,
+   "start_ms": 77272,
+   "end_ms": 83097,
+   "len_ms": 5825,
+   "cum_ms": 48248,
+   "score": 0.11
+  },
+  {
+   "v": 12,
+   "start_ms": 53732,
+   "end_ms": 60028,
+   "len_ms": 6295,
+   "cum_ms": 54073,
+   "score": 0.111
+  },
+  {
+   "v": 13,
+   "start_ms": 60488,
+   "end_ms": 66549,
+   "len_ms": 6060,
+   "cum_ms": 60369,
+   "score": 0.124
+  },
+  {
+   "v": 14,
+   "start_ms": 67213,
+   "end_ms": 71967,
+   "len_ms": 4754,
+   "cum_ms": 66429,
+   "score": 0.119
+  },
+  {
+   "v": 15,
+   "start_ms": 71901,
+   "end_ms": 76551,
+   "len_ms": 4649,
+   "cum_ms": 71183,
+   "score": 0.107
+  },
+  {
+   "v": 16,
+   "start_ms": 125318,
+   "end_ms": 132815,
+   "len_ms": 7497,
+   "cum_ms": 75833,
+   "score": 0.081
+  },
+  {
+   "v": 17,
+   "start_ms": 85069,
+   "end_ms": 91678,
+   "len_ms": 6609,
+   "cum_ms": 83330,
+   "score": 0.088
+  },
+  {
+   "v": 18,
+   "start_ms": 92186,
+   "end_ms": 98011,
+   "len_ms": 5825,
+   "cum_ms": 89939,
+   "score": 0.095
+  },
+  {
+   "v": 19,
+   "start_ms": 98235,
+   "end_ms": 103904,
+   "len_ms": 5668,
+   "cum_ms": 95765,
+   "score": 0.091
+  },
+  {
+   "v": 20,
+   "start_ms": 103864,
+   "end_ms": 108749,
+   "len_ms": 4884,
+   "cum_ms": 101433,
+   "score": 0.175
+  },
+  {
+   "v": 21,
+   "start_ms": 108794,
+   "end_ms": 111850,
+   "len_ms": 3056,
+   "cum_ms": 106318,
+   "score": 0.123
+  },
+  {
+   "v": 22,
+   "start_ms": 112118,
+   "end_ms": 116506,
+   "len_ms": 4388,
+   "cum_ms": 109375,
+   "score": 0.087
+  },
+  {
+   "v": 23,
+   "start_ms": 262953,
+   "end_ms": 266088,
+   "len_ms": 3134,
+   "cum_ms": 113763,
+   "score": 0.128
+  },
+  {
+   "v": 24,
+   "start_ms": 119922,
+   "end_ms": 124650,
+   "len_ms": 4728,
+   "cum_ms": 116898,
+   "score": 0.107
+  },
+  {
+   "v": 25,
+   "start_ms": 124528,
+   "end_ms": 132103,
+   "len_ms": 7575,
+   "cum_ms": 121626,
+   "score": 0.088
+  },
+  {
+   "v": 26,
+   "start_ms": 131997,
+   "end_ms": 139677,
+   "len_ms": 7680,
+   "cum_ms": 129202,
+   "score": 0.085
+  },
+  {
+   "v": 27,
+   "start_ms": 140263,
+   "end_ms": 150111,
+   "len_ms": 9848,
+   "cum_ms": 136882,
+   "score": 0.093
+  },
+  {
+   "v": 28,
+   "start_ms": 257922,
+   "end_ms": 262990,
+   "len_ms": 5067,
+   "cum_ms": 146730,
+   "score": 0.094
+  },
+  {
+   "v": 29,
+   "start_ms": 208492,
+   "end_ms": 214866,
+   "len_ms": 6373,
+   "cum_ms": 151798,
+   "score": 0.097
+  },
+  {
+   "v": 30,
+   "start_ms": 119192,
+   "end_ms": 124574,
+   "len_ms": 5381,
+   "cum_ms": 158171,
+   "score": 0.091
+  },
+  {
+   "v": 31,
+   "start_ms": 168667,
+   "end_ms": 175590,
+   "len_ms": 6922,
+   "cum_ms": 163553,
+   "score": 0.089
+  },
+  {
+   "v": 32,
+   "start_ms": 175941,
+   "end_ms": 180199,
+   "len_ms": 4258,
+   "cum_ms": 170475,
+   "score": 0.131
+  },
+  {
+   "v": 33,
+   "start_ms": 180052,
+   "end_ms": 185120,
+   "len_ms": 5067,
+   "cum_ms": 174733,
+   "score": 0.107
+  },
+  {
+   "v": 34,
+   "start_ms": 184256,
+   "end_ms": 194443,
+   "len_ms": 10187,
+   "cum_ms": 179801,
+   "score": 0.086
+  },
+  {
+   "v": 35,
+   "start_ms": 195757,
+   "end_ms": 202941,
+   "len_ms": 7183,
+   "cum_ms": 189989,
+   "score": 0.124
+  },
+  {
+   "v": 36,
+   "start_ms": 196045,
+   "end_ms": 201844,
+   "len_ms": 5799,
+   "cum_ms": 197172,
+   "score": 0.09
+  },
+  {
+   "v": 37,
+   "start_ms": 250753,
+   "end_ms": 255142,
+   "len_ms": 4388,
+   "cum_ms": 202972,
+   "score": 0.134
+  },
+  {
+   "v": 38,
+   "start_ms": 214111,
+   "end_ms": 219100,
+   "len_ms": 4989,
+   "cum_ms": 207360,
+   "score": 0.097
+  },
+  {
+   "v": 39,
+   "start_ms": 219131,
+   "end_ms": 225009,
+   "len_ms": 5877,
+   "cum_ms": 212350,
+   "score": 0.092
+  },
+  {
+   "v": 40,
+   "start_ms": 225451,
+   "end_ms": 236345,
+   "len_ms": 10893,
+   "cum_ms": 218227,
+   "score": 0.07
+  },
+  {
+   "v": 41,
+   "start_ms": 237170,
+   "end_ms": 243596,
+   "len_ms": 6426,
+   "cum_ms": 229120,
+   "score": 0.096
+  },
+  {
+   "v": 42,
+   "start_ms": 244054,
+   "end_ms": 251316,
+   "len_ms": 7262,
+   "cum_ms": 235547,
+   "score": 0.078
+  },
+  {
+   "v": 43,
+   "start_ms": 251435,
+   "end_ms": 257417,
+   "len_ms": 5982,
+   "cum_ms": 242809,
+   "score": 0.129
+  },
+  {
+   "v": 44,
+   "start_ms": 257890,
+   "end_ms": 263141,
+   "len_ms": 5250,
+   "cum_ms": 248791,
+   "score": 0.18
+  },
+  {
+   "v": 45,
+   "start_ms": 250565,
+   "end_ms": 258192,
+   "len_ms": 7627,
+   "cum_ms": 254041,
+   "score": 0.083
+  },
+  {
+   "v": 46,
+   "start_ms": 256813,
+   "end_ms": 271259,
+   "len_ms": 14445,
+   "cum_ms": 261669,
+   "score": 0.041
+  }
+ ],
+ "min_score": 0.041,
+ "mean_score": 0.108
+}

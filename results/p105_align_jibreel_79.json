@@ -1,1 +1,377 @@
-{"id": "jibreel", "error": "FileNotFoundError(2, 'No such file or directory')"}
+{
+ "id": "jibreel",
+ "surah": 79,
+ "surah_ms": 239333,
+ "verses": [
+  {
+   "v": 1,
+   "start_ms": 4440,
+   "end_ms": 8698,
+   "len_ms": 4258,
+   "cum_ms": 0,
+   "score": 0.953
+  },
+  {
+   "v": 2,
+   "start_ms": 8672,
+   "end_ms": 12956,
+   "len_ms": 4284,
+   "cum_ms": 4258,
+   "score": 0.989
+  },
+  {
+   "v": 3,
+   "start_ms": 12930,
+   "end_ms": 16718,
+   "len_ms": 3787,
+   "cum_ms": 8542,
+   "score": 0.997
+  },
+  {
+   "v": 4,
+   "start_ms": 16692,
+   "end_ms": 20323,
+   "len_ms": 3631,
+   "cum_ms": 12329,
+   "score": 1.0
+  },
+  {
+   "v": 5,
+   "start_ms": 20297,
+   "end_ms": 23954,
+   "len_ms": 3657,
+   "cum_ms": 15960,
+   "score": 0.996
+  },
+  {
+   "v": 6,
+   "start_ms": 23928,
+   "end_ms": 27507,
+   "len_ms": 3578,
+   "cum_ms": 19618,
+   "score": 0.982
+  },
+  {
+   "v": 7,
+   "start_ms": 27480,
+   "end_ms": 30772,
+   "len_ms": 3291,
+   "cum_ms": 23196,
+   "score": 0.953
+  },
+  {
+   "v": 8,
+   "start_ms": 30746,
+   "end_ms": 35578,
+   "len_ms": 4832,
+   "cum_ms": 26488,
+   "score": 1.0
+  },
+  {
+   "v": 9,
+   "start_ms": 35552,
+   "end_ms": 39079,
+   "len_ms": 3526,
+   "cum_ms": 31321,
+   "score": 0.989
+  },
+  {
+   "v": 10,
+   "start_ms": 39053,
+   "end_ms": 45818,
+   "len_ms": 6765,
+   "cum_ms": 34847,
+   "score": 0.956
+  },
+  {
+   "v": 11,
+   "start_ms": 45792,
+   "end_ms": 52453,
+   "len_ms": 6661,
+   "cum_ms": 41613,
+   "score": 0.987
+  },
+  {
+   "v": 12,
+   "start_ms": 52427,
+   "end_ms": 57756,
+   "len_ms": 5329,
+   "cum_ms": 48274,
+   "score": 1.0
+  },
+  {
+   "v": 13,
+   "start_ms": 57730,
+   "end_ms": 63085,
+   "len_ms": 5355,
+   "cum_ms": 53603,
+   "score": 0.998
+  },
+  {
+   "v": 14,
+   "start_ms": 63059,
+   "end_ms": 66899,
+   "len_ms": 3840,
+   "cum_ms": 58958,
+   "score": 0.985
+  },
+  {
+   "v": 15,
+   "start_ms": 66873,
+   "end_ms": 71131,
+   "len_ms": 4258,
+   "cum_ms": 62798,
+   "score": 0.988
+  },
+  {
+   "v": 16,
+   "start_ms": 71105,
+   "end_ms": 77453,
+   "len_ms": 6347,
+   "cum_ms": 67056,
+   "score": 0.959
+  },
+  {
+   "v": 17,
+   "start_ms": 77427,
+   "end_ms": 82703,
+   "len_ms": 5276,
+   "cum_ms": 73404,
+   "score": 0.965
+  },
+  {
+   "v": 18,
+   "start_ms": 82677,
+   "end_ms": 87640,
+   "len_ms": 4963,
+   "cum_ms": 78681,
+   "score": 0.964
+  },
+  {
+   "v": 19,
+   "start_ms": 87614,
+   "end_ms": 92264,
+   "len_ms": 4649,
+   "cum_ms": 83644,
+   "score": 0.952
+  },
+  {
+   "v": 20,
+   "start_ms": 92238,
+   "end_ms": 96000,
+   "len_ms": 3761,
+   "cum_ms": 88294,
+   "score": 0.999
+  },
+  {
+   "v": 21,
+   "start_ms": 95973,
+   "end_ms": 98586,
+   "len_ms": 2612,
+   "cum_ms": 92056,
+   "score": 1.0
+  },
+  {
+   "v": 22,
+   "start_ms": 98560,
+   "end_ms": 101694,
+   "len_ms": 3134,
+   "cum_ms": 94668,
+   "score": 1.0
+  },
+  {
+   "v": 23,
+   "start_ms": 101668,
+   "end_ms": 104829,
+   "len_ms": 3160,
+   "cum_ms": 97803,
+   "score": 0.957
+  },
+  {
+   "v": 24,
+   "start_ms": 104803,
+   "end_ms": 108956,
+   "len_ms": 4153,
+   "cum_ms": 100963,
+   "score": 0.997
+  },
+  {
+   "v": 25,
+   "start_ms": 108930,
+   "end_ms": 114834,
+   "len_ms": 5903,
+   "cum_ms": 105117,
+   "score": 0.998
+  },
+  {
+   "v": 26,
+   "start_ms": 114808,
+   "end_ms": 122096,
+   "len_ms": 7288,
+   "cum_ms": 111021,
+   "score": 0.963
+  },
+  {
+   "v": 27,
+   "start_ms": 122070,
+   "end_ms": 132075,
+   "len_ms": 10005,
+   "cum_ms": 118309,
+   "score": 0.96
+  },
+  {
+   "v": 28,
+   "start_ms": 132049,
+   "end_ms": 136124,
+   "len_ms": 4075,
+   "cum_ms": 128314,
+   "score": 0.994
+  },
+  {
+   "v": 29,
+   "start_ms": 136098,
+   "end_ms": 141270,
+   "len_ms": 5172,
+   "cum_ms": 132389,
+   "score": 0.975
+  },
+  {
+   "v": 30,
+   "start_ms": 141244,
+   "end_ms": 145632,
+   "len_ms": 4388,
+   "cum_ms": 137561,
+   "score": 0.976
+  },
+  {
+   "v": 31,
+   "start_ms": 145606,
+   "end_ms": 151771,
+   "len_ms": 6165,
+   "cum_ms": 141950,
+   "score": 0.984
+  },
+  {
+   "v": 32,
+   "start_ms": 151745,
+   "end_ms": 155089,
+   "len_ms": 3343,
+   "cum_ms": 148115,
+   "score": 0.955
+  },
+  {
+   "v": 33,
+   "start_ms": 155062,
+   "end_ms": 159268,
+   "len_ms": 4205,
+   "cum_ms": 151459,
+   "score": 0.995
+  },
+  {
+   "v": 34,
+   "start_ms": 159242,
+   "end_ms": 168751,
+   "len_ms": 9508,
+   "cum_ms": 155664,
+   "score": 0.957
+  },
+  {
+   "v": 35,
+   "start_ms": 168724,
+   "end_ms": 174628,
+   "len_ms": 5903,
+   "cum_ms": 165173,
+   "score": 0.988
+  },
+  {
+   "v": 36,
+   "start_ms": 174602,
+   "end_ms": 179565,
+   "len_ms": 4963,
+   "cum_ms": 171077,
+   "score": 0.955
+  },
+  {
+   "v": 37,
+   "start_ms": 179539,
+   "end_ms": 183823,
+   "len_ms": 4284,
+   "cum_ms": 176040,
+   "score": 0.982
+  },
+  {
+   "v": 38,
+   "start_ms": 183797,
+   "end_ms": 187689,
+   "len_ms": 3892,
+   "cum_ms": 180324,
+   "score": 0.941
+  },
+  {
+   "v": 39,
+   "start_ms": 187663,
+   "end_ms": 192000,
+   "len_ms": 4336,
+   "cum_ms": 184216,
+   "score": 0.972
+  },
+  {
+   "v": 40,
+   "start_ms": 191973,
+   "end_ms": 200333,
+   "len_ms": 8359,
+   "cum_ms": 188553,
+   "score": 1.0
+  },
+  {
+   "v": 41,
+   "start_ms": 200307,
+   "end_ms": 205087,
+   "len_ms": 4780,
+   "cum_ms": 196912,
+   "score": 0.964
+  },
+  {
+   "v": 42,
+   "start_ms": 205061,
+   "end_ms": 212245,
+   "len_ms": 7183,
+   "cum_ms": 201693,
+   "score": 0.97
+  },
+  {
+   "v": 43,
+   "start_ms": 212218,
+   "end_ms": 216816,
+   "len_ms": 4597,
+   "cum_ms": 208876,
+   "score": 0.982
+  },
+  {
+   "v": 44,
+   "start_ms": 216790,
+   "end_ms": 220891,
+   "len_ms": 4101,
+   "cum_ms": 213474,
+   "score": 0.968
+  },
+  {
+   "v": 45,
+   "start_ms": 220865,
+   "end_ms": 227526,
+   "len_ms": 6661,
+   "cum_ms": 217575,
+   "score": 0.941
+  },
+  {
+   "v": 46,
+   "start_ms": 227500,
+   "end_ms": 237505,
+   "len_ms": 10005,
+   "cum_ms": 224236,
+   "score": 0.984
+  }
+ ],
+ "min_score": 0.941,
+ "mean_score": 0.978
+}

@@ -1,1 +1,377 @@
-{"id": "yasser", "error": "FileNotFoundError(2, 'No such file or directory')"}
+{
+ "id": "yasser",
+ "surah": 79,
+ "surah_ms": 231706,
+ "verses": [
+  {
+   "v": 1,
+   "start_ms": 8104,
+   "end_ms": 12232,
+   "len_ms": 4127,
+   "cum_ms": 0,
+   "score": 0.105
+  },
+  {
+   "v": 2,
+   "start_ms": 59851,
+   "end_ms": 64005,
+   "len_ms": 4153,
+   "cum_ms": 4127,
+   "score": 0.108
+  },
+  {
+   "v": 3,
+   "start_ms": 61772,
+   "end_ms": 65038,
+   "len_ms": 3265,
+   "cum_ms": 8280,
+   "score": 0.146
+  },
+  {
+   "v": 4,
+   "start_ms": 217254,
+   "end_ms": 220441,
+   "len_ms": 3186,
+   "cum_ms": 11546,
+   "score": 0.109
+  },
+  {
+   "v": 5,
+   "start_ms": 195032,
+   "end_ms": 198428,
+   "len_ms": 3396,
+   "cum_ms": 14733,
+   "score": 0.12
+  },
+  {
+   "v": 6,
+   "start_ms": 4099,
+   "end_ms": 7312,
+   "len_ms": 3213,
+   "cum_ms": 18129,
+   "score": 0.125
+  },
+  {
+   "v": 7,
+   "start_ms": 60676,
+   "end_ms": 63262,
+   "len_ms": 2586,
+   "cum_ms": 21342,
+   "score": 0.106
+  },
+  {
+   "v": 8,
+   "start_ms": 213384,
+   "end_ms": 218817,
+   "len_ms": 5433,
+   "cum_ms": 23928,
+   "score": 0.089
+  },
+  {
+   "v": 9,
+   "start_ms": 160803,
+   "end_ms": 163990,
+   "len_ms": 3186,
+   "cum_ms": 29361,
+   "score": 0.109
+  },
+  {
+   "v": 10,
+   "start_ms": 219914,
+   "end_ms": 227280,
+   "len_ms": 7366,
+   "cum_ms": 32548,
+   "score": 0.091
+  },
+  {
+   "v": 11,
+   "start_ms": 101377,
+   "end_ms": 107411,
+   "len_ms": 6034,
+   "cum_ms": 39915,
+   "score": 0.109
+  },
+  {
+   "v": 12,
+   "start_ms": 158968,
+   "end_ms": 165081,
+   "len_ms": 6112,
+   "cum_ms": 45949,
+   "score": 0.095
+  },
+  {
+   "v": 13,
+   "start_ms": 220350,
+   "end_ms": 226202,
+   "len_ms": 5851,
+   "cum_ms": 52062,
+   "score": 0.109
+  },
+  {
+   "v": 14,
+   "start_ms": 200637,
+   "end_ms": 205026,
+   "len_ms": 4388,
+   "cum_ms": 57914,
+   "score": 0.096
+  },
+  {
+   "v": 15,
+   "start_ms": 189901,
+   "end_ms": 193506,
+   "len_ms": 3605,
+   "cum_ms": 62302,
+   "score": 0.125
+  },
+  {
+   "v": 16,
+   "start_ms": 6619,
+   "end_ms": 12627,
+   "len_ms": 6008,
+   "cum_ms": 65907,
+   "score": 0.092
+  },
+  {
+   "v": 17,
+   "start_ms": 214685,
+   "end_ms": 220615,
+   "len_ms": 5929,
+   "cum_ms": 71915,
+   "score": 0.081
+  },
+  {
+   "v": 18,
+   "start_ms": 60669,
+   "end_ms": 65528,
+   "len_ms": 4858,
+   "cum_ms": 77845,
+   "score": 0.101
+  },
+  {
+   "v": 19,
+   "start_ms": 214032,
+   "end_ms": 218552,
+   "len_ms": 4519,
+   "cum_ms": 82704,
+   "score": 0.108
+  },
+  {
+   "v": 20,
+   "start_ms": 45497,
+   "end_ms": 49546,
+   "len_ms": 4049,
+   "cum_ms": 87223,
+   "score": 0.084
+  },
+  {
+   "v": 21,
+   "start_ms": 199239,
+   "end_ms": 202243,
+   "len_ms": 3004,
+   "cum_ms": 91272,
+   "score": 0.128
+  },
+  {
+   "v": 22,
+   "start_ms": 95983,
+   "end_ms": 100502,
+   "len_ms": 4519,
+   "cum_ms": 94277,
+   "score": 0.092
+  },
+  {
+   "v": 23,
+   "start_ms": 73690,
+   "end_ms": 76511,
+   "len_ms": 2821,
+   "cum_ms": 98796,
+   "score": 0.164
+  },
+  {
+   "v": 24,
+   "start_ms": 207805,
+   "end_ms": 212142,
+   "len_ms": 4336,
+   "cum_ms": 101617,
+   "score": 0.103
+  },
+  {
+   "v": 25,
+   "start_ms": 50914,
+   "end_ms": 57497,
+   "len_ms": 6582,
+   "cum_ms": 105953,
+   "score": 0.087
+  },
+  {
+   "v": 26,
+   "start_ms": 171102,
+   "end_ms": 178338,
+   "len_ms": 7236,
+   "cum_ms": 112536,
+   "score": 0.07
+  },
+  {
+   "v": 27,
+   "start_ms": 52383,
+   "end_ms": 62362,
+   "len_ms": 9978,
+   "cum_ms": 119772,
+   "score": 0.065
+  },
+  {
+   "v": 28,
+   "start_ms": 8326,
+   "end_ms": 12924,
+   "len_ms": 4597,
+   "cum_ms": 129751,
+   "score": 0.083
+  },
+  {
+   "v": 29,
+   "start_ms": 199794,
+   "end_ms": 204627,
+   "len_ms": 4832,
+   "cum_ms": 134349,
+   "score": 0.097
+  },
+  {
+   "v": 30,
+   "start_ms": 58075,
+   "end_ms": 62516,
+   "len_ms": 4440,
+   "cum_ms": 139182,
+   "score": 0.082
+  },
+  {
+   "v": 31,
+   "start_ms": 77434,
+   "end_ms": 84670,
+   "len_ms": 7236,
+   "cum_ms": 143622,
+   "score": 0.081
+  },
+  {
+   "v": 32,
+   "start_ms": 214124,
+   "end_ms": 217598,
+   "len_ms": 3474,
+   "cum_ms": 150858,
+   "score": 0.134
+  },
+  {
+   "v": 33,
+   "start_ms": 102779,
+   "end_ms": 107455,
+   "len_ms": 4676,
+   "cum_ms": 154333,
+   "score": 0.082
+  },
+  {
+   "v": 34,
+   "start_ms": 169586,
+   "end_ms": 181916,
+   "len_ms": 12329,
+   "cum_ms": 159009,
+   "score": 0.05
+  },
+  {
+   "v": 35,
+   "start_ms": 2252,
+   "end_ms": 8391,
+   "len_ms": 6138,
+   "cum_ms": 171339,
+   "score": 0.08
+  },
+  {
+   "v": 36,
+   "start_ms": 59702,
+   "end_ms": 64744,
+   "len_ms": 5041,
+   "cum_ms": 177477,
+   "score": 0.104
+  },
+  {
+   "v": 37,
+   "start_ms": 193249,
+   "end_ms": 197037,
+   "len_ms": 3787,
+   "cum_ms": 182519,
+   "score": 0.126
+  },
+  {
+   "v": 38,
+   "start_ms": 114714,
+   "end_ms": 118684,
+   "len_ms": 3970,
+   "cum_ms": 186307,
+   "score": 0.09
+  },
+  {
+   "v": 39,
+   "start_ms": 105738,
+   "end_ms": 110571,
+   "len_ms": 4832,
+   "cum_ms": 190277,
+   "score": 0.122
+  },
+  {
+   "v": 40,
+   "start_ms": 67255,
+   "end_ms": 76476,
+   "len_ms": 9221,
+   "cum_ms": 195110,
+   "score": 0.061
+  },
+  {
+   "v": 41,
+   "start_ms": 27832,
+   "end_ms": 34127,
+   "len_ms": 6295,
+   "cum_ms": 204331,
+   "score": 0.082
+  },
+  {
+   "v": 42,
+   "start_ms": 59021,
+   "end_ms": 64298,
+   "len_ms": 5276,
+   "cum_ms": 210627,
+   "score": 0.106
+  },
+  {
+   "v": 43,
+   "start_ms": 78308,
+   "end_ms": 84082,
+   "len_ms": 5773,
+   "cum_ms": 215904,
+   "score": 0.122
+  },
+  {
+   "v": 44,
+   "start_ms": 124873,
+   "end_ms": 129523,
+   "len_ms": 4649,
+   "cum_ms": 221677,
+   "score": 0.133
+  },
+  {
+   "v": 45,
+   "start_ms": 74222,
+   "end_ms": 83235,
+   "len_ms": 9012,
+   "cum_ms": 226327,
+   "score": 0.076
+  },
+  {
+   "v": 46,
+   "start_ms": 3085,
+   "end_ms": 13403,
+   "len_ms": 10318,
+   "cum_ms": 235339,
+   "score": 0.055
+  }
+ ],
+ "min_score": 0.05,
+ "mean_score": 0.1
+}
