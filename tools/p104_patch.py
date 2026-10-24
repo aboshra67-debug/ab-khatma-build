@@ -1,4 +1,4 @@
-"""P104 VC129 patch applied after the P103 patch.
+"""P104 VC130 patch applied after the P103 patch.
 Audio only: consecutive verses recited as separate files no longer stop between them
 (the next prepared verse takes over a moment before the silent end of the current file).
 Every anchor is asserted exactly once; no signing, no data migration."""
@@ -23,11 +23,11 @@ edit(audio, "    private var switchWhenReady = false\n", r'''    private var swi
     // P104: a verse file ends with a short silence. When the next verse is already prepared it takes over a moment
     // before the end of the current file, so verses that continue one sentence (e.g. the oaths at the start of
     // surat An-Nazi'at) are heard without an audible stop. The old player is released a little later: nothing is cut.
-    private const val EARLY_SWITCH_MS = 180
+    private const val EARLY_SWITCH_MS = 210
     private val earlyRunnable = object : Runnable {
         override fun run() {
             earlyTick()
-            if (player != null) main.postDelayed(this, 25)
+            if (player != null) main.postDelayed(this, 10)
         }
     }
 
@@ -67,13 +67,40 @@ edit(audio, "main.removeCallbacks(progressRunnable); main.post(progressRunnable)
 edit(audio, "        main.removeCallbacks(segRunnable)\n        player?.let { p ->\n",
      "        main.removeCallbacks(segRunnable)\n        main.removeCallbacks(earlyRunnable)\n        player?.let { p ->\n")
 
-# 4. Sudais plays the whole surah in ONE file with verse timings (like the reciters that already have them) ---
-# The timing source (mp3quran.net read 54) describes the recording in cdn.mp3quran.net/audio/abdulrahman-sudais/r1/,
-# so the surah file moves to that same folder. Verse-by-verse files stay as the fallback.
-edit(audio, 'Q + "abdurrahmaan_as-sudays/", MUR, "Abdurrahmaan_As-Sudais_192kbps"',
-     'M + "abdulrahman-sudais/r1/", MUR, "Abdurrahmaan_As-Sudais_192kbps"')
+# 4. 21 reciters play the whole surah in ONE file with verse timings (continuous, like the reciters that already have them) ---
+# Each timing comes from mp3quran.net (read id = moshaf id) and describes the recording in the same cdn.mp3quran.net folder,
+# so the surah file moves to that folder. Verse-by-verse files stay as the fallback (and if the timings do not fit the file
+# the player already falls back to them). Every moshaf below was checked: hafs murattal, except where the style is stated.
+SEG = [
+    # (reciter id, old Q folder or None, new M folder, mp3quran read id)
+    ("sudais", "abdurrahmaan_as-sudays/", "abdulrahman-sudais/r1/", 54),
+    ("abdulbasit_murattal", "abdul_basit_murattal/", "abdulbasit-abdulsamad/r3/", 53),
+    ("abdulbasit_mujawwad", "abdulbaset_mujawwad/", "abdulbasit-abdulsamad/r1/", 51),
+    ("mostafa_ismaeel", "mostafa_ismaeel/", "mustafa-ismail/r2/", 288),
+    ("tablawi", "mohammad_altablawi/", "muhammad-tablawi/r1/", 106),
+    ("shuraym", "sa3ood_al-shuraym/", "saud-shuraim/r1/", 31),
+    ("dossari", "yasser_ad-dussary/", "yasser-dosari/r1/", 92),
+    ("juhany", "abdullaah_3awwaad_al-juhaynee/", "abdullah-juhani/r1/", 62),
+    ("huthaify", "huthayfi/", "ali-hudhaifi/r1/", 74),
+    ("budair", "salahbudair/", "salah-budair/r1/", 43),
+    ("thubaity", "thubaity/", "abdulbari-thubaiti/r1/", 49),
+    ("basfar", "abdullaah_basfar/", "abdullah-basfar/r1/", 60),
+    ("ali_jaber", "abdullaah_alee_jaabir_studio/", "ali-jaber/r1/", 76),
+    ("ghamdi", "sa3d_al-ghaamidi/complete/", "saad-ghamdi/r1/", 30),
+    ("ajmy", "ahmed_ibn_3ali_al-3ajamy/", "ahmad-ajmi/r1/", 5),
+    ("shatri", "abu_bakr_ash-shaatree/", "abubakr-shatri/r1/", 4),
+    ("bukhatir", "salaah_bukhaatir/", "salah-bukhatir/r1/", 46),
+    ("qatami", "nasser_bin_ali_alqatami/", "nasser-qatami/r1/", 86),
+    ("hani_rifai", "rifai/", "hani-rifai/r1/", 89),
+    ("qahtani", "khaalid_al-qahtaanee/", "khalid-qahtani/r1/", 21),
+    ("akram", "akram_al_alaqmi/", "akram-alaqmi/r1/", 10),
+]
+assert len(SEG) == 21 and len({x[0] for x in SEG}) == 21
+for rid, old, new, read in SEG:
+    edit(audio, 'Q + "%s", ' % old, 'M + "%s", ' % new)
 timing = j / "quran/P66Timing.kt"
-edit(timing, '        "maher_mujawwad" to 133,\n', '        "maher_mujawwad" to 133,\n        "sudais" to 54,\n')
+edit(timing, '        "maher_mujawwad" to 133,\n',
+     '        "maher_mujawwad" to 133,\n' + "".join('        "%s" to %d,\n' % (rid, read) for rid, _, _, read in SEG))
 
 # 5. a timed surah is saved on the phone first and played from the file, not streamed -------------
 # MediaPlayer streaming of one long file stalls on a weak connection (the "loading" stops). Surahs up to 40 MB are
@@ -125,6 +152,6 @@ edit(audio, "            p.setDataSource(r.surahUrl(s))\n",
 
 # 6. version -----------------------------------------------------------------------------
 g = root / "app/build.gradle.kts"
-edit(g, "versionCode = 126", "versionCode = 129")
-edit(g, 'versionName = "0.19.97-p103-qa-only"', 'versionName = "0.19.100-p104-audio-qa-only"')
+edit(g, "versionCode = 126", "versionCode = 130")
+edit(g, 'versionName = "0.19.97-p103-qa-only"', 'versionName = "0.19.101-p104-audio-qa-only"')
 print("P104 patch applied")

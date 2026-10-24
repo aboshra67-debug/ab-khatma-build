@@ -1,4 +1,4 @@
-name: P104 VC129 Safe Android CI
+name: P104 VC130 Safe Android CI
 on:
   push:
     branches: [feat/p104-audio-20261024]
@@ -60,7 +60,7 @@ jobs:
           python3 tools/p104_patch.py "$S"
           mkdir -p "$S/BUILD_REPRODUCIBILITY/p104"
           cp tools/p104_patch.py "$S/BUILD_REPRODUCIBILITY/p104/p104_patch.py"
-          grep -q 'versionCode = 129' "$S/app/build.gradle.kts"
+          grep -q 'versionCode = 130' "$S/app/build.gradle.kts"
           grep -q 'EARLY_SWITCH_MS = 180' "$S/app/src/main/java/com/ab/khatma/quran/P52SurahAudio.kt"
       - name: Retrieve same pinned Firebase public client settings as P95
         run: |
@@ -106,11 +106,11 @@ jobs:
           set -euo pipefail
           S=src/AB_Khatma_P100_VC123_SAFE_SOURCE
           mkdir -p safe_source unsigned ci_tests
-          cp "$S/app/build/outputs/apk/release/app-release-unsigned.apk" unsigned/P104_VC129_UNSIGNED_REVIEW.apk
+          cp "$S/app/build/outputs/apk/release/app-release-unsigned.apk" unsigned/P104_VC130_UNSIGNED_REVIEW.apk
           AAB=$(find "$S/app/build/outputs/bundle/release" -maxdepth 1 -name '*.aab' -print -quit)
           test -n "$AAB"
-          cp "$AAB" unsigned/P104_VC129_UNSIGNED_AAB_REVIEW.aab
-          test "$(unzip -l unsigned/P104_VC129_UNSIGNED_REVIEW.apk | grep -c 'assets/quran_pages_colored/.*\.webp')" -eq 604
+          cp "$AAB" unsigned/P104_VC130_UNSIGNED_AAB_REVIEW.aab
+          test "$(unzip -l unsigned/P104_VC130_UNSIGNED_REVIEW.apk | grep -c 'assets/quran_pages_colored/.*\.webp')" -eq 604
           mv "$GITHUB_WORKSPACE/plain_hold" "$S/app/src/main/assets/quran_pages"
           keytool -genkeypair -keystore /tmp/p103-ci.jks -alias ci -storepass android -keypass android -dname "CN=Disposable Android CI" -keyalg RSA -validity 2
           java -jar "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" sign --ks /tmp/p103-ci.jks --ks-key-alias ci --ks-pass pass:android --key-pass pass:android --v4-signing-enabled false --out ci_tests/p103-ci-app.apk "$(find "$S/app/build/outputs/apk/debug" -maxdepth 1 -name '*.apk' -print -quit)"
@@ -130,26 +130,26 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: AB-Khatma-P102-VC129-P104-UNSIGNED-REVIEW
+          name: AB-Khatma-P102-VC130-P104-UNSIGNED-REVIEW
           path: unsigned/*
           retention-days: 30
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
-          name: AB-Khatma-P102-VC129-P104-COMPLETE-SAFE-SOURCE
+          name: AB-Khatma-P102-VC130-P104-COMPLETE-SAFE-SOURCE
           path: safe_source/*
           retention-days: 30
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
-          name: AB-Khatma-P102-VC129-P104-CI-TEST-APKS
+          name: AB-Khatma-P102-VC130-P104-CI-TEST-APKS
           path: ci_tests/*
           retention-days: 7
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: AB-Khatma-P102-VC129-P104-UNIT-TEST-REPORT
+          name: AB-Khatma-P102-VC130-P104-UNIT-TEST-REPORT
           path: src/AB_Khatma_P100_VC123_SAFE_SOURCE/app/build/test-results/testDebugUnitTest/*
           retention-days: 30
 
@@ -164,7 +164,7 @@ jobs:
           java-version: '17'
       - uses: actions/download-artifact@v4
         with:
-          name: AB-Khatma-P102-VC129-P104-CI-TEST-APKS
+          name: AB-Khatma-P102-VC130-P104-CI-TEST-APKS
           path: ci_tests
       - name: Enable KVM
         run: |
@@ -191,7 +191,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: AB-Khatma-P102-VC129-P104-ANDROID-TEST-RESULTS
+          name: AB-Khatma-P102-VC130-P104-ANDROID-TEST-RESULTS
           path: p103-main-results.txt
           retention-days: 30
           if-no-files-found: warn
