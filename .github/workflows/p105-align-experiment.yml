@@ -1,0 +1,22 @@
+name: P105 align experiment (data only, no app build)
+on:
+  push:
+    branches: [exp/p105-align-20261025]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install numpy
+      - name: Align surah 79 for the four reciters
+        run: python3 tools/p105_align.py 79 46
+      - name: Save results on the branch
+        run: |
+          git config user.name "p105-bot"
+          git config user.email "p105-bot@users.noreply.github.com"
+          git add results
+          git commit -m "data(P105): alignment experiment results" || true
+          git push origin HEAD:exp/p105-align-20261025
