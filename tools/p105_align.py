@@ -7,9 +7,7 @@ from numpy.fft import rfft, irfft
 SR = 8000
 
 def fetch(url, path):
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=120) as r, open(path, "wb") as f:
-        f.write(r.read())
+    subprocess.run(["curl", "-sS", "-L", "--fail", "--max-time", "90", "--retry", "2", "-A", "Mozilla/5.0", "-o", path, url], check=True)
 
 def decode(path):
     out = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"],
@@ -27,8 +25,10 @@ def match(win, x):
     return k, float(sc[k])
 
 def run(rid, surah_url, verse_fmt, surah, nverses):
+    print("surah", surah_url, flush=True)
     fetch(surah_url, "/tmp/surah.mp3")
     S = decode("/tmp/surah.mp3")
+    print("decoded", len(S) / SR, flush=True)
     res = {"id": rid, "surah": surah, "surah_ms": int(len(S) / SR * 1000), "verses": []}
     pos = 0
     cum = 0
@@ -49,6 +49,7 @@ def run(rid, surah_url, verse_fmt, surah, nverses):
                               "len_ms": int(len(x) / SR * 1000), "cum_ms": int(cum / SR * 1000), "score": round(sc, 3)})
         pos = start + len(x)
         cum += len(x)
+        print(rid, v, round(sc, 3), flush=True)
     sc = [a["score"] for a in res["verses"] if "score" in a]
     res["min_score"] = min(sc)
     res["mean_score"] = round(sum(sc) / len(sc), 3)
