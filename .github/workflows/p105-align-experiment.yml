@@ -8,12 +8,12 @@ permissions:
 jobs:
   align:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg && pip install numpy
+      - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg && pip install numpy librosa
       - name: Align surah 79 for the four reciters
-        run: mkdir -p results && python3 tools/p105_align.py 79 46 maher
+        run: mkdir -p results && python3 tools/p105_dtw.py 79 46
       - name: Save results on the branch
         if: always()
         run: |
