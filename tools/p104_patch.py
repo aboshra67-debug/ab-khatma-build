@@ -1,4 +1,4 @@
-"""P104 VC127 patch applied after the P103 patch.
+"""P104 VC128 patch applied after the P103 patch.
 Audio only: consecutive verses recited as separate files no longer stop between them
 (the next prepared verse takes over a moment before the silent end of the current file).
 Every anchor is asserted exactly once; no signing, no data migration."""
@@ -67,8 +67,16 @@ edit(audio, "main.removeCallbacks(progressRunnable); main.post(progressRunnable)
 edit(audio, "        main.removeCallbacks(segRunnable)\n        player?.let { p ->\n",
      "        main.removeCallbacks(segRunnable)\n        main.removeCallbacks(earlyRunnable)\n        player?.let { p ->\n")
 
-# 4. version -----------------------------------------------------------------------------
+# 4. Sudais plays the whole surah in ONE file with verse timings (like the reciters that already have them) ---
+# The timing source (mp3quran.net read 54) describes the recording in cdn.mp3quran.net/audio/abdulrahman-sudais/r1/,
+# so the surah file moves to that same folder. Verse-by-verse files stay as the fallback.
+edit(audio, 'Q + "abdurrahmaan_as-sudays/", MUR, "Abdurrahmaan_As-Sudais_192kbps"',
+     'M + "abdulrahman-sudais/r1/", MUR, "Abdurrahmaan_As-Sudais_192kbps"')
+timing = j / "quran/P66Timing.kt"
+edit(timing, '        "maher_mujawwad" to 133,\n', '        "maher_mujawwad" to 133,\n        "sudais" to 54,\n')
+
+# 5. version -----------------------------------------------------------------------------
 g = root / "app/build.gradle.kts"
-edit(g, "versionCode = 126", "versionCode = 127")
-edit(g, 'versionName = "0.19.97-p103-qa-only"', 'versionName = "0.19.98-p104-audio-qa-only"')
+edit(g, "versionCode = 126", "versionCode = 128")
+edit(g, 'versionName = "0.19.97-p103-qa-only"', 'versionName = "0.19.99-p104-audio-qa-only"')
 print("P104 patch applied")
