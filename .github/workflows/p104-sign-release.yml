@@ -24,11 +24,11 @@ jobs:
           TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
           yes | "$TOOL" --licenses >/dev/null || true
           "$TOOL" "build-tools;36.0.0"
-      - name: Download the reviewed unsigned build (run 40097073387)
+      - name: Download the reviewed unsigned build (run 40100842046)
         uses: actions/download-artifact@v4
         with:
           name: AB-Khatma-P102-VC127-P104-UNSIGNED-REVIEW
-          run-id: 40097073387
+          run-id: 40100842046
           github-token: ${{ github.token }}
           path: unsigned
       - name: Sign AAB and APK with the original key and verify the fingerprint
