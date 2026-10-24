@@ -1,11 +1,13 @@
-"""P104 VC130 patch applied after the P103 patch.
+"""P104 VC131 patch applied after the P103 patch.
 Audio only: consecutive verses recited as separate files no longer stop between them
 (the next prepared verse takes over a moment before the silent end of the current file).
 Every anchor is asserted exactly once; no signing, no data migration."""
+import shutil
 import sys
 from pathlib import Path
 
 root = Path(sys.argv[1]).resolve()
+overlay = Path(sys.argv[2]).resolve()
 j = root / "app/src/main/java/com/ab/khatma"
 
 
@@ -23,7 +25,11 @@ edit(audio, "    private var switchWhenReady = false\n", r'''    private var swi
     // P104: a verse file ends with a short silence. When the next verse is already prepared it takes over a moment
     // before the end of the current file, so verses that continue one sentence (e.g. the oaths at the start of
     // surat An-Nazi'at) are heard without an audible stop. The old player is released a little later: nothing is cut.
-    private const val EARLY_SWITCH_MS = 210
+    private const val EARLY_SWITCH_MS = 210          // used while a verse has not been measured yet
+    private const val SWITCH_LATENCY_MS = 40         // time a prepared player needs to be heard after start()
+    private const val TARGET_GAP_MS = 30             // the small silence left between two verses
+    private var curSrc: String? = null
+    private var nextSrc: String? = null
     private val earlyRunnable = object : Runnable {
         override fun run() {
             earlyTick()
@@ -40,7 +46,12 @@ edit(audio, "    private var switchWhenReady = false\n", r'''    private var swi
         val dur = runCatching { p.duration }.getOrDefault(0)
         if (dur <= 0) return
         val pos = runCatching { p.currentPosition }.getOrDefault(0)
-        val lead = (EARLY_SWITCH_MS * speed).toInt()
+        val a = curSrc?.let { P104Silence.get(it) }
+        val b = nextSrc?.let { P104Silence.get(it) }
+        // Start the next verse so that its own leading silence runs while this verse's trailing silence runs.
+        val lead = if (a != null && b != null)
+            (a.tailMs + b.headMs + (SWITCH_LATENCY_MS - TARGET_GAP_MS) * speed).toInt().coerceAtLeast(0)
+        else (EARLY_SWITCH_MS * speed).toInt()
         if (dur - pos <= lead) switchToNext()
     }
 ''')
@@ -150,8 +161,22 @@ r'''        // P104: save a moderate surah on the phone first; play from the fil
 edit(audio, "            p.setDataSource(r.surahUrl(s))\n",
      "            p.setDataSource(P91OfflineAudio.saved(ctx, r.surahUrl(s))?.absolutePath ?: r.surahUrl(s))\n")
 
+# 5b. measure the silence of every verse file that is on the phone -------------------------------
+shutil.copy(overlay / "P104Silence.kt", j / "quran/P104Silence.kt")
+edit(audio, "        return P64AyahCache.cached(url)?.absolutePath ?: url\n",
+     """        val localVerse = P64AyahCache.cached(url)?.absolutePath
+        if (localVerse != null) { P104Silence.measureLater(localVerse); return localVerse }
+        return url
+""")
+edit(audio, "            p.setDataSource(sourceFor(r, surah))\n",
+     "            val verseSrc = sourceFor(r, surah)\n            curSrc = verseSrc\n            p.setDataSource(verseSrc)\n")
+edit(audio, "            n.setDataSource(sourceFor(reciter, item))\n",
+     "            val nextVerseSrc = sourceFor(reciter, item)\n            nextSrc = nextVerseSrc\n            n.setDataSource(nextVerseSrc)\n")
+edit(audio, "        val old = player\n        index += 1\n        message = null\n        player = n\n",
+     "        val old = player\n        index += 1\n        message = null\n        player = n\n        curSrc = nextSrc\n")
+
 # 6. version -----------------------------------------------------------------------------
 g = root / "app/build.gradle.kts"
-edit(g, "versionCode = 126", "versionCode = 130")
-edit(g, 'versionName = "0.19.97-p103-qa-only"', 'versionName = "0.19.101-p104-audio-qa-only"')
+edit(g, "versionCode = 126", "versionCode = 131")
+edit(g, 'versionName = "0.19.97-p103-qa-only"', 'versionName = "0.19.102-p104-audio-qa-only"')
 print("P104 patch applied")
