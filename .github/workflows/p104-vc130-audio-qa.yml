@@ -61,7 +61,7 @@ jobs:
           mkdir -p "$S/BUILD_REPRODUCIBILITY/p104"
           cp tools/p104_patch.py "$S/BUILD_REPRODUCIBILITY/p104/p104_patch.py"
           grep -q 'versionCode = 130' "$S/app/build.gradle.kts"
-          grep -q 'EARLY_SWITCH_MS = 180' "$S/app/src/main/java/com/ab/khatma/quran/P52SurahAudio.kt"
+          grep -q 'EARLY_SWITCH_MS = 210' "$S/app/src/main/java/com/ab/khatma/quran/P52SurahAudio.kt"
       - name: Retrieve same pinned Firebase public client settings as P95
         run: |
           set -euo pipefail
