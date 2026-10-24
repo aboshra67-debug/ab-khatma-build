@@ -1,6 +1,7 @@
 """Experiment: locate every EveryAyah verse file inside the whole-surah recording (same reciter) by waveform matching.
 Output: results/p105_align_<id>_<surah>.json  (start/end of every verse inside the surah file + match score)."""
-import json, subprocess, sys, urllib.request, numpy as np
+import json, os, subprocess, sys, urllib.request, numpy as np
+os.makedirs("results", exist_ok=True)
 from numpy.fft import rfft, irfft
 
 SR = 8000
