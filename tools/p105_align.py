@@ -35,8 +35,11 @@ def run(rid, surah_url, verse_fmt, surah, nverses):
     for v in range(1, nverses + 1):
         fetch(verse_fmt % (surah, v), "/tmp/v.mp3")
         x = decode("/tmp/v.mp3")
-        lo = max(0, pos - 2 * SR)
+        lo = max(0, min(pos, len(S) - len(x)) - 2 * SR)
         hi = min(len(S), pos + len(x) + 10 * SR)
+        if hi - lo < len(x) + 1:
+            res["verses"].append({"v": v, "error": "window empty", "pos_ms": int(pos / SR * 1000), "len_ms": int(len(x) / SR * 1000)})
+            break
         k, sc = match(S[lo:hi], x)
         start = lo + k
         if sc < 0.5:  # retry with the whole file
@@ -46,7 +49,7 @@ def run(rid, surah_url, verse_fmt, surah, nverses):
                               "len_ms": int(len(x) / SR * 1000), "cum_ms": int(cum / SR * 1000), "score": round(sc, 3)})
         pos = start + len(x)
         cum += len(x)
-    sc = [a["score"] for a in res["verses"]]
+    sc = [a["score"] for a in res["verses"] if "score" in a]
     res["min_score"] = min(sc)
     res["mean_score"] = round(sum(sc) / len(sc), 3)
     json.dump(res, open("results/p105_align_%s_%d.json" % (rid, surah), "w"), ensure_ascii=False, indent=1)
@@ -61,9 +64,13 @@ if __name__ == "__main__":
         ("jibreel", "https://download.quranicaudio.com/quran/muhammad_jibreel/complete/%03d.mp3" % surah, E % "Muhammad_Jibreel_128kbps"),
         ("yasser", "https://cdn.mp3quran.net/audio/yasser-salama/r1/%03d.mp3" % surah, E % "Yaser_Salamah_128kbps"),
     ]
+    only = sys.argv[3] if len(sys.argv) > 3 else None
     for rid, su, vf in cfg:
+        if only and rid != only:
+            continue
         try:
             run(rid, su, vf, surah, nv)
         except Exception as ex:
+            import traceback; traceback.print_exc()
             print(rid, "FAILED", repr(ex))
             json.dump({"id": rid, "error": repr(ex)}, open("results/p105_align_%s_%d.json" % (rid, surah), "w"))

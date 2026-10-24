@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg && pip install numpy
       - name: Align surah 79 for the four reciters
-        run: mkdir -p results && python3 tools/p105_align.py 79 46
+        run: mkdir -p results && python3 tools/p105_align.py 79 46 maher
       - name: Save results on the branch
         if: always()
         run: |
