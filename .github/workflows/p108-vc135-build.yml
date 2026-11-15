@@ -71,7 +71,7 @@ jobs:
           grep -q 'versionCode = 135' "$S/app/build.gradle.kts"
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
           mkdir -p "$S/BUILD_REPRODUCIBILITY/p108"
-          cp p108_files/p108/* "$S/BUILD_REPRODUCIBILITY/p108/"
+          cp p108_files/p108/p108_patch.py p108_files/p108/*.kt p108_files/p108/*.png "$S/BUILD_REPRODUCIBILITY/p108/"
       - name: Download verified P106 compiled public client settings
         uses: actions/download-artifact@v4
         with:
