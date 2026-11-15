@@ -90,9 +90,9 @@ jobs:
           with zipfile.ZipFile(apk) as z:
               dex=b''.join(z.read(n) for n in z.namelist() if n.startswith('classes') and n.endswith('.dex'))
           checks = {
-              'KHATMA_FIREBASE_API_KEY': (rb'AIza[0-9A-Za-z_\\-]{30,60}', 'd4ea8a31c69e4c7111f479ed6b40e7e350c82b7276502b601d04aa1bb96d451a'),
+              'KHATMA_FIREBASE_API_KEY': (rb'AIza[0-9A-Za-z_-]{30,60}', 'd4ea8a31c69e4c7111f479ed6b40e7e350c82b7276502b601d04aa1bb96d451a'),
               'KHATMA_FIREBASE_APP_ID': (rb'1:[0-9]{6,20}:android:[a-f0-9]{10,50}', '7ce83522c17b4c00b700a06f9825fb24cb4bfb02f108b6a8f2786f218f54bdfd'),
-              'KHATMA_GOOGLE_WEB_CLIENT_ID': (rb'[0-9]{10,20}-[a-z0-9]{20,50}\\.apps\\.googleusercontent\\.com', '3d3f44f50125801e9c6740b7e1fb4414156f6b9035934801a422ed20a90ed1ba'),
+              'KHATMA_GOOGLE_WEB_CLIENT_ID': (rb'[0-9]{10,20}-[a-z0-9]{20,50}[.]apps[.]googleusercontent[.]com', '3d3f44f50125801e9c6740b7e1fb4414156f6b9035934801a422ed20a90ed1ba'),
           }
           values={}
           for key,(pat,want) in checks.items():
@@ -103,7 +103,7 @@ jobs:
               values[key]=val.decode('ascii')
           Path('configs').mkdir(exist_ok=True)
           Path('configs/android_client_config.txt').write_text(
-              '\\n'.join(f'{key}={shlex.quote(val)}' for key,val in values.items())+'\\n'
+              chr(10).join(f'{key}={shlex.quote(val)}' for key,val in values.items())+chr(10)
           )
           print('Recovered and verified three public P106 client settings without printing values.')
           PY
