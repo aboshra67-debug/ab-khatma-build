@@ -60,7 +60,9 @@ jobs:
           PY
           python3 -m py_compile p115_build/p115_patch.py
           python3 p115_build/p115_patch.py "$S"
+          python3 tools/p115_compile_fix.py "$S"
           cp p115_build/p115_patch.py "$S/BUILD_REPRODUCIBILITY/p115/"
+          cp tools/p115_compile_fix.py "$S/BUILD_REPRODUCIBILITY/p115/"
           grep -q 'versionCode = 142' "$S/app/build.gradle.kts"
           grep -q 'P115GuidedMushafScreen' "$S/app/src/main/java/com/ab/khatma/ui/screens/P114QuranLearningScreen.kt"
           grep -q 'onPageViewed?.invoke(currentPage)' "$S/app/src/main/java/com/ab/khatma/ui/screens/P61Flow.kt"
