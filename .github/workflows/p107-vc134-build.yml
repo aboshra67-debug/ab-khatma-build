@@ -72,26 +72,41 @@ jobs:
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
           mkdir -p "$S/BUILD_REPRODUCIBILITY/p107"
           cp p107/tools/p107_patch.py p107/android_p107/*.kt "$S/BUILD_REPRODUCIBILITY/p107/"
-      - name: Retrieve pinned public Firebase client config
+      - name: Download verified P106 compiled public client settings
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P102-VC133-P104-UNSIGNED-REVIEW
+          run-id: 40139791406
+          github-token: ${{ github.token }}
+          path: compiled_baseline
+      - name: Recover only fingerprint-checked public client constants from P106 APK
         run: |
           set -euo pipefail
-          node <<'JS'
-          const {chromium}=require('/tmp/browser/node_modules/playwright');
-          (async()=>{
-            const browser=await chromium.launch({headless:true});
-            try {
-              const page=await browser.newPage({acceptDownloads:true});
-              await page.goto('https://firestorage.ai/ja/f/nBo1EY9iX-PP',{waitUntil:'domcontentloaded',timeout:60000});
-              const button=page.getByRole('button',{name:'ダウンロード',exact:true});
-              await button.waitFor({state:'visible',timeout:60000});
-              const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),button.click()]);
-              await download.saveAs('public_config.zip');
-            } finally {await browser.close()}
-          })().catch(e=>{console.error(e);process.exit(1)});
-          JS
-          echo '91fb83b2e7c315232e7f670074762fb7e0d22e06cc19da3cbea3b82cf501c411  public_config.zip' | sha256sum -c -
-          mkdir configs
-          unzip -q public_config.zip -d configs
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile, re, hashlib, shlex
+          apk=Path('compiled_baseline/P104_VC133_UNSIGNED_REVIEW.apk')
+          assert apk.is_file(), 'Verified P106 APK missing'
+          with zipfile.ZipFile(apk) as z:
+              dex=b''.join(z.read(n) for n in z.namelist() if n.startswith('classes') and n.endswith('.dex'))
+          checks = {
+              'KHATMA_FIREBASE_API_KEY': (rb'AIza[0-9A-Za-z_\\-]{30,60}', 'd4ea8a31c69e4c7111f479ed6b40e7e350c82b7276502b601d04aa1bb96d451a'),
+              'KHATMA_FIREBASE_APP_ID': (rb'1:[0-9]{6,20}:android:[a-f0-9]{10,50}', '7ce83522c17b4c00b700a06f9825fb24cb4bfb02f108b6a8f2786f218f54bdfd'),
+              'KHATMA_GOOGLE_WEB_CLIENT_ID': (rb'[0-9]{10,20}-[a-z0-9]{20,50}\\.apps\\.googleusercontent\\.com', '3d3f44f50125801e9c6740b7e1fb4414156f6b9035934801a422ed20a90ed1ba'),
+          }
+          values={}
+          for key,(pat,want) in checks.items():
+              matches=set(re.findall(pat,dex))
+              assert len(matches)==1, f'{key}: no unique client constant'
+              val=next(iter(matches))
+              assert hashlib.sha256(val).hexdigest()==want, f'{key}: baseline client constant mismatch'
+              values[key]=val.decode('ascii')
+          Path('configs').mkdir(exist_ok=True)
+          Path('configs/android_client_config.txt').write_text(
+              '\\n'.join(f'{key}={shlex.quote(val)}' for key,val in values.items())+'\\n'
+          )
+          print('Recovered and verified three public P106 client settings without printing values.')
+          PY
       - name: Save extra plain Quran pages outside APK exactly as P106
         run: |
           set -euo pipefail
