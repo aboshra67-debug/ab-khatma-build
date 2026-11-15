@@ -54,13 +54,14 @@ jobs:
           PY
           python3 -m py_compile tools/patch_p113.py
           python3 tools/patch_p113.py "$S"
+          python3 tools/p113_navigation_wire.py "$S"
           grep -q 'versionCode = 140' "$S/app/build.gradle.kts"
           grep -q 'P113ExamNavigation' "$S/app/src/main/java/com/ab/khatma/ui/screens/P109GroupRoomScreen.kt"
           grep -q 'showClose=stage!="exam"' "$S/app/src/main/java/com/ab/khatma/ui/screens/P108IndividualQuiz.kt"
           grep -q 'showClose=screen!="exam"' "$S/app/src/main/java/com/ab/khatma/ui/screens/P109GroupRoomScreen.kt"
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
           mkdir -p "$S/BUILD_REPRODUCIBILITY/p113"
-          cp tools/patch_p113.py tools/P113ExamDesign.kt "$S/BUILD_REPRODUCIBILITY/p113/"
+          cp tools/patch_p113.py tools/P113ExamDesign.kt tools/p113_navigation_wire.py "$S/BUILD_REPRODUCIBILITY/p113/"
       - name: Download verified P106 compiled public client settings
         uses: actions/download-artifact@v4
         with:
