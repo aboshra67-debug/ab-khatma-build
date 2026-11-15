@@ -63,7 +63,8 @@ jobs:
           cp p115_build/p115_patch.py "$S/BUILD_REPRODUCIBILITY/p115/"
           grep -q 'versionCode = 142' "$S/app/build.gradle.kts"
           grep -q 'P115GuidedMushafScreen' "$S/app/src/main/java/com/ab/khatma/ui/screens/P114QuranLearningScreen.kt"
-          grep -q 'P115LearningProgress.saveViewed' "$S/app/src/main/java/com/ab/khatma/ui/screens/P61Flow.kt"
+          grep -q 'onPageViewed?.invoke(currentPage)' "$S/app/src/main/java/com/ab/khatma/ui/screens/P61Flow.kt"
+          grep -q 'P115LearningProgress.saveViewed' "$S/app/src/main/java/com/ab/khatma/ui/screens/QuranScreen.kt"
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
           test -f "$S/app/src/test/java/com/ab/khatma/ui/screens/P115LearningProgressTest.kt"
       - name: Download verified P106 compiled public client settings
