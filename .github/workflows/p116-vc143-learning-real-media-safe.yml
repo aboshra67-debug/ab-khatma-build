@@ -64,7 +64,7 @@ jobs:
           grep -q 'versionCode = 143' "$S/app/build.gradle.kts"
           grep -q 'P116TeacherVideoDialog' "$S/app/src/main/java/com/ab/khatma/ui/screens/P114QuranLearningScreen.kt"
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
-          cp p116_bundle/* "$S/BUILD_REPRODUCIBILITY/p116/"
+          cp p116_bundle/P116LearningMedia.kt p116_bundle/p116_media_patch.py "$S/BUILD_REPRODUCIBILITY/p116/"
       - name: Download verified P106 compiled public client settings
         uses: actions/download-artifact@v4
         with:
