@@ -1,0 +1,15 @@
+name: P126 Audit Commons Human Letter Audio
+on:
+  push:
+    branches: [release/p126-vc153-learning-audio-audit-safe]
+    paths: ['.github/workflows/p126-discovery.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/p126_probe_commons.py
