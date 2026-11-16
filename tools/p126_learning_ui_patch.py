@@ -9,7 +9,7 @@ checks={
 "app/src/main/java/com/ab/khatma/ui/screens/P114QuranLearningScreen.kt":"4cf0baa5be43ffd874d774fb5188d52cdc18c0b3978347b4280457be5a16eafd",
 "app/src/main/java/com/ab/khatma/ui/screens/P121QuranLearningCurriculum.kt":"52fd8252aa4bdb66426f2ea40a745cd87d47aa6ebd2e0b619fdb71146b542d26",
 "app/src/main/java/com/ab/khatma/ui/screens/P123VerifiedTeacherAudio.kt":"4cd69dc504bd84c1af20f87bc1e44c7ab70b6f9c6659ef4b62e21975b238f2ee",
-"app/build.gradle.kts":"00b9a0b6952daf79931dc92df3875b3504db110436e7340f157e2e506367a9c7"
+"app/build.gradle.kts":"d3e89b6a7b037c3b9627c7050f1000a892e71e840e783efe23ce2805e34da3fc"
 }
 for file,sha in checks.items():
  assert hashlib.sha256((root/file).read_bytes()).hexdigest()==sha,file+" drift"
