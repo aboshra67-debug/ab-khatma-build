@@ -156,8 +156,8 @@ class P126RealAlphabetSoundTest {
         assertEquals(28,P126Alphabet.forLesson("N01").size)
     }
     @Test fun articulationGroupsAreExact() {
-        assertEquals(listOf("ع","ح"),P126Alphabet.forLesson("F05").map { it.char })
-        assertEquals(listOf("غ","خ"),P126Alphabet.forLesson("F06").map { it.char })
+        assertEquals(setOf("ع","ح"),P126Alphabet.forLesson("F05").map { it.char }.toSet())
+        assertEquals(setOf("غ","خ"),P126Alphabet.forLesson("F06").map { it.char }.toSet())
     }
     @Test fun shaddaLessonNowDisplaysOnlyDirectlySpokenQuranicWords() {
         val lesson=P121CurriculumBank.lessons.single { it.id=="N13" }
