@@ -1,0 +1,179 @@
+name: P119 VC146 Guided Lesson Audio Original Signed
+on:
+  push:
+    branches: [release/p119-vc146-lesson-guided-audio-safe]
+    paths: ['.github/workflows/p119-vc146-lesson-guided-audio-safe.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Install Android SDK
+        run: |
+          set -euo pipefail
+          TOOL=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" "platforms;android-36" "build-tools;36.0.0"
+      - name: Download pinned P118 VC145 full safe source
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P118-VC145-SAFE-SOURCE
+          run-id: 43827136801
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Apply verified P119 guided lesson audio patch
+        run: |
+          set -euo pipefail
+          test -f baseline/AB_Khatma_P118_VC145_SAFE_SOURCE.zip
+          unzip -tq baseline/AB_Khatma_P118_VC145_SAFE_SOURCE.zip
+          mkdir -p src
+          unzip -q baseline/AB_Khatma_P118_VC145_SAFE_SOURCE.zip -d src
+          S=src/AB_Khatma_P118_VC145_SAFE_SOURCE
+          grep -q 'versionCode = 145' "$S/app/build.gradle.kts"
+          cat tools/p119_patch_part1.b64 tools/p119_patch_part2.b64 > p119_payload.b64
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,gzip,hashlib
+          data=gzip.decompress(base64.b64decode(Path('p119_payload.b64').read_text().strip(),validate=True))
+          expected='f7bddb5933160fad9f621be4267807fa5515677e6aadf27ca6df2da14a44d3e2'
+          assert hashlib.sha256(data).hexdigest()==expected,"P119 source payload corrupted"
+          Path('p119_safe_patch.py').write_bytes(data)
+          print('P119 source SHA-256 PASS')
+          PY
+          python3 -m py_compile p119_safe_patch.py
+          python3 p119_safe_patch.py "$S"
+          grep -q 'versionCode = 146' "$S/app/build.gradle.kts"
+          grep -q 'P119GuidedAyahAudio' "$S/app/src/main/java/com/ab/khatma/ui/screens/P114QuranLearningScreen.kt"
+          grep -q 'P119GuidedPolicy' "$S/app/src/main/java/com/ab/khatma/ui/screens/P119GuidedAyahAudio.kt"
+          test -f "$S/app/src/test/java/com/ab/khatma/ui/screens/P119GuidedPolicyTest.kt"
+          test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
+          mkdir -p "$S/BUILD_REPRODUCIBILITY/p119"
+          cp p119_safe_patch.py "$S/BUILD_REPRODUCIBILITY/p119/"
+      - name: Download verified P106 compiled public client settings
+        uses: actions/download-artifact@v4
+        with:
+          name: AB-Khatma-P102-VC133-P104-UNSIGNED-REVIEW
+          run-id: 40139791406
+          github-token: ${{ github.token }}
+          path: compiled_baseline
+      - name: Recover only fingerprint-checked public client constants from P106 APK
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile, re, hashlib, shlex
+          apk=Path('compiled_baseline/P104_VC133_UNSIGNED_REVIEW.apk')
+          assert apk.is_file(), 'Verified P106 APK missing'
+          with zipfile.ZipFile(apk) as z:
+              dex=b''.join(z.read(n) for n in z.namelist() if n.startswith('classes') and n.endswith('.dex'))
+          checks = {
+              'KHATMA_FIREBASE_API_KEY': (rb'AIza[0-9A-Za-z_-]{30,60}', 'd4ea8a31c69e4c7111f479ed6b40e7e350c82b7276502b601d04aa1bb96d451a'),
+              'KHATMA_FIREBASE_APP_ID': (rb'1:[0-9]{6,20}:android:[a-f0-9]{10,50}', '7ce83522c17b4c00b700a06f9825fb24cb4bfb02f108b6a8f2786f218f54bdfd'),
+              'KHATMA_GOOGLE_WEB_CLIENT_ID': (rb'[0-9]{10,20}-[a-z0-9]{20,50}[.]apps[.]googleusercontent[.]com', '3d3f44f50125801e9c6740b7e1fb4414156f6b9035934801a422ed20a90ed1ba'),
+          }
+          values={}
+          for key,(pat,want) in checks.items():
+              matches=set(re.findall(pat,dex))
+              assert len(matches)==1, f'{key}: no unique client constant'
+              val=next(iter(matches))
+              assert hashlib.sha256(val).hexdigest()==want, f'{key}: baseline client constant mismatch'
+              values[key]=val.decode('ascii')
+          Path('configs').mkdir(exist_ok=True)
+          Path('configs/android_client_config.txt').write_text(
+              chr(10).join(f'{key}={shlex.quote(val)}' for key,val in values.items())+chr(10)
+          )
+          print('Recovered and verified three public P106 client settings without printing values.')
+          PY
+      - name: Save extra plain Quran pages outside APK exactly as P106
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P118_VC145_SAFE_SOURCE
+          mv "$S/app/src/main/assets/quran_pages" "$GITHUB_WORKSPACE/plain_hold"
+      - name: Compile and run unit tests
+        working-directory: src/AB_Khatma_P118_VC145_SAFE_SOURCE
+        run: |
+          set -euo pipefail
+          set -a
+          . ../../configs/android_client_config.txt
+          set +a
+          gradle --no-daemon :app:testDebugUnitTest :app:assembleRelease \
+            -PKHATMA_FIREBASE_API_KEY="$KHATMA_FIREBASE_API_KEY" \
+            -PKHATMA_FIREBASE_APP_ID="$KHATMA_FIREBASE_APP_ID" \
+            -PKHATMA_GOOGLE_WEB_CLIENT_ID="$KHATMA_GOOGLE_WEB_CLIENT_ID" \
+            -PKHATMA_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app" \
+            -PKHATMA_V2_API_BASE_URL="https://khatma-v2-api-staging.up.railway.app"
+      - name: Sign using original owner key and verify package
+        env:
+          KS_B64: ${{ secrets.KHATMA_PREVIEW_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.KHATMA_PREVIEW_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "${KS_B64:-}" && test -n "${KS_PASS:-}" || { echo "::error::Original signing secrets unavailable"; exit 1; }
+          mkdir -p signed
+          umask 077
+          printf '%s' "$KS_B64" | tr -d ' \r\n\t' | base64 -d > "$RUNNER_TEMP/owner.p12"
+          KS_PASS=$(printf '%s' "$KS_PASS" | tr -d '\r\n')
+          export KS_PASS
+          BT="$ANDROID_HOME/build-tools/36.0.0"
+          APK=src/AB_Khatma_P118_VC145_SAFE_SOURCE/app/build/outputs/apk/release/app-release-unsigned.apk
+          "$BT/zipalign" -f -P 16 4 "$APK" "$RUNNER_TEMP/aligned.apk"
+          java -jar "$BT/lib/apksigner.jar" sign --ks "$RUNNER_TEMP/owner.p12" --ks-key-alias khatma_preview \
+            --ks-pass env:KS_PASS --v2-signing-enabled true --v3-signing-enabled true \
+            --out signed/AB_Khatma_P119_VC146_ORIGINAL_SIGNED.apk "$RUNNER_TEMP/aligned.apk"
+          OUT=$(java -jar "$BT/lib/apksigner.jar" verify --verbose --print-certs signed/AB_Khatma_P119_VC146_ORIGINAL_SIGNED.apk)
+          echo "$OUT" | grep -q 'certificate SHA-256 digest: 3248c1ebdd2973a992a453919a4207317cdecfc4cf0c7e8dc28dd7d9a5468b41'
+          echo "$OUT" | grep -q 'Number of signers: 1'
+          BADGING=$("$BT/aapt2" dump badging signed/AB_Khatma_P119_VC146_ORIGINAL_SIGNED.apk | head -n 1)
+          echo "$BADGING" | grep -q "name='com.ab.khatma.preview'"
+          echo "$BADGING" | grep -q "versionCode='146'"
+          rm -f "$RUNNER_TEMP/owner.p12"
+          (cd signed && sha256sum *.apk > SHA256SUMS.txt)
+      - name: Prepare complete safe source
+        run: |
+          set -euo pipefail
+          S=src/AB_Khatma_P118_VC145_SAFE_SOURCE
+          mv "$GITHUB_WORKSPACE/plain_hold" "$S/app/src/main/assets/quran_pages"
+          mkdir -p safe_source
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile,ZIP_DEFLATED
+          root=Path('src/AB_Khatma_P118_VC145_SAFE_SOURCE')
+          with ZipFile('safe_source/AB_Khatma_P119_VC146_SAFE_SOURCE.zip','w',ZIP_DEFLATED,compresslevel=5) as z:
+              for p in sorted(root.rglob('*')):
+                  if not p.is_file(): continue
+                  rel=p.relative_to(root)
+                  if any(part in ('build','.gradle','.git') for part in rel.parts) or p.name=='local.properties':continue
+                  assert p.suffix.lower() not in ('.jks','.p12','.keystore','.apk','.aab','.pem'),rel
+                  z.write(p,'AB_Khatma_P119_VC146_SAFE_SOURCE/'+rel.as_posix())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P119-VC146-ORIGINAL-SIGNED-APK
+          path: signed/*
+          retention-days: 30
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-P119-VC146-SAFE-SOURCE
+          path: safe_source/*
+          retention-days: 30
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AB-Khatma-P119-VC146-UNIT-TEST-RESULTS
+          path: src/AB_Khatma_P118_VC145_SAFE_SOURCE/app/build/test-results/testDebugUnitTest/*
+          retention-days: 30
+          if-no-files-found: warn
