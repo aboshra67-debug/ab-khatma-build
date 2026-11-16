@@ -12,4 +12,4 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-      - run: python3 tools/p126_probe_commons.py
+      - run: python3 tools/p126_map_wiki.py
