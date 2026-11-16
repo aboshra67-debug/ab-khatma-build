@@ -29,7 +29,7 @@ jobs:
       - name: Download pinned P122 VC149 full safe source
         uses: actions/download-artifact@v4
         with:
-          name: AB-Khatma-P123-VC150-SAFE-SOURCE
+          name: AB-Khatma-P122-VC149-SAFE-SOURCE
           run-id: 43875804558
           github-token: ${{ github.token }}
           path: baseline
