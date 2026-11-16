@@ -33,7 +33,7 @@ jobs:
           run-id: 43892635960
           github-token: ${{ github.token }}
           path: baseline
-      - name: Verify baseline, import real licensed human speech, and safe-patch teaching
+      - name: Verify correct P125 root baseline and apply real licensed human speech
         run: |
           set -euo pipefail
           test -f baseline/AB_Khatma_P125_VC152_SAFE_SOURCE.zip
