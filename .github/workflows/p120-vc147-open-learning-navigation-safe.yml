@@ -61,6 +61,18 @@ jobs:
           PY
           python3 -m py_compile p120_unpack/p120_patch.py
           python3 p120_unpack/p120_patch.py "$S"
+          # Original P118 test used the former Muallim audio folder. Assert the
+          # new normal Husary source while keeping all exact ayah/zone checks.
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/AB_Khatma_P119_VC146_SAFE_SOURCE/app/src/test/java/com/ab/khatma/ui/screens/P118TeachingExamplesTest.kt')
+          s=p.read_text()
+          old='https://everyayah.com/data/Husary_Muallim_128kbps/'
+          new='https://everyayah.com/data/Husary_128kbps/'
+          assert s.count(old)==1,'unexpected P118 test baseline'
+          p.write_text(s.replace(old,new,1))
+          print('P118 original 6-verse source test adapted to requested removal; exact verse assertions preserved')
+          PY
           mkdir -p "$S/app/src/test/java/com/ab/khatma/ui/screens"
           cp p120_unpack/P120LearningOpenTest.kt "$S/app/src/test/java/com/ab/khatma/ui/screens/"
           grep -q 'versionCode = 147' "$S/app/build.gradle.kts"
