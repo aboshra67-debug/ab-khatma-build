@@ -1,0 +1,23 @@
+name: P125 QuranHive Audio Source Probe
+on:
+  push:
+    branches: [release/p125-vc152-real-word-audio-safe]
+    paths: ['.github/workflows/p125-audio-source-probe.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify licensed human word recordings
+        run: |
+          set -euo pipefail
+          for N in 001 002 003 004; do
+            URL="https://huggingface.co/datasets/quranhive/quran_word_by_word_audio/resolve/main/001_001_${N}.mp3"
+            curl -fL --retry 2 --connect-timeout 20 --max-time 70 -A "AB-Khatma-Educational-Audio/1" -o "/tmp/${N}.mp3" "$URL"
+            test "$(stat -c%s /tmp/${N}.mp3)" -gt 1000
+            ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 "/tmp/${N}.mp3" | grep -q duration
+            sha256sum "/tmp/${N}.mp3"
+          done
