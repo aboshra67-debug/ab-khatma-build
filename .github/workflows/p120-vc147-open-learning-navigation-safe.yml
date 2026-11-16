@@ -69,7 +69,7 @@ jobs:
           grep -q 'filterNot { it.id == "husary_muallim" }' "$S/app/src/main/java/com/ab/khatma/quran/P52SurahAudio.kt"
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
           mkdir -p "$S/BUILD_REPRODUCIBILITY/p120"
-          cp p120_unpack/* "$S/BUILD_REPRODUCIBILITY/p120/"
+          cp p120_unpack/p120_patch.py p120_unpack/P120LearningStages.kt p120_unpack/P120LearningOpenTest.kt "$S/BUILD_REPRODUCIBILITY/p120/"
       - name: Download verified P106 compiled public client settings
         uses: actions/download-artifact@v4
         with:
