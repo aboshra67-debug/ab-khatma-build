@@ -33,7 +33,7 @@ jobs:
           run-id: 43892635960
           github-token: ${{ github.token }}
           path: baseline
-      - name: Verify correct P125 root baseline and apply real licensed human speech
+      - name: Verify baseline and apply P126 direct offline alphabet playback with repaired ordered set tests
         run: |
           set -euo pipefail
           test -f baseline/AB_Khatma_P125_VC152_SAFE_SOURCE.zip
