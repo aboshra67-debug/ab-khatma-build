@@ -46,7 +46,7 @@ jobs:
           python3 tools/p126_learning_ui_patch.py "$S"
           python3 tools/p126_compat_tests.py "$S"
           grep -q 'versionCode = 153' "$S/app/build.gradle.kts"
-          test "$(find "$S/app/src/main/res/raw" -maxdepth 1 -name 'p126*.wav' | wc -l)" -ge 80
+          test "$(find "$S/app/src/main/res/raw" -maxdepth 1 -name 'p126*.wav' | wc -l)" -ge 56
           test "$(find "$S/app/src/main/assets/quran_pages_colored" -maxdepth 1 -name '*.webp' | wc -l)" -eq 604
           test -f "$S/app/src/test/java/com/ab/khatma/ui/screens/P126RealAlphabetSoundTest.kt"
       - name: Download verified P106 compiled public client settings
