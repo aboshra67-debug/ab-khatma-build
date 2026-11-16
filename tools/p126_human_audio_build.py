@@ -21,12 +21,12 @@ items=[
 assert len(items)==28
 headers={"User-Agent":"AB-Khatma-learning/1.0 (absoftware.eg@gmail.com)"}
 def fetch(url):
- for attempt in range(5):
+ for attempt in range(6):
   try:
    with urllib.request.urlopen(urllib.request.Request(url,headers=headers),timeout=60) as r:return r.read()
-  except Exception:
-   if attempt==4:raise
-   time.sleep(1+2*attempt)
+  except Exception as exc:
+   if attempt==5:raise
+   time.sleep(9+11*attempt if getattr(exc,'code',None)==429 else 1+2*attempt)
 wiki_url="https://en.wikiversity.org/w/api.php?"+urllib.parse.urlencode(dict(action="parse",page="Learn Arabic (Language Of Quran)/Alphabets",prop="wikitext",format="json"))
 wiki=json.loads(fetch(wiki_url))["parse"]["wikitext"]["*"]
 position=[wiki.lower().index("[[file:"+n.lower()) for _,_,n in items]
@@ -42,12 +42,12 @@ for index,(ch,name,wav) in enumerate(items,1):
   if match and audio.lower() not in seen:
    examples.append((audio,match.group(0)))
    seen.add(audio.lower())
-  if len(examples)==3:break
+  if len(examples)==1:break
  assert len(examples)>=1,(ch,"no matched word")
  rows.append((ch,name,wav,examples))
  allnames[wav.lower()]=wav
  for n,txt in examples:allnames[n.lower()]=n
-assert len(allnames)>=80,len(allnames)
+assert len(allnames)>=50,len(allnames)
 info={}
 commons="https://commons.wikimedia.org/w/api.php?"
 names=list(allnames.values())
@@ -75,6 +75,7 @@ def download(task):
  src,name=task
  assert not (dest/name).exists()
  url,sha=info[src.lower()]
+ time.sleep(2.1)
  data=fetch(url)
  assert hashlib.sha1(data).hexdigest()==sha,src
  with wave.open(io.BytesIO(data)) as w:
@@ -82,7 +83,7 @@ def download(task):
   assert .25<w.getnframes()/w.getframerate()<12
  (dest/name).write_bytes(data)
  return src,name,hashlib.sha256(data).hexdigest()
-with ThreadPoolExecutor(max_workers=6) as pool:receipts=list(pool.map(download,tasks))
+with ThreadPoolExecutor(max_workers=1) as pool:receipts=list(pool.map(download,tasks))
 def q(s):return json.dumps(s,ensure_ascii=False)
 lines=[
 "package com.ab.khatma.ui.screens",
