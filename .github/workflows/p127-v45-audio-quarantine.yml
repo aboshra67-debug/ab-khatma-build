@@ -1,10 +1,5 @@
 name: P127 V45 Human Quran Audio - Quarantine Research Only
 on:
-  push:
-    branches: [staging/p127-v45-commons-audio-quarantine]
-    paths:
-      - '.github/workflows/p127-v45-audio-quarantine.yml'
-      - 'tools/p127_v45_commons_audio_quarantine.py'
   workflow_dispatch:
 permissions:
   contents: read
