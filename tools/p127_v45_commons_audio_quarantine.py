@@ -25,7 +25,12 @@ def get_bytes(url, cap=6000000):
                 data = r.read(cap + 1)
                 if len(data) > cap: raise ValueError("Download exceeds size cap")
                 return data
-        except (HTTPError, TimeoutError) as exc:
+        except HTTPError as exc:
+            if exc.code == 429:
+                raise RuntimeError("WIKIMEDIA_RATE_LIMIT_429: access denied; stop without retry or bypass")
+            last = exc
+            time.sleep((attempt + 1) * 4)
+        except TimeoutError as exc:
             last = exc
             time.sleep((attempt + 1) * 4)
     raise RuntimeError(str(last))
