@@ -1,0 +1,35 @@
+name: P127 V45 Human Quran Audio - Quarantine Research Only
+on:
+  push:
+    branches: [staging/p127-v45-commons-audio-quarantine]
+    paths:
+      - '.github/workflows/p127-v45-audio-quarantine.yml'
+      - 'tools/p127_v45_commons_audio_quarantine.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify_audio_candidates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install technical audio probe
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+      - name: Download into isolated quarantine and validate source metadata
+        run: |
+          set -euo pipefail
+          python3 tools/p127_v45_commons_audio_quarantine.py
+      - name: Publish independent review evidence (NOT APPROVED FOR APP)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB-Khatma-V45-CANDIDATE-AUDIO-QUARANTINE-UNAPPROVED
+          path: v45_quarantine/
+          if-no-files-found: warn
+          retention-days: 7
